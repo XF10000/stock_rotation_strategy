@@ -1,0 +1,23 @@
+recID INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
+symbol VARCHAR(10) COMMENT '股票代码'
+open float COMMENT '开盘'
+close float COMMENT '收盘'
+high float COMMENT '最高'
+low float COMMENT '最低'
+low float COMMENT '开盘'
+volume float COMMENT '成交量'
+amount float COMMENT '成交额'
+amplitude float COMMENT '振幅'
+pct_change float COMMENT '涨跌幅'
+change float COMMENT '涨跌额'
+turnover_rate float COMMENT '换手率'
+label1 VARCHAR(32) NULL
+label2 VARCHAR(32) NULL
+label3 VARCHAR(32) NULL
+memo VARCHAR(200) NULL
+regID VARCHAR(32) NOT NULL COMMENT '注册ID'
+regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日'
+modifyID VARCHAR(32) COMMENT '修改ID'
+modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日'
+dispFlag VARCHAR(1) COMMENT '是否显示标记'
+delFlag VARCHAR(1) COMMENT '是否删除标记'

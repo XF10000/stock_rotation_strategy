@@ -1,0 +1,67 @@
+日期 	Date	date
+股票代码 	Stock Code 	symbol
+开盘 	 Opening Price	open
+收盘 	 Closing Price	close
+最高 	 Highest Price 	high
+最低 	 Lowest Price 	low
+成交量 	 Trading Volume 	volume
+成交额 	 Trading Value 	amount
+振幅 	 Price Range 	amplitude
+涨跌幅 	 Price Change Percentage	pct_change
+涨跌额 	 Price Change Amount 	change
+换手率 	 Turnover Rate	turnover_rate
+
+
+行业代码	Industry Code	industry_code
+行业名称	Industry Name	industry_name
+上级行业	Parent Industry	parenet_industry
+成份个数	Number of Constituents	num_of_constituents
+静态市盈率	Static P/E Ratio	static_PE_ratio
+TTM(滚动)市盈率	TTM (Trailing Twelve Months) P/E Ratio	TTM_PE_ratio
+市净率	Price-to-Book Ratio (P/B Ratio)	PB_ratio
+静态股息率	Static Dividend Yield	static_divident_yield
+
+排名 id
+板块名称  industry_name
+板块代码  industry_code
+最新价  last_price
+涨跌额  change
+涨跌幅  pct_change
+总市值  total_market_cap
+换手率  turnover_rate
+上涨家数 advancers
+下跌家数 decliners
+领涨股票 top_gainer
+领涨股票-涨跌幅 TG_change 
+
+序号 id
+代码 symbol
+名称 stock_name
+最新价 last_price
+涨跌幅 pct_change
+涨跌额 change
+成交量 volume
+成交额 amount
+振幅 range
+最高 high
+最低 low
+今开 open
+昨收 prev_close
+换手率 turnover_rate
+市盈率-动态 forward_PE_ratio
+市净率 PB_ratio
+
+日期 date
+股票代码 symbol
+开盘 open
+收盘 close
+最高 high
+最低 low
+成交量 volume
+成交额 amount
+振幅  range
+涨跌幅 pct_change
+涨跌额 change
+换手率 turnover_rate
+
+

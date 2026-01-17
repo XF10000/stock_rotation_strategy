@@ -1,0 +1,22 @@
+recID INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
+industry_code VARCHAR(12) COMMENT '行业代码'
+industry_code_sw VARCHAR(12) COMMENT '行业代码别名'
+industry_name VARCHAR(48) COMMENT '行业名称'
+industry_name_sw VARCHAR(48) COMMENT '行业名称申银万国'
+parenet_industry VARCHAR(48) COMMENT '上级行业'
+parenet_industry_sw VARCHAR(48) COMMENT '上级行业申银万国'
+num_of_constituents float COMMENT '成份个数'
+static_PE_ratio float COMMENT '静态市盈率'
+TTM_PE_ratio float COMMENT 'TTM(滚动)市盈率'
+PB_ratio float COMMENT '市净率'
+static_divident_yield float COMMENT '静态股息率'
+label1 VARCHAR(32) NULL
+label2 VARCHAR(32) NULL
+label3 VARCHAR(32) NULL
+memo VARCHAR(200) NULL
+regID VARCHAR(32) NOT NULL COMMENT '注册ID'
+regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日'
+modifyID VARCHAR(32) COMMENT '修改ID'
+modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日'
+dispFlag VARCHAR(1) COMMENT '是否显示标记'
+delFlag VARCHAR(1) COMMENT '是否删除标记'

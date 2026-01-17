@@ -1,0 +1,8 @@
+data/cache/stock_data
+log/*
+src/database/word_table_*.csv
+src/database/auto_gen_code_*.py
+src/config/__pycache__
+src/common/__pycache__
+src/config/__pycache__
+src/config/__pycache__
