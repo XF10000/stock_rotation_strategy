@@ -8,7 +8,7 @@
 #Description:   阿里云通用的配置管理
 # policy Editor, http://gosspublic.alicdn.com/ram-policy-editor/index.html
 
-_VERSION="20251221"
+_VERSION="20260117"
 
 
 import os
@@ -25,7 +25,7 @@ from config import local_settings as local_settings
 
 #生产环境 rss | 测试环境 dss
 _SYS = local_settings._SYS
-#_SYS = "project_01_1"
+#_SYS = "server_01_1"
 #_SYS = "local"
 
 _SYS_SERVER_NAME = local_settings._SYS_SERVER_NAME
@@ -50,7 +50,7 @@ ALIYUN_SMS_SERVICE = {
     "roleChangeSignName":"深圳湔端通知", 
     "roleChangeTemplateCode":"SMS_254130635", 
     }, 
-"project_01":{
+"server_01":{
     "AccessKeyId":"LTAI5tC6fqyJCdyVrsAKejEQ", 
     "AccessKeySecret":"YOUR_CODE", 
     "Domain":"cn-zhangjiakou", 
@@ -66,39 +66,7 @@ ALIYUN_SMS_SERVICE = {
     "roleChangeSignName":"深圳湔端通知", 
     "roleChangeTemplateCode":"SMS_254130635", 
     }, 
-"homeServer":{
-    "AccessKeyId":"LTAI5tC6fqyJCdyVrsAKejEQ", 
-    "AccessKeySecret":"YOUR_CODE", 
-    "Domain":"cn-zhangjiakou", 
-    "RegionId":"cn-zhangjiakou", 
-    "code":"code",
-    "SignName":"深圳湔端", 
-    "TemplateCode":"SMS_249250399", 
-    "infoCode":"phone", 
-    "infoSignName":"深圳湔端通知", 
-    "infoTemplateCode":"SMS_253000069", 
-    "roleChangeProjectName":"projectName", 
-    "roleChangeRoleName":"roleName", 
-    "roleChangeSignName":"深圳湔端通知", 
-    "roleChangeTemplateCode":"SMS_254130635", 
-    }, 
-"iottest-01":{
-    "AccessKeyId":"LTAI5tC6fqyJCdyVrsAKejEQ", 
-    "AccessKeySecret":"YOUR_CODE", 
-    "Domain":"cn-zhangjiakou", 
-    "RegionId":"cn-zhangjiakou", 
-    "code":"code",
-    "SignName":"深圳湔端", 
-    "TemplateCode":"SMS_249250399", 
-    "infoCode":"phone", 
-    "infoSignName":"深圳湔端通知", 
-    "infoTemplateCode":"SMS_253000069", 
-    "roleChangeProjectName":"projectName", 
-    "roleChangeRoleName":"roleName", 
-    "roleChangeSignName":"深圳湔端通知", 
-    "roleChangeTemplateCode":"SMS_254130635", 
-    }, 
-"vc-voice":{
+"server_02":{
     "AccessKeyId":"LTAI5tC6fqyJCdyVrsAKejEQ", 
     "AccessKeySecret":"YOUR_CODE", 
     "Domain":"cn-zhangjiakou", 
@@ -189,7 +157,7 @@ ALIYUN_OSS_SERVICE = {
             }]
         },
    }, 
-"project_01":{
+"server_01":{
     "RegionId":"cn-zhangjiakou", 
     "roleArn":"acs:ram::1392433711034021:role/aliyunosstokengeneratorrole",
     "AccessKeyId":"LTAI5t5jMGja38rpxSNjL9th", 
@@ -216,61 +184,7 @@ ALIYUN_OSS_SERVICE = {
             }]
         },
     }, 
-"homeServer":{
-    "RegionId":"cn-zhangjiakou", 
-    "roleArn":"acs:ram::1392433711034021:role/aliyunosstokengeneratorrole",
-    "AccessKeyId":"LTAI5t5jMGja38rpxSNjL9th", 
-    "AccessKeySecret":"YOUR_CODE", 
-    "readOnlyAccessKeyId":"LTAI5t8S6nUMBYPySaUVtCaA", 
-    "readOnlyAccessKeySecret":"YOUR_CODE", 
-    "stsRegionId":"oss-cn-zhangjiakou", 
-    "stsAccessKeyId":"LTAI5tPpkp526RfrRJB5LGnY", 
-    "stsAccessKeySecret":"YOUR_CODE", 
-    "Endpoint":"https://oss-cn-zhangjiakou.aliyuncs.com", 
-    "EndpointExternal":"https://oss-cn-zhangjiakou.aliyuncs.com", 
-    "EndpointInternal":"https://oss-cn-zhangjiakou-internal.aliyuncs.com", 
-    "BucketName":"caict-private-20220822", 
-    "ConnTimeOut":60, 
-    "DispTimeOut":1800, 
-    "stsPolicyData":{
-        "Version": "1",
-        "Statement": 
-        [{
-            "Effect": "Allow",
-            "Action": ["oss:Put*"],
-            "Resource": ["acs:oss:*:*:caict-private-20220822","acs:oss:*:*:caict-private-20220822/*"],
-            "Condition": {}
-            }]
-        },
-    }, 
-"iottest-01":{
-    "RegionId":"cn-zhangjiakou", 
-    "roleArn":"acs:ram::1392433711034021:role/aliyunosstokengeneratorrole",
-    "AccessKeyId":"LTAI5t5jMGja38rpxSNjL9th", 
-    "AccessKeySecret":"YOUR_CODE", 
-    "readOnlyAccessKeyId":"LTAI5t8S6nUMBYPySaUVtCaA", 
-    "readOnlyAccessKeySecret":"YOUR_CODE", 
-    "stsRegionId":"oss-cn-zhangjiakou", 
-    "stsAccessKeyId":"LTAI5tPpkp526RfrRJB5LGnY", 
-    "stsAccessKeySecret":"YOUR_CODE", 
-    "Endpoint":"https://oss-cn-zhangjiakou.aliyuncs.com", 
-    "EndpointExternal":"https://oss-cn-zhangjiakou.aliyuncs.com", 
-    "EndpointInternal":"https://oss-cn-zhangjiakou-internal.aliyuncs.com", 
-    "BucketName":"caict-private-20220822", 
-    "ConnTimeOut":60, 
-    "DispTimeOut":1800, 
-    "stsPolicyData":{
-        "Version": "1",
-        "Statement": 
-        [{
-            "Effect": "Allow",
-            "Action": ["oss:Put*"],
-            "Resource": ["acs:oss:*:*:caict-private-20220822","acs:oss:*:*:caict-private-20220822/*"],
-            "Condition": {}
-            }]
-        },
-    }, 
-"vc-voice":{
+"server_02":{
     "RegionId":"cn-zhangjiakou", 
     "roleArn":"acs:ram::1392433711034021:role/aliyunosstokengeneratorrole",
     "AccessKeyId":"LTAI5t5jMGja38rpxSNjL9th", 

@@ -7,7 +7,7 @@
 #Date: 2019-03-30
 #Description:  SQL数据库地址,网络地址等
 
-_VERSION="20251221"
+_VERSION="20260117"
 
 import os
 import sys
@@ -20,100 +20,80 @@ from common import  mysqlHandle as mysqlHandle
 
 #生产环境 rss | 测试环境 dss
 _SYS = local_settings._SYS
-#_SYS = "project_01"
+#_SYS = "server_01"
 
 
 #mysql数据库信息  begin
 #主库，写记录
 MYSQL_WRITE_HOST = {
     "local":"127.0.0.1",
-    "project_01":"127.0.0.1", 
-    "homeServer":"127.0.0.1", 
-    "iottest-01":"127.0.0.1",
-    "vc-voice":"127.0.0.1",
+    "server_01":"127.0.0.1", 
+    "server_02":"127.0.0.1", 
     "home":"192.168.100.100",
     }[_SYS]
 
 MYSQL_WRITE_PORT = {
     "local":3306,
-    "project_01":3306, 
-    "homeServer":3306, 
-    "iottest-01":3306, 
-    "vc-voice":3306, 
+    "server_01":3306, 
+    "server_02":3306, 
     "home":3306, 
     }[_SYS]
 
 MYSQL_WRITE_DB = {
     "local":"chin_hotel",
-    "project_01":"chin_hotel", 
-    "homeServer":"chin_hotel", 
-    "iottest-01":"chin_hotel", 
-    "vc-voice":"chin_hotel", 
+    "server_01":"chin_hotel", 
+    "server_02":"chin_hotel", 
     "home":"chin_hotel", 
     }[_SYS]
     
 MYSQL_WRITE_USER = {
     "local":"chdba",
-    "project_01":"chdba", 
-    "homeServer":"chdba", 
-    "iottest-01":"chdba", 
-    "vc-voice":"chdba", 
+    "server_01":"chdba", 
+    "server_02":"chdba", 
     "home":"chdba", 
     }[_SYS]
 
 MYSQL_WRITE_PASSWD = {
     "local":"chdba$123456",
-    "project_01":"chdba$123456", 
-    "homeServer":"chdba$123456", 
-    "iottest-01":"chdba$123456", 
-    "vc-voice":"chdba$123456", 
+    "server_01":"chdba$123456", 
+    "server_02":"chdba$123456", 
     "home":"chdba$123456", 
     }[_SYS]
 
 #从库，读记录
 MYSQL_READ_HOST = {
     "local":"127.0.0.1",
-    "project_01":"127.0.0.1", 
-    "homeServer":"127.0.0.1", 
-    "iottest-01":"127.0.0.1",
-    "vc-voice":"127.0.0.1",
+    "server_01":"127.0.0.1", 
+    "server_02":"127.0.0.1", 
     "home":"192.168.100.100",
     }[_SYS]
     
 MYSQL_READ_PORT = {
     "local":3306,
-    "project_01":3306, 
-    "homeServer":3306, 
-    "iottest-01":3306, 
-    "vc-voice":3306, 
+    "server_01":3306, 
+    "server_02":3306, 
     "home":3306, 
     }[_SYS]
 
     
 MYSQL_READ_DB = {
     "local":"chin_hotel",
-    "project_01":"chin_hotel", 
-    "homeServer":"chin_hotel", 
-    "iottest-01":"chin_hotel", 
-    "vc-voice":"chin_hotel", 
+    "server_01":"chin_hotel", 
+    "server_02":"chin_hotel", 
     "home":"chin_hotel", 
     }[_SYS]
 
 MYSQL_READ_USER = {
     "local":"chdba",
-    "project_01":"chdba", 
-    "homeServer":"chdba", 
-    "iottest-01":"chdba", 
-    "vc-voice":"chdba", 
+    "server_01":"chdba", 
+    "server_02":"chdba", 
     "home":"chdba", 
     }[_SYS]
 
 MYSQL_READ_PASSWD = {
     "local":"chdba$123456",
-    "project_01":"chdba$123456", 
-    "homeServer":"chdba$123456", 
-    "iottest-01":"chdba$123456", 
-    "vc-voice":"chdba$123456", 
+    "server_01":"chdba$123456", 
+    "server_02":"chdba$123456", 
     "home":"chdba$123456", 
     }[_SYS]
 
