@@ -13,6 +13,7 @@ _DEBUG=True
 
 import os
 import sys
+from turtle import up
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parentdir)
 
@@ -55,13 +56,12 @@ _LOG.info(f"PID:{_processorPID}, python version:{systemVersion}, main code versi
 #common function end
 
 
-def dataFetchProcessor():
-    result = {}
+def readStockPortfolioConfig(inputPortfolioFileName=""):
+    result = []
     try:
-        #首先读取股票配置文件
         _LOG.info(f"I: 读取股票配置文件开始... ")
 
-        portfolioList = comStock.readStockPortfolioConfig()
+        portfolioList = comStock.readStockPortfolioConfig(inputPortfolioFileName)
         stockConfigList = comStock.convertStockPortfolio2StockJson(portfolioList)
         comStock.saveStockPortfolioJson(stockConfigList)
         stockConfigList = comStock.readStockPortfolioJson()
@@ -78,7 +78,135 @@ def dataFetchProcessor():
         
             for stockConfig in stockConfigList:
                 symbol = stockConfig["symbol"]
-                comStock.checkReadStockFullData(symbol, startYMD, currYMD)
+                if symbol == comGD._DEF_STOCK_PORTFOLIO_CASH_NAME:
+                    continue
+                rtn = comStock.checkReadStockFullData(symbol, startYMD, currYMD)
+                if rtn:
+                    result.append(symbol)
+
+            _LOG.info(f"I: 开始检查股票信息是否存在... 结束 ")
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+def checkStockIndustryMappingFile():
+    result = False
+    try:
+        _LOG.info(f"I: 检查股票映射文件开始... ")
+        data = comStock.readStockIndustryMapping()
+        metaData = data.get("metadata", {})
+        stockBasicInfo = data.get("mapping", {})
+        
+        #判断时间是否最新
+        lastYMD = ""
+        if "YMDHMS" in metaData:
+            lastYMD = metaData["YMDHMS"][0:8]
+        elif "generated_at" in metaData:
+            generated_at = metaData["generated_at"]
+            lastYMD = generated_at[0:4] + generated_at[5:7] + generated_at[8:10]
+        
+        updateFlag = False
+        currYMDHMS = misc.getTime()
+        # currYMD = currYMDHMS[0:8]
+        updateYMD = misc.getPassday(comGD._DEF_STOCK_INDUSTRY_MAPING_DAYS)
+        if lastYMD == "":
+            updateFlag = True
+        else:
+            if lastYMD < updateYMD:
+                updateFlag = True
+
+        if updateFlag:
+            stockBasicInfo = comStock.getStockBasicInfo() 
+            stockNum = len(stockBasicInfo)
+            metaData["YMDHMS"] = currYMDHMS
+            metaData["version"] = "1.1"
+            metaData["total_stocks"] = stockNum
+            metaData["generated_at"] = currYMDHMS[0:4] + "-" + currYMDHMS[4:6] + "-" + currYMDHMS[6:8] + "T" + currYMDHMS[8:10] + ":" + currYMDHMS[10:12] + ":" + currYMDHMS[12:14]
+            data["mapping"] = stockBasicInfo
+            #计算行业分类
+            industryData = {}
+            for symbol, stockInfo in stockBasicInfo.items():
+                industry_code = stockInfo.get("industry_code", "")
+                if industry_code and industry_code not in industryData:
+                    industryData[industry_code] = []
+                industryData[industry_code].append(symbol)
+            data["industry_data"] = industryData
+            comStock.saveStockIndustryMapping(data)
+
+        stockNum = len(stockBasicInfo)
+        _LOG.info(f"I: 检查股票映射文件完成, 股票数量:{stockNum}")
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+#检查行业数据
+def checkIndustryData():
+    result = False
+    try:
+        _LOG.info(f"I: 检查行业数据开始... ")
+        data = comStock.readStockIndustryMapping()
+        metaData = data.get("metadata", {})
+        version = data.get("version", "")
+        industryData = data.get("industry_data", {})
+        
+        #判断时间是否最新
+        lastYMD = ""
+        if "industryYMDHMS" in metaData:
+            lastYMD = metaData["industryYMDHMS"][0:8]
+        
+        updateFlag = False
+        currYMDHMS = misc.getTime()
+        currYMD = currYMDHMS[0:8]
+        startYMD = misc.getPassday(comGD._DEF_STOCK_KEEP_HISTORY_DATA_DAYS)
+
+        updateYMD = misc.getPassday(comGD._DEF_STOCK_INDUSTRY_MAPING_DAYS)
+        if lastYMD == "":
+            updateFlag = True
+        else:
+            if lastYMD < updateYMD:
+                updateFlag = True
+
+        industryNum = len(industryData)
+        if updateFlag:
+            if version == "1.0":
+                industryList = comStock.comAK.swGetIndustryList()
+                industryData = {}
+                for industrInfo in industryList:
+                    industry_symbol = industrInfo.get("industry_symbol", "")
+                    industryData[industry_symbol] = []
+                industryNum = len(industryData)
+
+            #获取和更新行业数据
+            for industry_symbol, industryInfo in industryData.items():
+                rtn = comStock.checkReadIndexFullData(industry_symbol, startYMD, currYMD)
+                pass
+
+            metaData["industryYMDHMS"] = currYMDHMS
+            comStock.saveStockIndustryMapping(data)
+
+        _LOG.info(f"I: 检查行业数据开始, 行业数量:{industryNum}")
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+def dataFetchProcessor(inputPortfolioFileName=""):
+    result = []
+    try:
+        #首先检查股票映射文件是否存在
+        rtn = checkStockIndustryMappingFile()
+
+        #其次检查行业数据是否存在, 行业数据是为计算rsi而准备的
+        rtn = checkIndustryData()
+
+        #最后读取股票配置文件
+        result = readStockPortfolioConfig(inputPortfolioFileName)
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -89,11 +217,12 @@ def dataFetchProcessor():
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hd:", ["help", "debug"])
+        opts, args = getopt.getopt(sys.argv[1:], "hdi:", ["help", "debug", "input="])
     except getopt.GetoptError:
         sys.exit()
 
     debugFlag = False
+    inputPortfolioFileName = ""
 
     for name, value in opts:
         if name in ("-h", "--help"):
@@ -104,13 +233,16 @@ def main():
         elif name in ("-d", "--debug"):
             debugFlag = True
 
+        elif name in ("-i", "--input"):
+            inputPortfolioFileName = value
+
     if debugFlag:
         import pdb
         pdb.set_trace()
 
-    _LOG.info(f"I: PID:{_processorPID}, debug:{debugFlag}")
+    _LOG.info(f"I: PID:{_processorPID}, debug:{debugFlag}, portfolio:{inputPortfolioFileName}")
 
-    dataFetchProcessor()
+    dataFetchProcessor(inputPortfolioFileName)
 
 
 if __name__ == "__main__":

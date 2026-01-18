@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260113"
+_VERSION="20260118"
 
 
 import os
@@ -330,11 +330,127 @@ STOCK_DATA_SAVE_DIR_NAME = {
     "home":f"{STOCK_DATA_CACHE_DIR_NAME}/stock_data",
 }[_SYS]
 
+#根据 industry index 计算的rsi 数据存放地
+INDEX_DATA_SAVE_DIR_NAME = {
+    "local":f"{STOCK_DATA_CACHE_DIR_NAME}/rsi_data",
+    "server_01":f"{STOCK_DATA_CACHE_DIR_NAME}/rsi_data",
+    "server_02":f"{STOCK_DATA_CACHE_DIR_NAME}/rsi_data",
+    "home":f"{STOCK_DATA_CACHE_DIR_NAME}/rsi_data",
+}[_SYS]
+
 STOCK_PORTFOLIO_CONFIG_FILE = "portfolio_config.csv"
 STOCK_PORTFOLIO_CONFIG_JSON_FILE = "stock_portfolio_config.json"
 
 STOCK_SW_STOCK_INDUSTRY_MAP_FILE = "stock_to_industry_map.json" #股票到申银万国行业的映射文件,存储在 STOCK_CONFIG_DIR_NAME 下
 STOCK_BASIC_INFO_FILE = "stock_basic_info.json" #股票基本信息文件,存储在 STOCK_CONFIG_DIR_NAME 下
+
+
+"""
+申万二级行业RSI阈值计算配置文件
+用户可以通过修改此文件来调整计算参数
+"""
+
+# RSI阈值分位数配置
+RSI_THRESHOLDS = {
+    # 普通阈值（适用于所有行业的基础阈值）
+    "普通超卖": 3,  # 15%分位数
+    "普通超买": 97,  # 85%分位数
+    
+    # 极端阈值（根据波动率分层设置）
+    "极端阈值": {
+        "高波动": {
+            "超卖": 1,   # 5%分位数 - 高波动行业更容易触发极端信号
+            "超买": 99   # 95%分位数
+        },
+        "中波动": {
+            "超卖": 1,   # 8%分位数 - 中等波动行业
+            "超买": 99   # 92%分位数
+        },
+        "低波动": {
+            "超卖": 1,  # 10%分位数 - 低波动行业较难触发极端信号
+            "超买": 99   # 90%分位数
+        }
+    }
+}
+
+# 极端阈值系数配置
+# 新的RSI极端阈值 = 配置的分位数对应的RSI值 × 系数
+STOCK_RSI_EXTREME_THRESHOLD_COEFFICIENTS = {
+    "高波动": {
+        "超卖系数": 0.95,  # 高波动行业极端超卖阈值稍微收紧
+        "超买系数": 1.05   # 高波动行业极端超买阈值稍微放宽
+    },
+    "中波动": {
+        "超卖系数": 0.95,  # 中波动行业极端超卖阈值轻微收紧
+        "超买系数": 1.05   # 中波动行业极端超买阈值轻微放宽
+    },
+    "低波动": {
+        "超卖系数": 0.95,  # 低波动行业保持原分位数值
+        "超买系数": 1.05   # 低波动行业保持原分位数值
+    }
+}
+
+# 计算周期配置
+STOCK_RSI_CALCULATION_PERIODS = {
+    # 历史数据回看周数（用于计算RSI分位数）
+    "lookback_weeks": 104,  # 104周 ≈ 2年
+    
+    # RSI计算周期
+    "rsi_period": 14,  # 14周RSI
+    
+    # 波动率分层的分位数
+    "volatility_quantiles": {
+        "q1": 25,  # 25%分位数 - 低波动与中波动的分界线
+        "q3": 75   # 75%分位数 - 中波动与高波动的分界线
+    }
+}
+
+# 数据质量控制
+STOCK_RSI_DATA_QUALITY = {
+    # 最少需要的数据点数
+    "min_data_points": 50,  # 至少50周数据
+    "min_rsi_points": 20,   # 至少20个有效RSI数据点
+    
+    # API重试配置
+    "retry_times": 3,       # 重试次数
+    "retry_delay": 2        # 重试间隔（秒）
+}
+
+# 输出配置
+STOCK_RSI_OUTPUT_CONFIG = {
+    # 输出文件名
+    "output_filename": "sw2_rsi_threshold.csv",
+    
+    # 数值精度
+    "float_precision": 2,   # 保留2位小数
+    
+    # 是否包含调试信息
+    "include_debug_info": True
+}
+
+# 使用说明
+"""
+配置参数说明：
+
+1. RSI_THRESHOLDS - RSI阈值分位数配置
+   - 普通超卖/超买：适用于所有行业的基础阈值
+   - 极端阈值：根据行业波动率分层设置不同的极端阈值
+   
+2. CALCULATION_PERIODS - 计算周期配置
+   - lookback_weeks：历史数据回看周数，建议52-156周（1-3年）
+   - rsi_period：RSI计算周期，通常为14
+   - volatility_quantiles：波动率分层的分位数设置
+   
+3. 调整建议：
+   - 如果希望更敏感的信号：降低超卖阈值，提高超买阈值
+   - 如果希望更保守的信号：提高超卖阈值，降低超买阈值
+   - 历史数据周数越长，阈值越稳定但对近期变化反应越慢
+   
+4. 常用配置组合：
+   - 激进策略：普通(10,90)，极端高波动(3,97)，中波动(5,95)，低波动(8,92)
+   - 保守策略：普通(20,80)，极端高波动(8,92)，中波动(12,88)，低波动(15,85)
+   - 平衡策略：当前默认配置
+"""
 
 #stock data config end
 

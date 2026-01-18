@@ -104,6 +104,9 @@ def str2Time(a):
     a = datetime.datetime(* a[:6])
     return a
 
+def date2YMD(a):
+    return datetime.datetime.strftime(a, "%Y%m%d")
+
 #a = "2022-04-06 09:08:32"
 def humanTime2Time(a):
     a = time.strptime(a,'%Y-%m-%d %H:%M:%S')
@@ -136,8 +139,11 @@ def formatTime(a) :
     return result
 
 
-def getPassday(nums):
-    t = datetime.date.today()
+def getPassday(nums,YMD=""):
+    if YMD:
+        t = datetime.datetime.strptime(YMD, "%Y%m%d").date()
+    else:
+        t = datetime.date.today()
     t = t + datetime.timedelta(-nums)
     t = str(t)
     day = t[0:4]+t[5:7]+t[8:10]

@@ -54,10 +54,10 @@ MYSQL_WRITE_USER = {
     }[_SYS]
 
 MYSQL_WRITE_PASSWD = {
-    "local":"chdba$123456",
-    "server_01":"chdba$123456", 
-    "server_02":"chdba$123456", 
-    "home":"chdba$123456", 
+    "local":"chdba$",
+    "server_01":"chdba$", 
+    "server_02":"chdba$", 
+    "home":"chdba$", 
     }[_SYS]
 
 #从库，读记录
@@ -91,10 +91,10 @@ MYSQL_READ_USER = {
     }[_SYS]
 
 MYSQL_READ_PASSWD = {
-    "local":"chdba$123456",
-    "server_01":"chdba$123456", 
-    "server_02":"chdba$123456", 
-    "home":"chdba$123456", 
+    "local":"chdba$",
+    "server_01":"chdba$", 
+    "server_02":"chdba$", 
+    "home":"chdba$", 
     }[_SYS]
 
 #主库，写记录

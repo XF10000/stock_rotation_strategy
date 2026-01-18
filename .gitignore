@@ -1,4 +1,5 @@
 data/cache/stock_data
+data/cache/rsi_data
 log/*
 src/database/word_table_*.csv
 src/database/auto_gen_code_*.py

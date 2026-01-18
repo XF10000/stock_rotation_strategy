@@ -12,7 +12,7 @@
 # 1. 股票配置文件的读取
 # 2. 股票基本信息的读取(包括,行业数据, 股票基本信息等)
 
-_VERSION="20260117"
+_VERSION="20260118"
 
 
 import os
@@ -37,13 +37,20 @@ from config import basicSettings as settings
 
 #common begin
 _processorPID = os.getpid()
+
+#建立目录
+def createDir(dirName):
+    if not os.path.exists(dirName):
+        os.makedirs(dirName)
+
 #common end
 
 
-def readStockPortfolioConfig():
+def readStockPortfolioConfig(fileName=""):
     result = []
     try:
-        fileName = settings.STOCK_PORTFOLIO_CONFIG_FILE
+        if fileName == "":
+            fileName = settings.STOCK_PORTFOLIO_CONFIG_FILE
         filePath = f"{settings._DATA_CONFIG_DIR}/{fileName}"
         df = pd.read_csv(filePath)
         result = df.to_dict(orient='records')
@@ -108,14 +115,15 @@ def saveStockPortfolioJson(data):
     return result 
 
 
-def readSWStockIndustryMapping():
+#读取股票行业映射文件(申银万国和东方财富)
+def readStockIndustryMapping():
     result = {}
     try:
         fileName = settings.STOCK_SW_STOCK_INDUSTRY_MAP_FILE
         filePath = f"{settings._DATA_CONFIG_DIR}/{fileName}"
         # 读取SW股票行业映射文件
         data = misc.loadJsonData(filePath,"dict")
-        result = data.get("mapping",{})
+        result = data
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -123,12 +131,38 @@ def readSWStockIndustryMapping():
 
     return result
 
-def getHistoryStockData(symbol, startYMD, endYMD):
+
+#保存股票行业映射文件(申银万国和东方财富)
+def saveStockIndustryMapping(data):
+    result = False
+    try:
+        fileName = settings.STOCK_SW_STOCK_INDUSTRY_MAP_FILE
+        filePath = f"{settings._DATA_CONFIG_DIR}/{fileName}"
+        # 保存股票行业映射文件
+        rtn = misc.saveJsonData(filePath,data,indent=2,ensure_ascii=False)
+        result = True
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+def getHistoryStockData(symbol,startYMD,endYMD):
     result = []
     try:
+        #排除周六和周日
+        endYMDHMS = endYMD + "000000"
+        weekDay = misc.weekDay(endYMDHMS)
+        if weekDay.wday == 5:
+            endYMD = misc.getPassday(1,endYMD)
+        elif weekDay.wday == 6:
+            endYMD = misc.getPassday(2,endYMD)
+
         if startYMD < endYMD:
             #获取股票历史数据(东方财富)
-            result = comAK.gmGetHistroryData(symbol, startYMD, endYMD)
+            result = comAK.swGetIndexHistory(symbol, period, endYMD)
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -141,15 +175,15 @@ def getHistoryStockData(symbol, startYMD, endYMD):
 def getStockBasicInfo():
     result = {}
     try:
-        #首先读取SW股票行业映射文件(申银万国)
-        swIndustryMapping = readSWStockIndustryMapping()
+        #首先获取申银万国股票的基本信息(申银万国)
+        swStockInfoDict = comAK.swGetStockInfoData()
         #其次获取所有股票的基本信息(东方财富)
-        stockInfoDict = comAK.emGetStockInfoData()
-        for symbol, stockInfo in stockInfoDict.items():
-            #根据申银万国行业映射, 填充行业信息
-            if symbol in swIndustryMapping:
-                stockInfo["industry_name_sw"] = swIndustryMapping[symbol]["industry_name"]
-                stockInfo["industry_code_sw"] = swIndustryMapping[symbol]["industry_code"]
+        emStockInfoDict = comAK.emGetStockInfoData()
+        for symbol, stockInfo in swStockInfoDict.items():
+            #根据东方财富数据, 填充东方财富行业信息
+            if symbol in emStockInfoDict:
+                stockInfo["industry_name_em"] = emStockInfoDict[symbol]["industry_name_em"]
+                stockInfo["industry_code_em"] = emStockInfoDict[symbol]["industry_code_em"]
             else:
                 pass
                 #pass
@@ -204,7 +238,8 @@ def checkReadStockFullData(symbol, startYMD, endYMD):
         stockInfo["symbol"] = symbol
         stockInfo["start_date"] = startYMD
         stockInfo["end_date"] = endYMD
-        stockInfo["columns"] = ["open","high","low","close","volume","amount"]
+        stockInfo["columns"] = ["date","open","high","low","close","volume","amount",\
+            "symbol","range","pct_change","change","turnover"]
 
         for period in periodList:
             for adjust in adjustList:
@@ -218,26 +253,36 @@ def checkReadStockFullData(symbol, startYMD, endYMD):
                 stockJsonFilePath = f"{settings.STOCK_DATA_SAVE_DIR_NAME}/{stockJsonFileName}"
                 stockDataFilePath = f"{settings.STOCK_DATA_SAVE_DIR_NAME}/{stockDataFileName}"
 
+                # 检查目录是否存在, 如果不存在, 则创建
+                dirName = os.path.split(indexJsonFilePath)[0]
+                createDir(dirName)
+
                 # 检查文件是否存在
+                changeFlag = False
                 if os.path.exists(stockJsonFilePath) and os.path.exists(stockDataFilePath):
                     # 读取文件内容
                     savedStockInfo, savedStockDataList = readStockData(symbol, period, adjust)
-                    savedStartDate = savedStockInfo.get("start_date","")
+                    # savedStartDate = savedStockInfo.get("start_date","")
                     savedEndDate = savedStockInfo.get("end_date","")
                     newStartDate = savedEndDate
                     newStockDataList = getHistoryStockData(symbol, newStartDate, endYMD)
+                    if newStockDataList:
+                        changeFlag = True
                     stockDataList = savedStockDataList + newStockDataList
                     stockDataList = filterStockData(stockDataList,startYMD,endYMD)
                 else:
                     #读取网络数据
                     stockDataList = getHistoryStockData(symbol, startYMD, endYMD)
+                    changeFlag = True
                     pass
                 
-                #保存数据
-                stockInfo["YMDHMS"] = misc.getTime()
-                stockInfo["save_time"] = misc.humanTime(stockInfo["YMDHMS"])
-                saveStockData(symbol, period, adjust, stockDataList, stockInfo)
+                if changeFlag:
+                    #保存数据
+                    stockInfo["YMDHMS"] = misc.getTime()
+                    stockInfo["save_time"] = misc.humanTime(stockInfo["YMDHMS"])
+                    saveStockData(symbol, period, adjust, stockDataList, stockInfo)
 
+                result = True
         pass
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -316,6 +361,148 @@ def filterStockData(stockDataList,startYMD,endYMD):
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
 
     return result
+
+
+#rsi 计算 begin
+#采用index 数据, 计算rsi
+#检查并读取股票完整数据, 包括, daily, weekly, monthly 数据, 包括,当前,前复权, 后复权等
+# periodList = ["daily","weekly","monthly"]
+indexPeriodList = ["day","week","month"]
+def checkReadIndexFullData(symbol, startYMD,endYMD):
+    result = False
+    try:
+        indexInfo = {}
+        indexInfo["code"] = symbol
+        indexInfo["symbol"] = symbol
+        indexInfo["start_date"] = startYMD
+        indexInfo["end_date"] = endYMD
+        indexInfo["columns"] = ["date","symbol","open","high","low","close","volume","amount"]
+
+        for period in indexPeriodList:
+            indexJsonFileName = f"{period}/{symbol}.json"
+            indexDataFileName = f"{period}/{symbol}.csv"
+
+            indexJsonFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexJsonFileName}"
+            indexDataFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexDataFileName}"
+
+            # 检查目录是否存在, 如果不存在, 则创建
+            dirName = os.path.split(indexJsonFilePath)[0]
+            createDir(dirName)
+
+            # 检查文件是否存在
+            changeFlag = False
+            if os.path.exists(indexJsonFilePath) and os.path.exists(indexDataFilePath):
+                # 读取文件内容
+                savedIndexInfo, savedIndexDataList = readIndexData(symbol, period)
+                # savedStartDate = savedIndexInfo.get("start_date","")
+                savedEndDate = savedIndexInfo.get("end_date","")
+                newStartDate = savedEndDate
+                newIndexDataList = getHistoryIndexData(symbol,period,newStartDate,endYMD)
+                if newIndexDataList:
+                    changeFlag = True
+                indexDataList = savedIndexDataList + newIndexDataList
+                indexDataList = filterStockData(stockDataList,startYMD,endYMD)
+            else:
+                #读取网络数据
+                indexDataList = getHistoryIndexData(symbol,period,startYMD,endYMD)
+                changeFlag = True
+                pass
+            
+            if changeFlag:
+                #保存数据
+                indexInfo["YMDHMS"] = misc.getTime()
+                indexInfo["save_time"] = misc.humanTime(indexInfo["YMDHMS"])
+                saveIndexData(symbol, period, indexDataList, indexInfo)
+
+            result = True
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+# 保存行业数据, 包括, day, week, month数据
+def saveIndexData(symbol, period, indexDataList,indexInfo):
+    result = False
+    try:
+        indexJsonFileName = f"{period}/{symbol}.json"
+        indexDataFileName = f"{period}/{symbol}.csv"
+
+        indexJsonFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexJsonFileName}"
+        indexDataFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexDataFileName}"
+
+        # 保存股票数据文件
+        indexData = pd.DataFrame(indexDataList,columns=["date","symbol","open","high","low","close","volume","amount"])
+        indexData.to_csv(indexDataFilePath,index=False)
+
+        # 保存行业基本信息文件
+        rtn = misc.saveJsonData(indexJsonFilePath,indexInfo,indent=2,ensure_ascii=False)
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+# 读取行业数据, 包括, day, week, month 数据
+def readIndexData(symbol, period=""):
+    stockInfo = {}
+    stockData = []
+    try:
+        indexJsonFileName = f"{period}/{symbol}.json"
+        indexDataFileName = f"{period}/{symbol}.csv"
+
+        indexJsonFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexJsonFileName}"
+        indexDataFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexDataFileName}"
+
+        indexData = pd.read_csv(indexDataFilePath)
+
+        indexData = indexData.to_dict(orient='records')
+
+        indexInfo = misc.loadJsonData(indexJsonFilePath,"dict")
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return indexInfo,indexData
+
+
+# 过滤行业数据, 只保留在startYMD和endYMD之间的数据
+def filterIndexData(indexDataList,startYMD,endYMD):
+    result = []
+    try:
+        dateData = {}
+        for indexData in indexDataList:
+            date = indexData.get("date","")
+            if date not in dateData:
+                dateData[date] = date
+                if date >= startYMD and date <= endYMD:
+                    result.append(indexData)
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+def getHistoryIndexData(symbol,period,startYMD, endYMD):
+    result = []
+    try:
+        if startYMD < endYMD:
+            #获取行业历史数据(申银万国)
+            result = comAK.swGetIndexHistory(symbol, period, startYMD)
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+#rsi 计算 end
 
 
 def test():

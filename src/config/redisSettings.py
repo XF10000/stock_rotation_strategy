@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20251221"
+_VERSION="20260117"
 
 
 import os
@@ -26,7 +26,7 @@ from config import basicSettings as settings
 
 #生产环境 rss | 测试环境 dss
 _SYS = settings._SYS
-#_SYS = "project_01"
+#_SYS = "server_01"
 #_SYS = "local"
 
 
@@ -42,74 +42,58 @@ _REDIS_DB_NO_DEFAULT = 3
 #主库，写记录
 REDIS_WRITE_HOST = {
     "local":"127.0.0.1",
-    "project_01":"127.0.0.1", 
-    "homeServer":"127.0.0.1", 
-    "iottest-01":"127.0.0.1", 
-    "vc-voice":"127.0.0.1", 
+    "server_01":"127.0.0.1", 
+    "server_02":"127.0.0.1", 
     "home":"192.168.100.100",
     }[_SYS]
 
 REDIS_WRITE_PORT = {
     "local":_REDIS_DB_PORT_ORIGINAL,
-    "project_01":_REDIS_DB_PORT_DEFAULT, 
-    "homeServer":_REDIS_DB_PORT_DEFAULT, 
-    "iottest-01":_REDIS_DB_PORT_ORIGINAL, 
-    "vc-voice":_REDIS_DB_PORT_ORIGINAL, 
+    "server_01":_REDIS_DB_PORT_DEFAULT, 
+    "server_02":_REDIS_DB_PORT_DEFAULT, 
     "home":_REDIS_DB_PORT_DEFAULT,
     }[_SYS]
 
 REDIS_WRITE_DB = {
     "local":_REDIS_DB_NO_DEFAULT,
-    "project_01":_REDIS_DB_NO_DEFAULT, 
-    "homeServer":_REDIS_DB_NO_DEFAULT, 
-    "iottest-01":_REDIS_DB_NO_DEFAULT, 
-    "vc-voice":_REDIS_DB_NO_DEFAULT, 
+    "server_01":_REDIS_DB_NO_DEFAULT, 
+    "server_02":_REDIS_DB_NO_DEFAULT, 
     "home":_REDIS_DB_NO_DEFAULT, 
    }[_SYS]
 
 #从库，读记录
 REDIS_READ_HOST = {
     "local":"127.0.0.1",
-    "project_01":"127.0.0.1", 
-    "homeServer":"127.0.0.1", 
-    "iottest-01":"127.0.0.1", 
-    "vc-voice":"127.0.0.1", 
+    "server_01":"127.0.0.1", 
+    "server_02":"127.0.0.1", 
     "home":"192.168.100.100",
     }[_SYS]
     
 REDIS_READ_PORT = {
     "local":_REDIS_DB_PORT_ORIGINAL,
-    "project_01":_REDIS_DB_PORT_DEFAULT, 
-    "homeServer":_REDIS_DB_PORT_DEFAULT, 
-    "iottest-01":_REDIS_DB_PORT_ORIGINAL, 
-    "vc-voice":_REDIS_DB_PORT_ORIGINAL, 
+    "server_01":_REDIS_DB_PORT_DEFAULT, 
+    "server_02":_REDIS_DB_PORT_DEFAULT, 
     "home":_REDIS_DB_PORT_DEFAULT,
     }[_SYS]
     
 REDIS_READ_DB = {
     "local":_REDIS_DB_NO_DEFAULT,
-    "project_01":_REDIS_DB_NO_DEFAULT, 
-    "homeServer":_REDIS_DB_NO_DEFAULT, 
-    "iottest-01":_REDIS_DB_NO_DEFAULT, 
-    "vc-voice":_REDIS_DB_NO_DEFAULT, 
+    "server_01":_REDIS_DB_NO_DEFAULT, 
+    "server_02":_REDIS_DB_NO_DEFAULT, 
     "home":_REDIS_DB_NO_DEFAULT, 
     }[_SYS]
 
 REDIS_USERNAME = {
     "local":"",
-    "project_01":"", 
-    "homeServer":"", 
-    "iottest-01":"", 
-    "vc-voice":"", 
+    "server_01":"", 
+    "server_02":"", 
     "home":"", 
     }[_SYS]
 
 REDIS_PASSWD = {
     "local":"", 
-    "project_01":"", 
-    "homeServer":"", 
-    "iottest-01":"", 
-    "vc-voice":"", 
+    "server_01":"", 
+    "server_02":"", 
     "home":"", 
     }[_SYS]
 

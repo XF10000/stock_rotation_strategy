@@ -324,7 +324,7 @@ _DEF_STOCK_MYSQL_TITLE = "STOCK_MYSQL" #transmysql redis key
 _DEF_STOCK_PORTFOLIO_CASH_NAME = "CASH" #现金
 
 _DEF_STOCK_KEEP_HISTORY_DATA_DAYS = (365*5) #默认保留5年历史数据
-
+_DEF_STOCK_INDUSTRY_MAPING_DAYS = 90 #默认股票行业映射文件更新间隔90天
 
 #log name
 _DEF_GENRAL_MYSQL_LOG_NAME = "mysqllog"

@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260117"
+_VERSION = "20260118"
 
 import os
 import sys
@@ -187,7 +187,7 @@ def getStockIndividualInfo(symbol):
 
 
 #获取申万三级行业数据
-def swGetIndustryList():
+def swGetIndustryThirdList():
     result = []
     try:
         sw_third_list = ak.sw_index_third_info() # 返回包含行业代码和名称的DataFrame[citation:1]
@@ -205,6 +205,114 @@ def swGetIndustryList():
                 industryInfo["industry_symbol"] = ""
                 industryInfo["market_prefix"] = ""
             result.append(industryInfo)
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+    return result
+
+
+#获取申万二级行业数据
+def swGetIndustryList():
+    result = []
+    try:
+        # 获取申万二级行业信息
+        sw_industry = ak.sw_index_second_info()
+        sw_industry.rename(columns={'行业代码': 'industry_code', '行业名称': 'industry_name','上级行业':'parenet_industry',
+        '成份个数':'num_of_constituents','静态市盈率':'static_PE_ratio','TTM(滚动)市盈率':'TTM_PE_ratio',
+        '市净率':'PB_ratio','静态股息率':'static_divident_yield'}, inplace=True)
+        sw_industry = sw_industry.to_dict(orient='records')
+        for industryInfo in sw_industry:
+            industry_code = industryInfo['industry_code']
+            aList = industry_code.split(".")
+            if len(aList) == 2:
+                industryInfo["industry_symbol"] = aList[0]
+                industryInfo["market_prefix"] = aList[1]
+            else:
+                industryInfo["industry_symbol"] = ""
+                industryInfo["market_prefix"] = ""
+            result.append(industryInfo)
+        pass
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+    return result
+
+
+#获取申万行业包含的股票数据
+def swGetIndustryConstituents(industry_symbol):
+    try:
+        stockList = ak.index_component_sw(symbol=industry_symbol)
+        stockList.rename(columns={'序号': 'id', '证券代码': 'symbol', '证券名称': 'stock_name','最新权重':'last_weight',
+        '计入日期':'date'}, inplace=True)
+        result = stockList.to_dict(orient='records')
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+    return result
+
+
+#获取申万行业数据
+def swGetStockInfoData():
+    result = {}
+    try:
+        #获取申万行业数据
+        industryList = swGetIndustryList()
+        for industryInfo in industryList:
+            industry_symbol = industryInfo["industry_symbol"]
+            #获取行业包含的股票
+            
+            tryTimes = 3
+            while tryTimes > 0:
+                stockList = swGetIndustryConstituents(industry_symbol)
+                if len(stockList) > 0:
+                    break
+                tryTimes -= 1
+                misc.time.sleep(0.5)
+
+            for stockInfo in stockList:
+                item = {}
+                symbol = stockInfo["symbol"]
+
+                #股票信息
+                item["symbol"] = symbol
+                item["stock_name"] = stockInfo["stock_name"]
+                item["last_weight"] = stockInfo["last_weight"]
+                item["date"] = stockInfo["date"].strftime(f"%Y-%m-%d")
+
+                #行业信息,以申万二级行业为准
+                item["industry_name"] = industryInfo["industry_name"]
+                item["industry_code"] = industry_symbol
+
+                item["industry_name_sw"] = industryInfo["industry_name"]
+                item["industry_code_sw"] = industry_symbol
+
+                item["industry_type"] = "申银万国"               
+                item["industry_type_sw"] = "申银万国"               
+
+                #时间信息
+                item["YMDMHS"] = misc.getTime()
+                
+                result[symbol] = item
+                pass
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+    return result
+
+#获取申万指数历史行情
+# period = "day", "week", "month" #日k线、周k线、月k线
+def swGetIndexHistory(index_symbol,period="week",start_date="20200101"):
+    result = []
+    try:   
+        indexHistory = ak.index_hist_sw(symbol=index_symbol,period=period)
+        indexHistory.rename(columns={'日期': 'date', '代码': 'symbol','开盘':'open','收盘':'close','最高':'high','最低':'low',
+        '成交量':'volume','成交额':'amount'}, inplace=True)
+        indexHistory = indexHistory.to_dict(orient='records')
+        for item in indexHistory:
+            item["date"] = item["date"].strftime(f"%Y-%m-%d")
+            YMD = item["date"].replace("-","")
+            if YMD > start_date:
+                result.append(item)
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
@@ -262,11 +370,11 @@ def emGetStockInfoData():
                 item["PB_ratio"] = stockInfo["PB_ratio"]
 
                 #行业信息
-                item["industry_name"] = industryInfo["industry_name"]
-                item["industry_code"] = industryInfo["industry_code"]
+                # item["industry_name"] = industryInfo["industry_name"]
+                # item["industry_code"] = industryInfo["industry_code"]
                 item["industry_name_em"] = industryInfo["industry_name"]
                 item["industry_code_em"] = industryInfo["industry_code"]
-                item["industry_type"] = "东方财富"               
+                item["industry_type_em"] = "东方财富"               
 
                 #时间信息
                 item["YMDMHS"] = misc.getTime()
@@ -354,6 +462,9 @@ def getIntradayData(symbol):
 
 def test():
     pass
+    swGetIndexHistory("801030") 
+    # swGetIndustryList()
+    swGetStockInfoData()
     emGetStockInfoData()
     # getSWIndustryList()
     getStockSymboleNameList()
