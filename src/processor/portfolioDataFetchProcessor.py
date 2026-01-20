@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch portfolio data from server
 
-_VERSION="20260117"
+_VERSION="20260120"
 
 _DEBUG=True
 
@@ -56,6 +56,7 @@ _LOG.info(f"PID:{_processorPID}, python version:{systemVersion}, main code versi
 #common function end
 
 
+#读取股票配置文件
 def readStockPortfolioConfig(inputPortfolioFileName=""):
     result = []
     try:
@@ -131,8 +132,11 @@ def checkStockIndustryMappingFile():
             for symbol, stockInfo in stockBasicInfo.items():
                 industry_code = stockInfo.get("industry_code", "")
                 if industry_code and industry_code not in industryData:
-                    industryData[industry_code] = []
-                industryData[industry_code].append(symbol)
+                    industryData[industry_code] = {}
+                    industryData[industry_code]["industry_name"] = stockInfo.get("industry_name", "")
+                    industryData[industry_code]["industry_type"] = stockInfo.get("industry_type", "")
+                    industryData[industry_code]["symbol_list"] = []
+                industryData[industry_code]["symbol_list"].append(symbol)
             data["industry_data"] = industryData
             comStock.saveStockIndustryMapping(data)
 
@@ -178,18 +182,46 @@ def checkIndustryData():
                 industryData = {}
                 for industrInfo in industryList:
                     industry_symbol = industrInfo.get("industry_symbol", "")
-                    industryData[industry_symbol] = []
+                    industryData[industry_symbol] = {}
+                    industryData[industry_symbol]["industry_name"] = industrInfo.get("industry_name", "")
+                    industryData[industry_symbol]["industry_type"] = industrInfo.get("industry_type", "")
+                    industryData[industry_symbol]["symbol_list"] = []
                 industryNum = len(industryData)
 
             #获取和更新行业数据
-            for industry_symbol, industryInfo in industryData.items():
+            for industry_symbol, symbole_list in industryData.items():
                 rtn = comStock.checkReadIndexFullData(industry_symbol, startYMD, currYMD)
                 pass
 
             metaData["industryYMDHMS"] = currYMDHMS
             comStock.saveStockIndustryMapping(data)
 
-        _LOG.info(f"I: 检查行业数据开始, 行业数量:{industryNum}")
+        _LOG.info(f"I: 检查行业数据结束, 行业数量:{industryNum}")
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+#读取回测配置文件
+def readBacktestSettings(inputBacktestSettingsFileName=""):
+    result = {}
+    try:
+        _LOG.info(f"I: 读取回测配置文件开始... ")
+
+        backtestSettingsList = comStock.readBacktestSetting(inputBacktestSettingsFileName)
+        backtestSettings = comStock.convertBacktestSetting2Json(backtestSettingsList)
+        comStock.saveBacktestSettingJson(backtestSettings)
+        backtestSettings = comStock.readBacktestSettingJson()
+        
+        _LOG.info(f"I: 读取回测配置文件完成, 配置如下: {backtestSettings}")
+        
+        if backtestSettings:
+            result = backtestSettings
+            pass
+
+            _LOG.info(f"I: 读取回测配置文件结束... ")
+        pass
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -197,7 +229,7 @@ def checkIndustryData():
 
 
 def dataFetchProcessor(inputPortfolioFileName=""):
-    result = []
+    result = {}
     try:
         #首先检查股票映射文件是否存在
         rtn = checkStockIndustryMappingFile()
@@ -205,9 +237,14 @@ def dataFetchProcessor(inputPortfolioFileName=""):
         #其次检查行业数据是否存在, 行业数据是为计算rsi而准备的
         rtn = checkIndustryData()
 
-        #最后读取股票配置文件
-        result = readStockPortfolioConfig(inputPortfolioFileName)
+        #读取股票配置文件
+        stockPortfolio = readStockPortfolioConfig(inputPortfolioFileName)
+        result["stockPortfolio"] = stockPortfolio
 
+        #最后读取回测配置文件
+        backtestSettings = readBacktestSettings()
+        result["backtestSettings"] = backtestSettings
+        
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")

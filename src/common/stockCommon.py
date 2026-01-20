@@ -12,13 +12,12 @@
 # 1. 股票配置文件的读取
 # 2. 股票基本信息的读取(包括,行业数据, 股票基本信息等)
 
-_VERSION="20260118"
+_VERSION="20260120"
 
 
 import os
 import sys
 
-from common.redisCommon import statSaveDataGeneral
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parentdir)
 if sys.getdefaultencoding() != 'utf-8':
@@ -27,10 +26,13 @@ if sys.getdefaultencoding() != 'utf-8':
     #sys.setdefaultencoding('utf-8')
 
 import pathlib
-import pandas as pd
 
+import pandas as pd
+import pandas_ta as ta
+import numpy as np
+
+from common import globalDefinition as comGD
 from common import miscCommon as misc
-# from common import funcCommon as comFC
 from common import akshareCommon as comAK
 
 from config import basicSettings as settings
@@ -46,6 +48,7 @@ def createDir(dirName):
 #common end
 
 
+#读取股票组合配置文件(csv 格式)
 def readStockPortfolioConfig(fileName=""):
     result = []
     try:
@@ -62,6 +65,7 @@ def readStockPortfolioConfig(fileName=""):
     return result 
 
 
+#将股票组合配置文件转换为股票json 格式
 def convertStockPortfolio2StockJson(portfolioList):
     result = []
     stockBasicInfoDict = readStockBasicInfo()
@@ -105,6 +109,123 @@ def saveStockPortfolioJson(data):
     try:
         fileName = settings.STOCK_PORTFOLIO_CONFIG_JSON_FILE
         filePath = f"{settings._DATA_CONFIG_DIR}/{fileName}"
+
+        # 检查目录是否存在, 如果不存在, 则创建
+        dirName = os.path.split(filePath)[0]
+        createDir(dirName)
+
+        rtn = misc.saveJsonData(filePath,data,indent=2,ensure_ascii=False)
+        result = True
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result 
+
+
+#读取股票组合配置文件(csv 格式)
+def readBacktestSetting(fileName=""):
+    result = []
+    try:
+        if fileName == "":
+            fileName = settings.STOCK_BACKTEST_SETTINGS_FILE
+        filePath = f"{settings._DATA_CONFIG_DIR}/{fileName}"
+
+        df = pd.read_csv(filePath)
+        result = df.to_dict(orient='records')
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result 
+
+
+#将股票组合配置文件转换为股票json 格式
+def convertBacktestSetting2Json(backtestSettings):
+    result = {}
+    try:
+        for item in backtestSettings:
+            parameter = item.get("Parameter","")
+            parameter = parameter.strip()
+            if parameter.startswith("#") or parameter == "":
+                # 跳过注释行和空行
+                continue
+            
+            #真正的参数
+            value = item.get("Value","")
+            description = item.get("Description","")
+
+            newItem = {}
+            # 开始日期和结束日期, 格式为yyyy-mm-dd 跳过已有配置
+            if parameter in ["start_date","end_date"]:
+                startYMD = misc.getPassday(comGD._DEF_STOCK_BACKTEST_DAYS)
+                endYMD = misc.getTime()[0:8]
+                if parameter == "start_date":
+                    # value = startYMD[0:4] + "-" + startYMD[4:6] + "-" + startYMD[6:8]
+                    additionalItem = {}
+                    additionalItem["parameter"] = "startYMD"
+                    additionalItem["value"] = startYMD
+                    additionalItem["description"] = "回测数据开始日期"
+                    result["startYMD"] = additionalItem
+                else:
+                    # value = endYMD[0:4] + "-" + endYMD[4:6] + "-" + endYMD[6:8]                   
+                    additionalItem = {}
+                    additionalItem["parameter"] = "endYMD"
+                    additionalItem["value"] = endYMD
+                    additionalItem["description"] = "回测数据结束日期"
+                    result["endYMD"] = additionalItem
+
+            elif parameter in ["data_source","backup_data_source","tushare_token","data_fetch_strategy"]:
+                # 数据来源, 备份数据来源, tushare token 等文本数据
+                value = value.strip()
+            elif parameter in ["historical_data_weeks","min_data_length"]:
+                # 历史数据周数和最小数据长度, 必须为整数
+                value = int(value)
+            else:
+                # 其他参数, 转换为浮点数
+                value = float(value)
+                
+            newItem["parameter"] = parameter
+            newItem["value"] = value
+            newItem["description"] = description
+
+            result[parameter] = newItem
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+#读取股票组合配置文件(json 格式)
+def readBacktestSettingJson():
+    result = {}
+    try:
+        fileName = settings.STOCK_BACKTEST_SETTINGS_JSON_FILE
+        filePath = f"{settings._DATA_CONFIG_DIR}/{fileName}"
+        result = misc.loadJsonData(filePath,"dict")
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result 
+
+
+#保存回测配置文件(json 格式)
+def saveBacktestSettingJson(data):
+    result = False
+    try:
+        fileName = settings.STOCK_BACKTEST_SETTINGS_JSON_FILE
+        filePath = f"{settings._DATA_CONFIG_DIR}/{fileName}"
+
+        # 检查目录是否存在, 如果不存在, 则创建
+        dirName = os.path.split(filePath)[0]
+        createDir(dirName)
+
         rtn = misc.saveJsonData(filePath,data,indent=2,ensure_ascii=False)
         result = True
 
@@ -365,7 +486,7 @@ def filterStockData(stockDataList,startYMD,endYMD):
 
 #rsi 计算 begin
 #采用index 数据, 计算rsi
-#检查并读取股票完整数据, 包括, daily, weekly, monthly 数据, 包括,当前,前复权, 后复权等
+#检查并读取股票完整数据, 包括, day, week, month 数据等
 # periodList = ["daily","weekly","monthly"]
 indexPeriodList = ["day","week","month"]
 def checkReadIndexFullData(symbol, startYMD,endYMD):
@@ -401,7 +522,7 @@ def checkReadIndexFullData(symbol, startYMD,endYMD):
                 if newIndexDataList:
                     changeFlag = True
                 indexDataList = savedIndexDataList + newIndexDataList
-                indexDataList = filterStockData(stockDataList,startYMD,endYMD)
+                indexDataList = filterIndexData(indexDataList,startYMD,endYMD)
             else:
                 #读取网络数据
                 indexDataList = getHistoryIndexData(symbol,period,startYMD,endYMD)
@@ -449,8 +570,8 @@ def saveIndexData(symbol, period, indexDataList,indexInfo):
 
 # 读取行业数据, 包括, day, week, month 数据
 def readIndexData(symbol, period=""):
-    stockInfo = {}
-    stockData = []
+    indexInfo = {}
+    indexData = []
     try:
         indexJsonFileName = f"{period}/{symbol}.json"
         indexDataFileName = f"{period}/{symbol}.csv"
@@ -458,11 +579,13 @@ def readIndexData(symbol, period=""):
         indexJsonFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexJsonFileName}"
         indexDataFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{indexDataFileName}"
 
-        indexData = pd.read_csv(indexDataFilePath)
+        if os.path.exists(indexJsonFilePath) and os.path.exists(indexDataFilePath):
 
-        indexData = indexData.to_dict(orient='records')
+            indexData = pd.read_csv(indexDataFilePath)
 
-        indexInfo = misc.loadJsonData(indexJsonFilePath,"dict")
+            indexData = indexData.to_dict(orient='records')
+
+            indexInfo = misc.loadJsonData(indexJsonFilePath,"dict")
         pass
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -502,6 +625,168 @@ def getHistoryIndexData(symbol,period,startYMD, endYMD):
     return result
 
 
+# 计算行业RSI指标,根据industry_symbol获取行业数据
+RSI_PERIOD = settings.STOCK_RSI_CALCULATION_PERIODS.get("rsi_period",14)
+def calcIndexRSI(indexDataList,period=RSI_PERIOD):
+    result = []
+    try:
+        #获取行业历史数据(申银万国)
+        indexData = pd.DataFrame(indexDataList,columns=["date","symbol","open","high","low","close","volume","amount"])
+        # indexData['date'] = pd.to_datetime(indexData['date']) # 转换为日期时间格式, 用于排序, 暂时不需要, 原来格式也可以保证顺序
+        indexData = indexData.sort_values('date')
+        # indexData.set_index('date', inplace=True) #已经用sort_values排序, 不需要再设置索引
+        indexData["rsi14"] = ta.rsi(indexData["close"],period)
+        lookbackWeeks = settings.STOCK_RSI_CALCULATION_PERIODS.get("lookback_weeks",104)
+        indexData = indexData.tail(lookbackWeeks)
+        result = indexData.to_dict(orient='records')
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+#计算行业波动率 σ (sigma),根据rsi14指标计算
+def calcIndexSigma(indexDataList):
+    result = 0.0
+    try:
+        indexData = pd.DataFrame(indexDataList,columns=["date","symbol","open","high","low","close","volume","amount","rsi14"])
+        result = float(indexData["rsi14"].std())
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")   
+    return result
+
+
+def calcIndustrySigma(symbolList):
+    result = []
+    try:
+        indexPeriod = "week"
+        for symbol in symbolList:
+            indexInfo,indexDataList = readIndexData(symbol, indexPeriod)
+            if indexDataList:
+                indexDataList = calcIndexRSI(indexDataList)
+                lastRsi = indexDataList[-1]["rsi14"]
+                sigma = calcIndexSigma(indexDataList)
+                item = {"symbol":symbol,"sigma":sigma,"rsi":lastRsi}
+                result.append(item)
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")   
+    return result
+
+
+#生成行业波动率分类
+def generateIndustryVolatilityStratification():
+    result = []
+    try:
+        # 读取行业映射数据
+        industryMappingData = readStockIndustryMapping()
+        industry_data = industryMappingData["industry_data"]
+        industrySymbolList = list(industry_data.keys())
+
+        # 计算行业波动率 σ (sigma)
+        sigmaDataList = calcIndustrySigma(industrySymbolList)
+        sigmaList = [item["sigma"] for item in sigmaDataList]
+
+        # 计算波动率分位数
+        q1Percentage = settings.STOCK_RSI_CALCULATION_PERIODS.get("volatility_quantiles",{}).get("q1",25)
+        q3Percentage = settings.STOCK_RSI_CALCULATION_PERIODS.get("volatility_quantiles",{}).get("q3",75)
+        q1 = float(np.percentile(sigmaList, q1Percentage))
+        q3 = float(np.percentile(sigmaList, q3Percentage))
+
+        lookbackWeeks = settings.STOCK_RSI_CALCULATION_PERIODS.get("lookback_weeks",104)
+
+        #计算各个行业的波动率分类
+        for item in sigmaDataList:
+            symbol = item["symbol"]
+            if symbol in industry_data:
+                industryName = industry_data[symbol].get("industry_name","")
+            else:
+                industryName = ""
+            
+            sigma = item["sigma"]
+            if sigma <= q1:
+                layer = "低波动"
+                pct_low, pct_high = 8, 92
+            elif sigma <= q3:
+                layer = "中波动"
+                pct_low, pct_high = 10, 90
+            else:
+                layer = "高波动"
+                pct_low, pct_high = 5, 95
+            
+            oversold = float(np.percentile(sigmaList, 15))
+            overbought = float(np.percentile(sigmaList, 85))
+            extreme_oversold = float(np.percentile(sigmaList, pct_low))
+            extreme_overbought = float(np.percentile(sigmaList, pct_high))
+
+            item["industry_name"] = industryName
+            item["volatility"] = round(sigma,2)
+            item["layer"] = layer
+            item["rsi"] = round(item["rsi"],2)  
+            item["oversold"] =  round(oversold,2)
+            item["overbought"] = round(overbought,2)
+            item["extreme_oversold"] = round(extreme_oversold,2)
+            item["extreme_overbought"] = round(extreme_overbought,2)
+            item["data_points"] = lookbackWeeks 
+            item["updateTime"] = misc.getHumanTimeStamp()[0:19]
+
+            del item["sigma"]
+
+            result.append(item)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")   
+    return result
+
+
+# 保存行业RSI阈值数据,包括波动率, 超卖, 超买, 极端超卖, 极端超买, 数据点数, 更新时间
+def saveSWRSIThresholdData(dataList):
+    result = False
+    try:
+        rsiThresoldFileName = settings.STOCK_SW_RSI_THRESHOLD_FILE
+        rsiThresoldFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{rsiThresoldFileName}"
+        createDir(settings.INDEX_DATA_SAVE_DIR_NAME)
+
+        # 保存股票数据文件
+        data = pd.DataFrame(dataList,columns=["symbol","industry_name","layer","volatility","rsi","oversold","overbought",\
+            "extreme_oversold","extreme_overbought","data_points","updateTime"])
+
+        data = data.sort_values(by=['symbol'], ascending=True)
+
+        data.rename(columns={'symbol':'行业代码', 'industry_name':'行业名称','oversold':'普通超卖',
+        'overbought':'普通超买','extreme_oversold':'极端超卖','extreme_overbought':'极端超买',
+        'rsi':'current_rsi','updateTime':'更新时间'}, inplace=True)
+
+        data.to_csv(rsiThresoldFilePath,index=False)
+        result = True
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+# 读取行业RSI阈值数据,包括波动率, 超卖, 超买, 极端超卖, 极端超买, 数据点数, 更新时间
+def readSWRSIThresholdData():
+    result = []
+    try:
+        rsiThresoldFileName = settings.STOCK_SW_RSI_THRESHOLD_FILE
+        rsiThresoldFilePath = f"{settings.INDEX_DATA_SAVE_DIR_NAME}/{rsiThresoldFileName}"
+        if os.path.exists(rsiThresoldFilePath):
+            data = pd.read_csv(rsiThresoldFilePath)
+            result = data.to_dict(orient='records')
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
 #rsi 计算 end
 
 
@@ -510,6 +795,19 @@ def test():
     # data = getStockBasicInfo()
     # rtn = saveStockBasicInfo(data)
     # data = readStockBasicInfo()
+
+    # indexPeriod = "week"
+    # symbol = "801012"
+    # indexInfo,indexDataList = readIndexData(symbol, indexPeriod)
+    # indexDataList = calcIndexRSI(indexDataList)
+    # sigma = calcIndexSigma(indexDataList)
+    # industryMappingData = readStockIndustryMapping()
+    # industry_data = industryMappingData["industry_data"]
+    # industrySymbolList = list(industry_data.keys())
+    # sigmaList = calcIndustrySigma(industrySymbolList)
+    dataList = generateIndustryVolatilityStratification()
+    saveSWRSIThresholdData(dataList)
+    dataList = readSWRSIThresholdData()
 
     portfolioList = readStockPortfolioConfig()
     stockConfigList = convertStockPortfolio2StockJson(portfolioList)

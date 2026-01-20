@@ -64,4 +64,7 @@ TTM(滚动)市盈率	TTM (Trailing Twelve Months) P/E Ratio	TTM_PE_ratio
 涨跌额 change
 换手率 turnover_rate
 
-
+普通超卖 oversold
+普通超买 overbought 
+极端超卖 extreme_oversold
+极端超买 extreme_overbought 

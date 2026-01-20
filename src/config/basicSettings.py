@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260118"
+_VERSION="20260120"
 
 
 import os
@@ -343,7 +343,10 @@ STOCK_PORTFOLIO_CONFIG_JSON_FILE = "stock_portfolio_config.json"
 
 STOCK_SW_STOCK_INDUSTRY_MAP_FILE = "stock_to_industry_map.json" #股票到申银万国行业的映射文件,存储在 STOCK_CONFIG_DIR_NAME 下
 STOCK_BASIC_INFO_FILE = "stock_basic_info.json" #股票基本信息文件,存储在 STOCK_CONFIG_DIR_NAME 下
+STOCK_SW_RSI_THRESHOLD_FILE = "sw2_rsi_threshold.csv" #申万二级行业RSI阈值文件,存储在 INDEX_DATA_SAVE_DIR_NAME 下
 
+STOCK_BACKTEST_SETTINGS_FILE = "backtest_settings.csv" #回测配置文件,存储在 STOCK_CONFIG_DIR_NAME 下
+STOCK_BACKTEST_SETTINGS_JSON_FILE = "backtest_settings.json" #回测配置文件,存储在 STOCK_CONFIG_DIR_NAME 下
 
 """
 申万二级行业RSI阈值计算配置文件

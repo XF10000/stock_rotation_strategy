@@ -7,7 +7,7 @@
 #Date: 2019-08-01
 #Description:   定义全局常量
 
-_VERSION="20260116"
+_VERSION="20260120"
 
 #导入具体应用的全局变量
 
@@ -192,11 +192,6 @@ _DEF_BUFFER_DATA_BEGIN_NUM = 0 # 默认一次提供30个数据
 _DEF_BUFFER_DATA_END_NUM = 29 #默认一次提供30个数据
 
 
-#APP 
-_DEF_APP_LOG_TITLE = "APP_V1"
-_DEF_APP_LOG_NAME = "applog"
-
-
 #支付相关
 #currency 币种,最小单位换算关系
 _DEF_CURRENCY_AUD = "AUD" #澳大利亚元
@@ -285,8 +280,8 @@ _DEF_WECHAT_PAY_STATYS_CALLBACK_CREATE = "A" #call back 建立
 
 _DEF_MAX_QUERY_LIMIT_NUM = 5000 #默认最多允许搜索数据个数
 _DEF_MIN_QUERY_LIMIT_NUM = 1000 #默认最少允许搜索数据个数
-_DEF_MAX_DISP_LIMIT_NUM = 1000 #默认最多允许搜索数据个数
-_DEF_BATCH_QUERY_LIMIT_NUM = 5000 #默认最多允许搜索数据个数
+_DEF_MAX_DISP_LIMIT_NUM = 1000 #默认最多显示数据个数
+_DEF_BATCH_QUERY_LIMIT_NUM = 5000 #默认每次查询数据个数
 
 
 _DEF_NICKNAME_PREFIX = "user"
@@ -318,6 +313,7 @@ _DEF_EMAIL_LABEL ="EMAIL"
 
 _DEF_WHOLE_ADDR_LABEL ="WADDR"
 
+
 #stock info begin
 _DEF_STOCK_MYSQL_TITLE = "STOCK_MYSQL" #transmysql redis key
 
@@ -325,6 +321,9 @@ _DEF_STOCK_PORTFOLIO_CASH_NAME = "CASH" #现金
 
 _DEF_STOCK_KEEP_HISTORY_DATA_DAYS = (365*5) #默认保留5年历史数据
 _DEF_STOCK_INDUSTRY_MAPING_DAYS = 90 #默认股票行业映射文件更新间隔90天
+_DEF_STOCK_INDUSTRY_UPDATE_DAYS = 7 #默认股票行业更新间隔7天
+
+_DEF_STOCK_BACKTEST_DAYS = (365*2) #默认回测2年数据
 
 #log name
 _DEF_GENRAL_MYSQL_LOG_NAME = "mysqllog"
