@@ -18,6 +18,8 @@ _VERSION="20260120"
 import os
 import sys
 
+from aiohttp.connector import EMPTY_SCHEMA_SET
+
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parentdir)
 if sys.getdefaultencoding() != 'utf-8':
@@ -30,6 +32,7 @@ import pathlib
 import pandas as pd
 import pandas_ta as ta
 import numpy as np
+import talib
 
 from common import globalDefinition as comGD
 from common import miscCommon as misc
@@ -789,6 +792,97 @@ def readSWRSIThresholdData():
 
 #rsi 计算 end
 
+#计算布林线
+"""
+计算布林线
+
+参数:
+symbol: 股票代码
+window: 移动平均窗口大小，默认20
+std_dev: 标准差倍数，默认2
+
+返回:
+包含中轨、上轨、下轨的DataFrame
+"""
+def calcBollingerBands(symbol, window=20, std_dev=2, period="weekly",adjust="hfq"):
+    result = {}
+    try:
+        stockInfo,stockDataList = readStockData(symbol,period=period,adjust=adjust)
+        df = pd.DataFrame(stockDataList)
+        df = df.sort_values(by=['date'], ascending=True) # 按日期排序
+        df['MA'] = df['close'].rolling(window=window).mean()
+        df['STD'] = df['close'].rolling(window=window).std()
+        df['upper_band'] = df['MA'] + (df['STD'] * std_dev)
+        df['lower_band'] = df['MA'] - (df['STD'] * std_dev)
+        df = df.where(pd.notna(df), 0.0)
+        result = df.to_dict(orient='records')
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+
+#计算技术指标,包括布林线, RSI, EMA, 成交量均线, K线等
+def calcTechnicalIndicators(symbol, period="weekly", adjust="hfq",parameters={}):
+    result = {}
+    try:
+        if parameters == {}:
+            parameters = {"bolling_window":20, "bolling_std_dev":2, "rsi_window":14, "EMA_window":20,
+            "volume_window":4,"macd_fastperiod":12, "macd_slowperiod":26, "macd_signalperiod":9}
+        stockInfo,stockDataList = readStockData(symbol,period=period,adjust=adjust)
+        df = pd.DataFrame(stockDataList)
+        df = df.sort_values(by=['date'], ascending=True) # 按日期排序
+        
+        # 计算移动平均线和标准差,布林线
+        df['MA'] = df['close'].rolling(window=parameters["bolling_window"]).mean()
+        df['STD'] = df['close'].rolling(window=parameters["bolling_window"]).std()
+        df['upper_band'] = df['MA'] + (df['STD'] * parameters["bolling_std_dev"])
+        df['lower_band'] = df['MA'] - (df['STD'] * parameters["bolling_std_dev"])
+        
+        # 计算RSI
+        df['RSI'] = talib.RSI(df['close'], timeperiod=parameters["rsi_window"])
+
+        # 计算MACD数据
+        macd, macd_signal, macd_hist = talib.MACD(df['close'], fastperiod=parameters["macd_fastperiod"], slowperiod=parameters["macd_slowperiod"], signalperiod=parameters["macd_signalperiod"])
+        df["macd"] = macd
+        df["macd_signal"] = macd_signal
+        df["macd_hist"] = macd_hist
+
+        #计算EMA
+        df['EMA'] = talib.EMA(df['close'], timeperiod=parameters["EMA_window"])
+
+        #成交量均线
+        df['volume_MA'] = df['volume'].rolling(window=parameters["volume_window"]).mean()
+
+        #计算K线
+        df['K'] = (df['close'] - df['low']) / (df['high'] - df['low'])
+
+        df = df.where(pd.notna(df), 0.0)
+        result = df.to_dict(orient='records')
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
+
+#把技术指标数据转换为Frank Xie格式
+def covertTechnicalIndicators2FrankFormat(dataList):
+    result = pd.DataFrame()
+    try:
+        df = pd.DataFrame(dataList)
+        df.rename(columns={'macd_hist':'macd_histogram',"RSI":"rsi","lower_band":"bb_lower",
+        "upper_band":"bb_upper","MA":"bb_middle","EMA":"ema_20","volume_MA":"volume_ma_4"}, inplace=True)
+        result = df[["date","open","high","low","close","volume","rsi",
+        "macd","macd_signal","macd_histogram","ema_20",
+        "bb_lower","bb_upper","bb_middle","volume_ma_4","K"]]
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+    return result
 
 def test():
     # 示例
@@ -796,6 +890,10 @@ def test():
     # rtn = saveStockBasicInfo(data)
     # data = readStockBasicInfo()
 
+    symbol = "600989"
+    # data = calcBollingerBands(symbol)
+    data = calcTechnicalIndicators(symbol)
+    result = covertTechnicalIndicators2FrankFormat(data)
     # indexPeriod = "week"
     # symbol = "801012"
     # indexInfo,indexDataList = readIndexData(symbol, indexPeriod)
