@@ -7,7 +7,7 @@
 #Date: 2015-12-05
 #Description:   通用杂项函数,例如时间,字符串处理等
 
-_VERSION = "20260117"
+_VERSION = "20260125"
 
 #common function:
 import time, datetime
@@ -232,6 +232,23 @@ class getNow:
         return result
 
 
+#获取上一个周五
+def getPreviousFriday(YMD=""):
+    if YMD:
+        t = datetime.datetime.strptime(YMD, "%Y%m%d").date()
+    else:
+        t = datetime.date.today()
+    weekday = t.weekday()
+    if weekday < 4: # 如果是周一到周四，往前推7天
+        days = weekday - 4 + 7
+    else:
+        days = weekday - 4 
+    friday = t - datetime.timedelta(days=days)
+    friday = str(friday)
+    day = friday[0:4]+friday[5:7]+friday[8:10]
+    return day
+
+
 #log hanlding function
 def setlog(title,logfile) :
     logger = logging.getLogger(title)
@@ -249,7 +266,7 @@ def setlog(title,logfile) :
     return logger
 
 
-def setLogNew(title, filebasename, homeDir=r"../../log"):
+def setLogNew(title, filebasename, homeDir=r"../../log",stdout=False):
     #logfile = r"../../log/%s" % (filebasename)
     logfile=os.path.join(homeDir, filebasename)
     logger = logging.getLogger(title)
@@ -259,6 +276,9 @@ def setLogNew(title, filebasename, homeDir=r"../../log"):
     logger.addHandler(file_handler)
     logger.setLevel(logging.INFO)
     logger.logFileName = logfile
+    if stdout:
+        stream_handler = logging.StreamHandler(sys.stdout)
+        logger.addHandler(stream_handler)
     return logger
 
 

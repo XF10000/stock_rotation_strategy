@@ -7,7 +7,7 @@
 #Date: 2019-08-01
 #Description:   定义全局常量
 
-_VERSION="20260120"
+_VERSION="20260124"
 
 #导入具体应用的全局变量
 
@@ -321,15 +321,28 @@ _DEF_STOCK_PORTFOLIO_CASH_NAME = "CASH" #现金
 
 _DEF_STOCK_KEEP_HISTORY_DATA_DAYS = (365*5) #默认保留5年历史数据
 _DEF_STOCK_INDUSTRY_MAPING_DAYS = 90 #默认股票行业映射文件更新间隔90天
+_DEF_STOCK_DIVIDEND_DATA_DAYS = 90 #默认股票分红数据文件更新间隔90天
 _DEF_STOCK_INDUSTRY_UPDATE_DAYS = 7 #默认股票行业更新间隔7天
 
 _DEF_STOCK_BACKTEST_DAYS = (365*2) #默认回测2年数据
+
+#价值比过滤器判断
+_DEF_STOCK_VALUE_SCREEN_SELL = "sell" #价值比大于80%
+_DEF_STOCK_VALUE_SCREEN_BUY = "buy" #价值比小于70%
+_DEF_STOCK_VALUE_SCREEN_HOLD = "hold" #价值比在70%到80%之间
+
+#EMA趋势过滤器判断
+_DEF_STOCK_EMA_TREND_DOWN = "down" #20周EMA趋势过滤器, 趋势向下
+_DEF_STOCK_EMA_TREND_UP = "up" #20周EMA趋势过滤器, 趋势向上
+_DEF_STOCK_EMA_TREND_HOLD = "hold" #20周EMA趋势过滤器, 趋势无明显变化
 
 #log name
 _DEF_GENRAL_MYSQL_LOG_NAME = "mysqllog"
 
 _DEF_LOG_STOCK_WEBAPI_TITLE = "STOCK"
 _DEF_LOG_STOCK_WEB_API_NAME = "stockwebapilog"
+
+_DEF_LOG_STOCK_TEST_NAME = "stocktestlog"
 
 _DEF_LOG_STOCK_FETCH_DATA_NAME = "stockfetchdatalog"
 

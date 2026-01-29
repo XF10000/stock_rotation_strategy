@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260120"
+_VERSION="20260122"
 
 
 import os
@@ -348,6 +348,8 @@ STOCK_SW_RSI_THRESHOLD_FILE = "sw2_rsi_threshold.csv" #申万二级行业RSI阈�
 STOCK_BACKTEST_SETTINGS_FILE = "backtest_settings.csv" #回测配置文件,存储在 STOCK_CONFIG_DIR_NAME 下
 STOCK_BACKTEST_SETTINGS_JSON_FILE = "backtest_settings.json" #回测配置文件,存储在 STOCK_CONFIG_DIR_NAME 下
 
+STOCK_DIVIDEND_DATA_FILE = "stock_dividend.json" #股票分红数据文件,存储在 STOCK_DATA_CACHE_DIR_NAME 下
+
 """
 申万二级行业RSI阈值计算配置文件
 用户可以通过修改此文件来调整计算参数
@@ -454,6 +456,39 @@ STOCK_RSI_OUTPUT_CONFIG = {
    - 保守策略：普通(20,80)，极端高波动(8,92)，中波动(12,88)，低波动(15,85)
    - 平衡策略：当前默认配置
 """
+
+
+# 策略参数配置
+STOCK_STRATEGY_PARAMS = {
+    'timeframe': 'weekly',     # 时间周期：周线
+    'position_size': 0.10,     # 单次轮动仓位：10%
+    'lookback_period': 13,     # 背离检测回溯周期
+    
+    # 技术指标参数
+    'ema_period': 20,          # EMA周期
+    'rsi_period': 14,          # RSI周期
+    'rsi_overbought': 70,      # RSI超买阈值
+    'rsi_oversold': 30,        # RSI超卖阈值
+    'macd_fast': 12,           # MACD快线
+    'macd_slow': 26,           # MACD慢线
+    'macd_signal': 9,          # MACD信号线
+    'bb_period': 20,           # 布林带周期
+    'bb_std': 2.0,             # 布林带标准差
+    'volume_multiplier_high': 1.3,  # 高量能倍数
+    'volume_multiplier_low': 0.8,   # 低量能倍数
+    'volume_ma_period': 4      # 量能均线周期
+}
+
+# 回测配置
+STOCK_BACKTEST_CONFIG = {
+    'start_date': '2024-01-01',    # 回测开始日期
+    'end_date': None,              # 回测结束日期（None为当前日期）
+    'initial_capital': 1000000,    # 初始资金：100万
+    'commission_rate': 0.0003,     # 手续费率：万3
+    'stamp_tax_rate': 0.001,       # 印花税率：千1（仅卖出）
+    'slippage_rate': 0.001,        # 滑点率：千1
+    'min_trade_amount': 1000       # 最小交易金额
+}
 
 #stock data config end
 

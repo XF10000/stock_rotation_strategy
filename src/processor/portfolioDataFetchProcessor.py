@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch portfolio data from server
 
-_VERSION="20260120"
+_VERSION="20260125"
 
 _DEBUG=True
 
@@ -83,7 +83,10 @@ def readStockPortfolioConfig(inputPortfolioFileName=""):
                     continue
                 rtn = comStock.checkReadStockFullData(symbol, startYMD, currYMD)
                 if rtn:
-                    result.append(symbol)
+                    _LOG.info(f"  - 股票代码:{symbol}, 股票名称:{stockConfig['stock_name']}, 检查结果:存在")
+                    result.append(stockConfig)
+                else:
+                    _LOG.info(f"  - 股票代码:{symbol}, 股票名称:{stockConfig['stock_name']}, 检查结果:不存在")
 
             _LOG.info(f"I: 开始检查股票信息是否存在... 结束 ")
         pass
@@ -93,6 +96,7 @@ def readStockPortfolioConfig(inputPortfolioFileName=""):
     return result
 
 
+#检查股票行业映射文件, 如果不存在或者过期, 则重新生成
 def checkStockIndustryMappingFile():
     result = False
     try:
@@ -196,7 +200,44 @@ def checkIndustryData():
             metaData["industryYMDHMS"] = currYMDHMS
             comStock.saveStockIndustryMapping(data)
 
+            #生成行业波动率分类
+            _LOG.info(f"I: 生成行业波动率分类")
+            industryRsiThresoldDataList = comStock.generateIndustryVolatilityStratification()
+            if industryRsiThresoldDataList:
+                comStock.saveSWRSIThresholdData(industryRsiThresoldDataList)
+                _LOG.info(f"I: 保存行业波动率分类数据")
+
         _LOG.info(f"I: 检查行业数据结束, 行业数量:{industryNum}")
+
+        result = updateFlag
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+#检查股票分红数据
+def checkDividendData():
+    result = {}
+    try:
+        _LOG.info(f"I: 检查股票分红数据开始... ")
+
+        dividendFileInfo = comStock.getDividendFileInfo()
+        if dividendFileInfo:
+            fileSize = dividendFileInfo.get("fileSize", 0)
+            fileModTime = dividendFileInfo.get("fileModTime", 0)
+            currTime = misc.time.time()
+            if (currTime - fileModTime ) > (comGD._DEF_STOCK_DIVIDEND_DATA_DAYS * 24 * 60 * 60):
+                dividendData = comStock.getDividendData()
+            else:
+                dividendData = comStock.readDividendData()
+            if dividendData:
+                result = dividendData
+        else:
+            dividendData = comStock.getDividendData()
+            if dividendData:
+                comStock.saveDividendData(dividendData)
+                result = dividendData
+        _LOG.info(f"I: 检查股票分红数据结束, 股票数量:{len(dividendData)}")
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -240,6 +281,10 @@ def dataFetchProcessor(inputPortfolioFileName=""):
         #读取股票配置文件
         stockPortfolio = readStockPortfolioConfig(inputPortfolioFileName)
         result["stockPortfolio"] = stockPortfolio
+
+        #读取股票分红数据文件
+        dividendData = checkDividendData()
+        result["dividendData"] = dividendData
 
         #最后读取回测配置文件
         backtestSettings = readBacktestSettings()

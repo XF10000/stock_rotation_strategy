@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260118"
+_VERSION = "20260125"
 
 import os
 import sys
@@ -34,16 +34,18 @@ from common import miscCommon as misc
 def symbol2symboleWithMarket(symbol):
     result = symbol
     try:
-        if symbol.startswith("5") or symbol.startswith("3"):
-            #上海,基金
-            result = "sh" + symbol 
-        elif symbol.startswith("0") or symbol.startswith("3"):
-            #深圳
-            result = "sz" + symbol 
-        elif symbol.startswith("4"):
-            #北交所
-            result = "bj" + symbol 
+        if symbol.startswith("6") or symbol.startswith("9") or symbol.startswith("5") or symbol.startswith("1"):
+            # 上海：6主板，9科创板，5基金，1债券
+            result = "sh" + symbol
+        elif symbol.startswith("0") or symbol.startswith("3") or symbol.startswith("2"):
+            # 深圳：0主板，3创业板，2B股
+            result = "sz" + symbol
+        elif symbol.startswith("4") or symbol.startswith("8"):
+            # 北交所：43、83、87、88开头
+            result = "bj" + symbol
         else:
+            # 其他情况，如B股（900开头是上海B股，200开头是深圳B股）
+            # 但上面的代码已经覆盖了主要情况
             pass
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
@@ -299,6 +301,7 @@ def swGetStockInfoData():
         errMsg = f"{e},{traceMsg}"
     return result
 
+
 #获取申万指数历史行情
 # period = "day", "week", "month" #日k线、周k线、月k线
 def swGetIndexHistory(index_symbol,period="week",start_date="20200101"):
@@ -422,7 +425,79 @@ def gmGetHistroryData(symbol,startDate,endDate,period="daily",adjust=""):
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
+        result = None
     return result
+
+
+#腾讯历史数据
+def txGetHistroryData(symbol,startDate,endDate,period="daily",adjust=""):
+    result = []
+    try:
+        #首先转换symbol为腾讯股票代码
+        txSymbol = symbol2symboleWithMarket(symbol)       
+        stockDataList = ak.stock_zh_a_hist_tx(symbol=txSymbol, start_date=startDate, end_date=endDate, adjust=adjust)
+ 
+        #日数据到周数据转换
+        if period == "weekly":
+            if not isinstance(stockDataList.index, pd.DatetimeIndex):
+                stockDataList["date"] = pd.to_datetime(stockDataList["date"])
+                stockDataList.set_index("date", inplace=True)
+                stockDataList = stockDataList.resample('W-FRI').agg({'open': 'last', 'high': 'max', 'low': 'min', 'close': 'last', 'amount': 'sum'})
+                stockDataList["symbol"] = symbol 
+                stockDataList["volume"] = stockDataList["amount"] / stockDataList["close"]
+                stockDataList.reset_index(inplace=True)
+                #指定顺序
+                stockDataList = stockDataList[["date","open","high","low","close","volume","amount","symbol"]]           
+        else:
+            stockDataList["symbol"] = symbol 
+            stockDataList["volume"] = stockDataList["amount"] / stockDataList["close"]
+            #指定顺序
+            stockDataList = stockDataList[["date","open","high","low","close","volume","amount","symbol"]]
+        #转换为字典
+        stockDataList = stockDataList.to_dict(orient='records')
+        for item in stockDataList:
+            item["date"] = item["date"].strftime(f"%Y-%m-%d")
+            result.append(item)
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        result = None
+    return result
+
+
+#新浪历史数据
+def sinoGetHistroryData(symbol,startDate,endDate,period="daily",adjust=""):
+    result = []
+    try:
+        #首先转换symbol为腾讯股票代码
+        sinoSymbol = symbol2symboleWithMarket(symbol)       
+        stockDataList = ak.stock_zh_a_daily(symbol=sinoSymbol, start_date=startDate, end_date=endDate, adjust=adjust)
+ 
+        #日数据到周数据转换
+        if period == "weekly":
+            if not isinstance(stockDataList.index, pd.DatetimeIndex):
+                stockDataList["date"] = pd.to_datetime(stockDataList["date"])
+                stockDataList.set_index("date", inplace=True)
+                stockDataList = stockDataList.resample('W-FRI').agg({'open': 'last', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'})
+                stockDataList["symbol"] = symbol 
+                stockDataList.reset_index(inplace=True)
+                #指定顺序
+                stockDataList = stockDataList[["date","open","high","low","close","volume","amount","symbol"]]           
+        else:
+            stockDataList["symbol"] = symbol 
+            #指定顺序
+            stockDataList = stockDataList[["date","open","high","low","close","volume","amount","symbol","outstanding_share"]]
+        #转换为字典
+        stockDataList = stockDataList.to_dict(orient='records')
+        for item in stockDataList:
+            item["date"] = item["date"].strftime(f"%Y-%m-%d")
+            result.append(item)
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        result = None
+    return result
+
 
 '''
 获取分时数据
@@ -451,6 +526,28 @@ def getIntradayData(symbol):
         errMsg = f"{e},{traceMsg}"
     return result
 
+
+#分红配股数据
+# 代码 名称 上市日期 累计股息 年均股息 分红次数 融资总额 融资次数
+def getDividendData():
+    result = {}
+    try:
+        dividendList = ak.stock_history_dividend()
+        dividendList.rename(columns={'代码': 'symbol', '名称': 'stock_name','上市日期':'ipo_date',
+        '累计股息':'cumulative_dividend','年均股息':'annual_dividend',
+        '分红次数':'dividend_count','融资总额':'total_financing','融资次数':'financing_count'}, inplace=True)
+        dividendList = dividendList.to_dict(orient='records')
+        for item in dividendList:
+            symbol = item.get("symbol")
+            item["ipo_date"] = item["ipo_date"].strftime(f"%Y-%m-%d")
+            if symbol not in result:               
+                result[symbol] = []
+            result[symbol].append(item) 
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+    return result
 #history data end
 
 
@@ -462,6 +559,8 @@ def getIntradayData(symbol):
 
 def test():
     pass
+    # sinoGetHistroryData("601088","20240101","20260125",period="weekly")
+    txGetHistroryData("601088","20240101","20260125",period="weekly")
     swGetIndexHistory("801030") 
     # swGetIndustryList()
     swGetStockInfoData()
