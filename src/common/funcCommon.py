@@ -7,7 +7,7 @@
 #Date: 2019-08-02
 #Description:   这个应用的通用函数
 
-_VERSION="20251222"
+_VERSION="20260203"
 
 
 import os
@@ -1723,6 +1723,93 @@ def genHotelUniqueID(cityName,address,countryCode2=""):
             result = "CITY_" + hashVal
     except Exception as e:
         pass
+    return result
+
+
+#判断某天是否公共假期
+'''
+本地保存一个文件, 这样可以, 一天清理一次, 主要是处理三天前的数据
+首先判断本地是否保存了数据, 然后考虑是否需要从网络更新
+'''
+_localIsPublucHolidayFileName = "publicholiday.json"
+def isPublicHoliday(YMD):
+    result = False
+    currYMDHMS = misc.getTime()
+    saveData = misc.loadJsonData(_localIsPublucHolidayFileName,"dict")
+    if saveData:
+        saveFlag = False
+        saveYMDHMS = saveData.get("YMDHMS")
+        holidayInfoData = saveData.get("data")
+        if saveYMDHMS[0:8] != currYMDHMS[0:8]:
+            #日期不同需要清理数据
+            passYMDHMS = misc.getPassday(3) + "000000"
+            currKeys = list(holidayInfoData.keys())
+            for key in currKeys:
+                if key < passYMDHMS:
+                    del holidayInfoData[key]
+                    saveFlag = True
+                    saveData["YMDHMS"] = currYMDHMS
+        if YMD in holidayInfoData:
+            result = holidayInfoData[YMD]["isHoliday"]
+        else:
+            #调用外部接口
+            holidayInfo = getPublicHolidayInfo(YMD)
+            if holidayInfo:
+                saveData["data"][YMD] = holidayInfo
+                saveFlag = True
+
+        if saveFlag:
+            misc.saveJsonData(_localIsPublucHolidayFileName, saveData,indent = 2)
+    else:
+        #调用外部接口
+        holidayInfo = getPublicHolidayInfo(YMD)
+        if holidayInfo:
+            saveData = {}
+            saveData["data"] = {}
+            saveData["YMDHMS"] = currYMDHMS
+            result = holidayInfo.get("isHoliday")
+            saveData["data"][YMD] = holidayInfo
+            misc.saveJsonData(_localIsPublucHolidayFileName, saveData,indent = 2)
+
+    return result
+
+
+#利用外部接口获取公共假日信息
+'''
+利用外部的接口
+https://github.com/Haoshenqi0123/holiday
+https://api.haoshenqi.top/holiday?date=2023-10-01
+    {
+        "date": "2019-05-01",
+        "year": 2019,
+        "month": 5,
+        "day": 1,
+        "status": 3
+    }
+status: 0普通工作日1周末双休日2需要补班的工作日3法定节假日
+'''
+def getPublicHolidayInfo(YMD):
+    result = {}
+    try:
+        url = "http://api.haoshenqi.top/holiday"
+        currDate = YMD[0:4] + "-" + YMD[4:6] + "-" + YMD[6:8]
+        header = {"content-type":"application/json"}
+        url = url + "?date=" + currDate
+        r = requests.get(url,headers = header) 
+        if r.status_code == requests.codes.ok:
+            dataList = misc.jsonLoads(r.text)
+            if dataList:
+                currDataSet = dataList[0]
+                status = currDataSet.get("status")
+                result["status"] = status
+                result["date"] = currDataSet.get("date")
+                if status == 0:
+                    result["isHoliday"] = False
+                else:
+                    result["isHoliday"] = True
+    except:
+        pass
+
     return result
 
 

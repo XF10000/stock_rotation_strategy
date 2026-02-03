@@ -1672,7 +1672,7 @@ def genCmdQueryCode(tableName, dataStructure):
         aList.append("")
         tempString = TS5 + '#if limitNum:'
         aList.append(tempString)
-        tempString = TS6 + '#indexKeyDataSet["limitNum"] = mode'
+        tempString = TS6 + '#indexKeyDataSet["limitNum"] = limitNum'
         aList.append(tempString)
 
         aList.append("")

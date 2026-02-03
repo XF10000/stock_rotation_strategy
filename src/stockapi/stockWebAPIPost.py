@@ -2005,7 +2005,7 @@ def funcUserInfoQuery(CMD, dataSet, sessionIDSet):
         searchLoginID = dataSet.get("loginID")
         loginIDPrefix = dataSet.get("loginIDPrefix")
         mode = dataSet.get("mode", "normal")
-        limitNum = dataSet.get("limitNum")
+        limitNum = dataSet.get("limitNum",0)
 
         requestData = dataSet
         # requestData["CMD"] = "ADA0" #mysql
@@ -3273,7 +3273,7 @@ def funcIndustryInfoQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -3294,8 +3294,8 @@ def funcIndustryInfoQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -3308,7 +3308,7 @@ def funcIndustryInfoQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_industry_info()
-                            allDataList = comMysql.query_industry_info(tableName,mode = mode)
+                            allDataList = comMysql.query_industry_info(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -3316,10 +3316,10 @@ def funcIndustryInfoQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_industry_info()
-                                currDataList = comMysql.query_industry_info(tableName,id,mode = mode)
+                                currDataList = comMysql.query_industry_info(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_industry_info()
-                                currDataList = comMysql.query_industry_info(tableName,industry_code=industry_code,industry_name=industry_name,mode = mode)
+                                currDataList = comMysql.query_industry_info(tableName,industry_code=industry_code,industry_name=industry_name,limitNum=limitNum)
 
                         dataList = []
 
@@ -3367,7 +3367,7 @@ def funcIndustryInfoQry(CMD,dataSet,sessionIDSet):
 
                     rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
 
-                    #rtnData["limitNum"] = limitNum
+                    rtnData["limitNum"] = limitNum
 
                     result = rtnData
 
@@ -3769,7 +3769,7 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -3795,8 +3795,8 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -3809,7 +3809,7 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_stock_info()
-                            allDataList = comMysql.query_stock_info(tableName,mode = mode)
+                            allDataList = comMysql.query_stock_info(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -3817,11 +3817,11 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_stock_info()
-                                currDataList = comMysql.query_stock_info(tableName,id,mode = mode)
+                                currDataList = comMysql.query_stock_info(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_stock_info()
                                 currDataList = comMysql.query_stock_info(tableName,stock_code=stock_code,stock_name=stock_name,
-                                    industry_code=industry_code,industry_name=industry_name)
+                                    industry_code=industry_code,industry_name=industry_name,limitNum=limitNum)
 
                         dataList = []
 
@@ -3865,7 +3865,7 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
 
                     rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
 
-                    #rtnData["limitNum"] = limitNum
+                    rtnData["limitNum"] = limitNum
 
                     result = rtnData
 
@@ -3918,7 +3918,7 @@ def funcStockHistoryAdd(CMD,dataSet,sessionIDSet):
 
             if errCode == "B0": #
                 #data validation check
-                period = dataSet.get("period", "")
+                period = dataSet.get("period", "day")
                 adjust = dataSet.get("adjust", "")
 
                 symbol = dataSet.get("symbol", "")
@@ -4017,7 +4017,7 @@ def funcStockHistoryDel(CMD,dataSet,sessionIDSet):
             #权限检查
 
             if errCode == "B0": #
-                period = dataSet.get("period", "")
+                period = dataSet.get("period", "day")
                 adjust = dataSet.get("adjust", "")
 
                 id = dataSet.get("id", "")
@@ -4089,7 +4089,7 @@ def funcStockHistoryModify(CMD,dataSet,sessionIDSet):
                 #data validation check
                 dataValidFlag = True
 
-                period = dataSet.get("period", "")
+                period = dataSet.get("period", "day")
                 adjust = dataSet.get("adjust", "")
 
                 id = dataSet.get("id") 
@@ -4271,7 +4271,7 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                 else:
                     stock_code = dataSet.get("stock_code", "")  
 
-                period = dataSet.get("period", "")
+                period = dataSet.get("period", "day")
 
                 adjust = dataSet.get("adjust", "")
                 
@@ -4283,7 +4283,7 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -4310,8 +4310,8 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -4324,7 +4324,7 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_stock_history_data(period=period,adjust=adjust)
-                            allDataList = comMysql.query_stock_history_data(tableName,mode = mode)
+                            allDataList = comMysql.query_stock_history_data(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -4332,10 +4332,10 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_stock_history_data(period=period,adjust=adjust)
-                                currDataList = comMysql.query_stock_history_data(tableName,id,mode = mode)
+                                currDataList = comMysql.query_stock_history_data(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_stock_history_data(period=period,adjust=adjust)
-                                currDataList = comMysql.query_stock_history_data(tableName,stock_code=stock_code,stock_name=stock_name)
+                                currDataList = comMysql.query_stock_history_data(tableName,stock_code=stock_code,stock_name=stock_name,limitNum=limitNum)
 
                         dataList = []
 
@@ -4769,7 +4769,7 @@ def funcStockDividendQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -4790,8 +4790,8 @@ def funcStockDividendQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -4804,7 +4804,7 @@ def funcStockDividendQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_stock_dividend_data()
-                            allDataList = comMysql.query_stock_dividend_data(tableName,mode = mode)
+                            allDataList = comMysql.query_stock_dividend_data(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -4812,10 +4812,10 @@ def funcStockDividendQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_stock_dividend_data()
-                                currDataList = comMysql.query_stock_dividend_data(tableName,id,mode = mode)
+                                currDataList = comMysql.query_stock_dividend_data(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_stock_dividend_data()
-                                currDataList = comMysql.query_stock_dividend_data(tableName,stock_code=stock_code,stock_name=stock_name,mode = mode)
+                                currDataList = comMysql.query_stock_dividend_data(tableName,stock_code=stock_code,stock_name=stock_name,mode = mode,limitNum=limitNum)
 
                         dataList = []
 
@@ -5251,7 +5251,7 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -5271,7 +5271,7 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
                         indexKeyDataSet["mode"] = mode
 
                     if limitNum:
-                        indexKeyDataSet["limitNum"] = mode
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -5284,7 +5284,7 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_industry_history_data()
-                            allDataList = comMysql.query_industry_history_data(tableName,mode = mode)
+                            allDataList = comMysql.query_industry_history_data(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -5292,10 +5292,10 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_industry_history_data()
-                                currDataList = comMysql.query_industry_history_data(tableName,id,mode = mode)
+                                currDataList = comMysql.query_industry_history_data(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_industry_history_data()
-                                currDataList = comMysql.query_industry_history_data(tableName,industry_code=industry_code,mode = mode)
+                                currDataList = comMysql.query_industry_history_data(tableName,industry_code=industry_code,mode = mode,limitNum=limitNum)
 
                         dataList = []
 
@@ -6393,7 +6393,7 @@ def funcBalanceSheetQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -6416,8 +6416,8 @@ def funcBalanceSheetQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -6430,7 +6430,7 @@ def funcBalanceSheetQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_balance_sheets()
-                            allDataList = comMysql.query_balance_sheets(tableName,mode = mode)
+                            allDataList = comMysql.query_balance_sheets(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -6438,10 +6438,10 @@ def funcBalanceSheetQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_balance_sheets()
-                                currDataList = comMysql.query_balance_sheets(tableName,id,mode = mode)
+                                currDataList = comMysql.query_balance_sheets(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_balance_sheets()
-                                currDataList = comMysql.query_balance_sheets(tableName,stock_code=stock_code,stock_name=stock_name,report_date=report_date)
+                                currDataList = comMysql.query_balance_sheets(tableName,stock_code=stock_code,stock_name=stock_name,report_date=report_date,limitNum=limitNum)
 
                         dataList = []
 
@@ -7361,7 +7361,7 @@ def funcIncomeStatementsQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -7382,8 +7382,8 @@ def funcIncomeStatementsQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -7396,7 +7396,7 @@ def funcIncomeStatementsQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_income_statements()
-                            allDataList = comMysql.query_income_statements(tableName,mode = mode)
+                            allDataList = comMysql.query_income_statements(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -7404,10 +7404,10 @@ def funcIncomeStatementsQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_income_statements()
-                                currDataList = comMysql.query_income_statements(tableName,id,mode = mode)
+                                currDataList = comMysql.query_income_statements(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_income_statements()
-                                currDataList = comMysql.query_income_statements(tableName,stock_code=stock_code,report_date=report_date,mode = mode)
+                                currDataList = comMysql.query_income_statements(tableName,stock_code=stock_code,report_date=report_date,mode = mode,limitNum=limitNum)
 
                         dataList = []
 
@@ -8251,7 +8251,7 @@ def funcCashFlowQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -8272,8 +8272,8 @@ def funcCashFlowQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -8286,7 +8286,7 @@ def funcCashFlowQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_cash_flow_statements()
-                            allDataList = comMysql.query_cash_flow_statements(tableName,mode = mode)
+                            allDataList = comMysql.query_cash_flow_statements(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -8294,10 +8294,10 @@ def funcCashFlowQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_cash_flow_statements()
-                                currDataList = comMysql.query_cash_flow_statements(tableName,id,mode = mode)
+                                currDataList = comMysql.query_cash_flow_statements(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_cash_flow_statements()
-                                currDataList = comMysql.query_cash_flow_statements(tableName,stock_code=stock_code,report_date=report_date)
+                                currDataList = comMysql.query_cash_flow_statements(tableName,stock_code=stock_code,report_date=report_date,limitNum=limitNum)
 
                         dataList = []
 
@@ -8764,7 +8764,7 @@ def funcIndicatorQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -8785,8 +8785,8 @@ def funcIndicatorQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -8799,7 +8799,7 @@ def funcIndicatorQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_indicator_medians()
-                            allDataList = comMysql.query_indicator_medians(tableName,mode = mode)
+                            allDataList = comMysql.query_indicator_medians(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -8807,10 +8807,10 @@ def funcIndicatorQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_indicator_medians()
-                                currDataList = comMysql.query_indicator_medians(tableName,id,mode = mode)
+                                currDataList = comMysql.query_indicator_medians(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_indicator_medians()
-                                currDataList = comMysql.query_indicator_medians(tableName,indicator_name=indicator_name,report_date=report_date,mode = mode)
+                                currDataList = comMysql.query_indicator_medians(tableName,indicator_name=indicator_name,report_date=report_date,mode = mode,limitNum=limitNum)
 
                         dataList = []
 
@@ -9241,7 +9241,7 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                # limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
 
                 #权限检查/功能检测
 
@@ -9262,8 +9262,8 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    # if limitNum:
-                    #     indexKeyDataSet["limitNum"] = mode
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -9276,7 +9276,7 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                         if searchOption:
                             currDataList = []
                             tableName = comMysql.tablename_convertor_user_stock_list()
-                            allDataList = comMysql.query_user_stock_list(tableName,mode = mode)
+                            allDataList = comMysql.query_user_stock_list(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
                             if serachResultSet["rtn"] == "B0":
@@ -9284,10 +9284,10 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                         else:
                             if id:
                                 tableName = comMysql.tablename_convertor_user_stock_list()
-                                currDataList = comMysql.query_user_stock_list(tableName,id,mode = mode)
+                                currDataList = comMysql.query_user_stock_list(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_user_stock_list()
-                                currDataList = comMysql.query_user_stock_list(tableName,loginID=loginID,stock_code=stock_code)
+                                currDataList = comMysql.query_user_stock_list(tableName,loginID=loginID,stock_code=stock_code,limitNum=limitNum)
 
                         dataList = []
 

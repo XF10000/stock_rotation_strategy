@@ -49,6 +49,17 @@ if "_LOG" not in dir() or not _LOG:
 _processorPID = os.getpid()
 
 YLWZ_STOCK_API_URL_DATA = {
+    #common 
+    "generalnext":
+    {
+        "method":"post",
+        "description":"获取后续数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/generalnext",
+        "params":{}
+    },
     #industry info
     "industryinfoadd":
     {
@@ -460,6 +471,19 @@ YLWZ_STOCK_API_URL_DATA = {
         "params":{}
     },
 }
+
+QUERY_CMD_LIST = [
+    "stockinfoqry",
+    "industryinfoqry",
+    "stockhistoryqry",
+    "stockdividendqry",
+    "industryhistoryqry",
+    "balancesheetqry",
+    "incomestatementsqry",
+    "cashflowqry",
+    "indicatorqry",
+    "userstocklistqry",
+]
 #common end
 
 class StockServer:
@@ -469,6 +493,10 @@ class StockServer:
     _errMsg = ""
     _project = None
     _case = None
+    _indexKey = ""
+    _indexBeginNum = 0
+    _indexEndNum = 0
+    _indexTotal = 0
 
     
     def __init__(self,host="",port=80,sessionID="",rootPath="",pdFormat=False):
@@ -570,7 +598,28 @@ class StockServer:
                     result = self.postRequest(url,requestData,paramsData)
                 else:
                     result = self.getRequest(url,paramsData)                 
+                
+                #处理qry命令
+                if cmd in QUERY_CMD_LIST:
+                    self.handleQueryResult(cmd,result)
 
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg
+    
+        return result   
+    
+
+    def handleQueryResult(self,cmd,dataSet):
+        result = False
+        try:
+            if dataSet and "data" in dataSet:
+                data = dataSet["data"]
+                if data:
+                    self._indexKey = data.get("indexKey","")
+                    self._indexTotal = int(data.get("total",0))
+                    self._indexBeginNum = int(data.get("beginNum",0))
+                    self._indexEndNum = int(data.get("endNum",0))
         except Exception as e:
             errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
             self._errMsg = errMsg
@@ -578,8 +627,48 @@ class StockServer:
         return result   
 
 
+    #获取下一批数据
+    def getNext(self,num = 100):
+        result = []
+        try:
+            nextBeginNum = self._indexEndNum + 1
+            nextEndNum = nextBeginNum + num - 1
+            if nextEndNum > self._indexTotal:
+                nextEndNum = self._indexTotal
+            querySet = {"indexKey":self._indexKey,"beginNum":nextBeginNum,"endNum":nextEndNum}
+            cmd = "generalnext"
+            result = self.query(cmd,querySet)
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg
+        
+
+        return result
+
+
+def readSessionIDFromEnv():
+    try:
+        sessionID = os.getenv("YLWZ_SESSION_ID")
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return sessionID
+
+
 def test():
     # 示例
+    host = "www.iottest.online"
+    sessionID = readSessionIDFromEnv()
+
+    ylwzStockServer = StockServer(host=host, sessionID=sessionID)
+
+    cmd = "stockinfoqry"
+    # querySet = {"symbol":"920000"}
+    querySet = {}
+    rtnData = ylwzStockServer.query(cmd,querySet)
+    print(rtnData)
+    rtnData = ylwzStockServer.getNext(100)
+
     pass
 
 
