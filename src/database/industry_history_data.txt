@@ -1,5 +1,5 @@
 id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
-stock_code VARCHAR(10) COMMENT '股票代码'
+industry_code VARCHAR(10) COMMENT '行业代码'
 date VARCHAR(10) COMMENT '日期'
 open float COMMENT '开盘'
 close float COMMENT '收盘'

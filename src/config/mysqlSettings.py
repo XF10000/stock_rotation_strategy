@@ -7,7 +7,7 @@
 #Date: 2019-03-30
 #Description:  SQL数据库地址,网络地址等
 
-_VERSION="20260117"
+_VERSION="20260131"
 
 import os
 import sys
@@ -40,24 +40,24 @@ MYSQL_WRITE_PORT = {
     }[_SYS]
 
 MYSQL_WRITE_DB = {
-    "local":"chin_hotel",
-    "server_01":"chin_hotel", 
-    "server_02":"chin_hotel", 
-    "home":"chin_hotel", 
+    "local":"stock_db",
+    "server_01":"stock_db", 
+    "server_02":"stock_db", 
+    "home":"stock_db", 
     }[_SYS]
     
 MYSQL_WRITE_USER = {
-    "local":"chdba",
-    "server_01":"chdba", 
-    "server_02":"chdba", 
-    "home":"chdba", 
+    "local":"stockdba",
+    "server_01":"stockdba", 
+    "server_02":"stockdba", 
+    "home":"stockdba", 
     }[_SYS]
 
 MYSQL_WRITE_PASSWD = {
-    "local":"chdba$",
-    "server_01":"chdba$", 
-    "server_02":"chdba$", 
-    "home":"chdba$", 
+    "local":"stock$123456",
+    "server_01":"stock$123456", 
+    "server_02":"stock$123456", 
+    "home":"stock$123456", 
     }[_SYS]
 
 #从库，读记录
@@ -77,24 +77,24 @@ MYSQL_READ_PORT = {
 
     
 MYSQL_READ_DB = {
-    "local":"chin_hotel",
-    "server_01":"chin_hotel", 
-    "server_02":"chin_hotel", 
-    "home":"chin_hotel", 
+    "local":"stock_db",
+    "server_01":"stock_db", 
+    "server_02":"stock_db", 
+    "home":"stock_db", 
     }[_SYS]
 
 MYSQL_READ_USER = {
-    "local":"chdba",
-    "server_01":"chdba", 
-    "server_02":"chdba", 
-    "home":"chdba", 
+    "local":"stockdba",
+    "server_01":"stockdba", 
+    "server_02":"stockdba", 
+    "home":"stockdba", 
     }[_SYS]
 
 MYSQL_READ_PASSWD = {
-    "local":"chdba$",
-    "server_01":"chdba$", 
-    "server_02":"chdba$", 
-    "home":"chdba$", 
+    "local":"stock$123456",
+    "server_01":"stock$123456", 
+    "server_02":"stock$123456", 
+    "home":"stock$123456", 
     }[_SYS]
 
 #主库，写记录

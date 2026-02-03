@@ -353,7 +353,7 @@ def saveStockIndustryMapping(data):
     return result
 
 
-#获取股票历史数据(东方财富)
+#获取股票历史数据(东方财富/新浪)
 def getHistoryStockData(symbol,startYMD,endYMD,period="",adjust=""):
     result = []
     try:
@@ -377,8 +377,12 @@ def getHistoryStockData(symbol,startYMD,endYMD,period="",adjust=""):
             #获取股票历史数据(东方财富)
             result = comAK.gmGetHistroryData(symbol, startYMD, endYMD,period,adjust)
             if result == None:
+                _LOG.warning(f"E: 获取东方财富股票历史数据失败, 股票代码:{symbol}, 开始日期:{startYMD}, 结束日期:{endYMD}, 周期:{period}, 调整:{adjust}")
                 #出错了, 尝试新浪数据
                 result = comAK.sinoGetHistroryData(symbol, startYMD, endYMD,period,adjust)
+                if result == None:
+                    _LOG.warning(f"E: 获取新浪股票历史数据失败, 股票代码:{symbol}, 开始日期:{startYMD}, 结束日期:{endYMD}, 周期:{period}, 调整:{adjust}")
+
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")

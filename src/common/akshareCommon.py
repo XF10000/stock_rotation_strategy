@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260125"
+_VERSION = "20260131"
 
 import os
 import sys
@@ -81,10 +81,15 @@ def symbolWithMarket2symbole(symbol):
     return result
 
 
-def getStockList():
-    result = pd.DataFrame()
+#新浪获取所有股票列表
+def sinoGetStockList():
+    result = []
     try:
-        result = ak.stock_zh_a_spot()
+        df = ak.stock_zh_a_spot()
+        df.rename(columns={'代码': 'symbol', '名称': 'stock_name','最新价':'last_price','涨跌额':'change'\
+           ,'涨跌幅':'pct_change','买入':'buy_price','卖出':'sell_price','昨收':'prev_close','今开':'open'\
+           ,'最高':'high','最低':'low','成交量':'volume','成交额':'amount','时间戳':"datetime"}, inplace=True)
+        result = df.to_dict(orient='records')
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
@@ -352,6 +357,7 @@ def emGetIndustryConstituents(industry_name):
     return result
 
 
+#获取东方财富股票行业数据
 def emGetStockInfoData():
     result = {}
     try:

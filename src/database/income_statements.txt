@@ -1,0 +1,89 @@
+id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
+stock_code VARCHAR(10) COMMENT '股票代码'
+report_date VARCHAR(10) COMMENT '报告日期'
+total_operating_revenue FLOAT NULL
+operating_revenue FLOAT NULL
+interest_income FLOAT NULL
+earned_premiums FLOAT NULL
+fees_and_commissions_income FLOAT NULL
+real_estate_sales_revenue FLOAT NULL
+other_business_revenue FLOAT NULL
+total_operating_costs FLOAT NULL
+operating_costs FLOAT NULL
+fees_and_commissions_expenses FLOAT NULL
+real_estate_sales_costs FLOAT NULL
+surrender_value FLOAT NULL
+net_claims_paid FLOAT NULL
+net_insurance_contract_reserves FLOAT NULL
+policy_dividend_expenses FLOAT NULL
+reinsurance_expenses FLOAT NULL
+other_business_costs FLOAT NULL
+taxes_and_surcharges FLOAT NULL
+rd_expenses FLOAT NULL
+selling_expenses FLOAT NULL
+administrative_expenses FLOAT NULL
+financial_expenses FLOAT NULL
+interest_expenses FLOAT NULL
+interest_expenditure FLOAT NULL
+investment_income FLOAT NULL
+investment_income_from_associates_and_joint_ventures FLOAT NULL
+gain_on_derecognition_of_financial_assets_at_amortized_cost FLOAT NULL
+foreign_exchange_gains FLOAT NULL
+net_open_hedge_gains FLOAT NULL
+fair_value_change_gains FLOAT NULL
+futures_gains_losses FLOAT NULL
+custody_income FLOAT NULL
+subsidy_income FLOAT NULL
+other_gains FLOAT NULL
+asset_impairment_losses FLOAT NULL
+credit_impairment_losses FLOAT NULL
+other_business_profits FLOAT NULL
+asset_disposal_gains FLOAT NULL
+operating_profit FLOAT NULL
+non_operating_income FLOAT NULL
+non_current_asset_disposal_gains FLOAT NULL
+non_operating_expenses FLOAT NULL
+non_current_asset_disposal_losses FLOAT NULL
+total_profit FLOAT NULL
+income_tax_expense FLOAT NULL
+unrecognized_investment_losses FLOAT NULL
+net_profit FLOAT NULL
+net_profit_from_continuing_operations FLOAT NULL
+net_profit_from_discontinued_operations FLOAT NULL
+net_profit_attributable_to_parent_company FLOAT NULL
+net_profit_of_acquiree_before_merger FLOAT NULL
+minority_interests_profit_loss FLOAT NULL
+other_comprehensive_income FLOAT NULL
+other_comprehensive_income_attributable_to_parent FLOAT NULL
+oci_not_reclassified_to_profit_loss FLOAT NULL
+remeasurement_of_defined_benefit_plans FLOAT NULL
+oci_under_equity_method_not_reclassified FLOAT NULL
+fair_value_change_of_other_equity_instruments FLOAT NULL
+fair_value_change_of_own_credit_risk FLOAT NULL
+oci_reclassified_to_profit_loss FLOAT NULL
+oci_under_equity_method_reclassified FLOAT NULL
+fair_value_change_of_afs_financial_assets FLOAT NULL
+fair_value_change_of_other_debt_investments FLOAT NULL
+financial_assets_reclassified_to_oci FLOAT NULL
+credit_impairment_of_other_debt_investments FLOAT NULL
+htm_reclassified_to_afs_gains_losses FLOAT NULL
+cash_flow_hedge_reserve FLOAT NULL
+effective_portion_of_cash_flow_hedge FLOAT NULL
+foreign_currency_translation_difference FLOAT NULL
+other FLOAT NULL
+other_comprehensive_income_attributable_to_minority FLOAT NULL
+total_comprehensive_income FLOAT NULL
+total_comprehensive_income_attributable_to_parent FLOAT NULL
+total_comprehensive_income_attributable_to_minority FLOAT NULL
+basic_earnings_per_share FLOAT NULL
+diluted_earnings_per_share FLOAT NULL
+label1 VARCHAR(32) NULL
+label2 VARCHAR(32) NULL
+label3 VARCHAR(32) NULL
+memo VARCHAR(200) NULL
+regID VARCHAR(32) NOT NULL COMMENT '注册ID'
+regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日'
+modifyID VARCHAR(32) COMMENT '修改ID'
+modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日'
+dispFlag VARCHAR(1) COMMENT '是否显示标记'
+delFlag VARCHAR(1) COMMENT '是否删除标记'

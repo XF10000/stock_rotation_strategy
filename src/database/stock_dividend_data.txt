@@ -1,16 +1,12 @@
 id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
 stock_code VARCHAR(10) COMMENT '股票代码'
-date VARCHAR(10) COMMENT '日期'
-open float COMMENT '开盘'
-close float COMMENT '收盘'
-high float COMMENT '最高'
-low float COMMENT '最低'
-volume float COMMENT '成交量'
-amount float COMMENT '成交额'
-amplitude float COMMENT '振幅'
-pct_change float COMMENT '涨跌幅'
-price_change float COMMENT '涨跌额'
-turnover_rate float COMMENT '换手率'
+stock_name VARCHAR(12) COMMENT '股票名称'
+ipo_date VARCHAR(10) COMMENT '上市时间'
+cumulative_dividend double COMMENT '累计股息'
+annual_dividend double COMMENT '年均股息'
+dividend_count float COMMENT '分红次数'
+total_financing double COMMENT '融资总额'
+financing_count float COMMENT '融资次数'
 label1 VARCHAR(32) NULL
 label2 VARCHAR(32) NULL
 label3 VARCHAR(32) NULL

@@ -268,6 +268,8 @@ def setlog(title,logfile) :
 
 def setLogNew(title, filebasename, homeDir=r"../../log",stdout=False):
     #logfile = r"../../log/%s" % (filebasename)
+    if not os.path.exists(homeDir):
+        os.makedirs(homeDir)
     logfile=os.path.join(homeDir, filebasename)
     logger = logging.getLogger(title)
     file_handler = logging.FileHandler(logfile)

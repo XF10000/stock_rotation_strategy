@@ -1,0 +1,23 @@
+id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
+stock_code VARCHAR(10) COMMENT '股票代码'
+stock_name VARCHAR(12) COMMENT '股票名称'
+total_shares_outstanding double COMMENT '总股本'
+public_float double COMMENT '流通股'
+market_cap double COMMENT '总市值'
+free_market_cap double COMMENT '流通市值'
+dcf_value_pre_share float COMMENT '每股贴现现金流价值'
+industry_code VARCHAR(10) COMMENT '行业代码'
+industry_name VARCHAR(48) COMMENT '行业名称'
+industry_name_sw VARCHAR(48) COMMENT '行业申银万国'
+industry_name_em VARCHAR(48) COMMENT '行业东方财富'
+ipo_date VARCHAR(10) COMMENT '上市时间'
+label1 VARCHAR(32) NULL
+label2 VARCHAR(32) NULL
+label3 VARCHAR(32) NULL
+memo VARCHAR(200) NULL
+regID VARCHAR(32) NOT NULL COMMENT '注册ID'
+regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日'
+modifyID VARCHAR(32) COMMENT '修改ID'
+modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日'
+dispFlag VARCHAR(1) COMMENT '是否显示标记'
+delFlag VARCHAR(1) COMMENT '是否删除标记'

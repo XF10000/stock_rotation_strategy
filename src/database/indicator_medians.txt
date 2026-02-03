@@ -1,16 +1,8 @@
 id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
-stock_code VARCHAR(10) COMMENT '股票代码'
-date VARCHAR(10) COMMENT '日期'
-open float COMMENT '开盘'
-close float COMMENT '收盘'
-high float COMMENT '最高'
-low float COMMENT '最低'
-volume float COMMENT '成交量'
-amount float COMMENT '成交额'
-amplitude float COMMENT '振幅'
-pct_change float COMMENT '涨跌幅'
-price_change float COMMENT '涨跌额'
-turnover_rate float COMMENT '换手率'
+indicator_name  VARCHAR(50) NULL
+report_date  VARCHAR(10) NULL
+median_value float NULL
+cache_version  VARCHAR(50) NULL
 label1 VARCHAR(32) NULL
 label2 VARCHAR(32) NULL
 label3 VARCHAR(32) NULL

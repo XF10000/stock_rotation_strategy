@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260122"
+_VERSION="20260202"
 
 
 import os
@@ -236,6 +236,18 @@ ROLE_CMD_LIST =\
     "savehomepagemsg","qryhomepagemsg",
     #获取当前用户的默认主页数据
     "gethomepagedata",
+    #stock related begin
+    "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
+    "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
+    "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
+    "stockdividendadd","stockdividenddel","stockdividendmodify","stockdividendqry",
+    "industryhistoryadd","industryhistorydel","industryhistorymodify","industryhistoryqry",
+    "balancesheetadd","balancesheetdel","balancesheetmodify","balancesheetqry",
+    "incomestatementsadd","incomestatementsdel","incomestatementsmodify","incomestatementsqry",
+    "cashflowadd","cashflowdel","cashflowmodify","cashflowqry",
+    "indicatoradd","indicatordel","indicatormodify","indicatorqry",
+    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    #stock related end
     ], 
 "manager":    [
     #user related
@@ -245,6 +257,18 @@ ROLE_CMD_LIST =\
     "savehomepagemsg","qryhomepagemsg",
     #获取当前用户的默认主页数据
     "gethomepagedata",
+    #stock related begin
+    "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
+    "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
+    "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
+    "stockdividendadd","stockdividenddel","stockdividendmodify","stockdividendqry",
+    "industryhistoryadd","industryhistorydel","industryhistorymodify","industryhistoryqry",
+    "balancesheetadd","balancesheetdel","balancesheetmodify","balancesheetqry",
+    "incomestatementsadd","incomestatementsdel","incomestatementsmodify","incomestatementsqry",
+    "cashflowadd","cashflowdel","cashflowmodify","cashflowqry",
+    "indicatoradd","indicatordel","indicatormodify","indicatorqry",
+    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    #stock related end
     ], 
 "operator":[
     #user related
@@ -252,6 +276,18 @@ ROLE_CMD_LIST =\
     "usersavedata", "usergetdata",
     #获取当前用户的默认主页
     "gethomepagedata",
+    #stock related begin
+    "stockinfoqry",
+    "industryinfoqry",
+    "stockhistoryqry",
+    "stockdividendqry",
+    "industryhistoryqry",
+    "balancesheetqry",
+    "incomestatementsqry",
+    "cashflowqry",
+    "indicatorqry",
+    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    #stock related end
     ], 
 "customer":[
     #user related
@@ -259,6 +295,16 @@ ROLE_CMD_LIST =\
     "usersavedata", "usergetdata",
     #获取当前用户的默认主页
     "gethomepagedata",
+    "stockinfoqry",
+    "industryinfoqry",
+    "stockhistoryqry",
+    "stockdividendqry",
+    "industryhistoryqry",
+    "balancesheetqry",
+    "incomestatementsqry",
+    "cashflowqry",
+    "indicatorqry",
+    "userstocklistqry",
     ], 
 }
 

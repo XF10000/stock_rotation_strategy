@@ -8,7 +8,7 @@
 #Date: 2019-08-03
 #Description:   redis 处理代码
 
-_VERSION="20251101"
+_VERSION = "20260131"
 
 import os
 import sys
@@ -545,7 +545,8 @@ def saveUserSession(userID, sessionID, expireTime = comGD._DEF_USER_SESSION_EXPI
 def setSessionInfo(sessionID, mapping, expireTime = comGD._DEF_USER_SESSION_EXPIRE_TIME):
     dbKey=genDBKey(comGD._DEF_REDIS_USER_LEVEL1, comGD._DEF_REDIS_USER_DB_SESSIONID_LIST, sessionID)
     result = dbMainW.hmset(dbKey,mapping)
-    dbMainW.expire(dbKey, expireTime)
+    if expireTime > 0:
+        dbMainW.expire(dbKey, expireTime)
     return result
     
     
