@@ -7,7 +7,7 @@
 #Date: 2020-8-5
 #Description:  生成标准的mysqlCommon 和RESTful 接口所用的增删改查
 
-_VERSION = "20260202"
+_VERSION = "20260204"
 
 _DEBUG=True
 #auto_increment_default_value = 10000
@@ -424,7 +424,7 @@ def genQueryCode(tableName, dataStructure):
 
             tempString = TS3 + f'{primaryKey} = int({primaryKey})'
             aList.append(tempString)
-            aList.append("")
+            # aList.append("")
 
             tempString = TS2 + 'except:'
             aList.append(tempString)
@@ -1147,7 +1147,7 @@ def genCmdDelCode(tableName, dataStructure):
         tempString = TS5 + 'errCode = "CB"'
         aList.append(tempString)
 
-        aList.append("")
+        # aList.append("")
 
         #tempString = TS3 + 'else:'
         #aList.append(tempString)
@@ -1359,21 +1359,26 @@ def genCmdUpdateCode(tableName, dataStructure):
         aList.append(tempString)
 
         aList.append("")
-        
+
+        primaryKeyDataType = ""        
         for data in dataStructure:
             dataType = data.get("dataType")
+            isPrimaryKey = data.get("isPrimaryKey")
+            if isPrimaryKey:
+                primaryKeyDataType = dataType
             fieldName = data.get("fieldName")
             restString = data.get("rest").upper()
             if restString.find("AUTO_INCREMENT") >= 0: #自动增加的数据不需要修改
                 continue 
+            if fieldName in MYSQL_FIELD_SPECIAL_KEYS_LIST:
+                continue
             tempString = TS7 + 'if {0} != currDataSet.get("{0}") and {0}:'.format(fieldName)
             aList.append(tempString)
             tempString = TS8 + 'saveSet["{0}"] = {0}'.format(fieldName)
             aList.append(tempString)
             aList.append("")
 
-        aList.append("")
-
+        # aList.append("")
         #delFlag
         tempString = TS7 + 'if saveSet:'
         aList.append(tempString)
@@ -1393,8 +1398,11 @@ def genCmdUpdateCode(tableName, dataStructure):
 
         tempString = TS8 + 'tableName = comMysql.tablename_convertor_{0}()'.format(tableName)
         aList.append(tempString)
-
-        tempString = TS8 + 'rtn = comMysql.update_{0}(tableName,{1},saveSet)'.format(tableName, primaryKey)
+        
+        if primaryKeyDataType.upper() == "INT":
+            tempString = TS8 + 'rtn = comMysql.update_{0}(tableName,{1},saveSet)'.format(tableName, "recID")
+        else:
+            tempString = TS8 + 'rtn = comMysql.update_{0}(tableName,{1},saveSet)'.format(tableName, primaryKey)
         aList.append(tempString)
         tempString = TS8 + 'rtnData["rtn"] = str(rtn)'
         aList.append(tempString)
@@ -1451,7 +1459,7 @@ def genCmdUpdateCode(tableName, dataStructure):
         tempString = TS5 + 'errCode = "BA"'
         aList.append(tempString)
 
-        aList.append("")
+        # aList.append("")
 
         #tempString = TS3 + 'else:'
         #aList.append(tempString)

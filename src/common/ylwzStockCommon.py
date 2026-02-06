@@ -470,6 +470,47 @@ YLWZ_STOCK_API_URL_DATA = {
         "urlPath":"stockapi/userstocklistqry",   
         "params":{}
     },
+    #data check log
+    "datachecklogadd":
+    {
+        "method":"post",
+        "description":"添加数据检查日志数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/datachecklogadd",  
+        "params":{}
+    },
+    "datachecklogdel":
+    {
+        "method":"post",
+        "description":"删除数据检查日志数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/datachecklogdel",  
+        "params":{}
+    },
+    "datachecklogmodify":
+    {
+        "method":"post",
+        "description":"修改数据检查日志数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/datachecklogmodify",  
+        "params":{}
+    },
+    "datachecklogqry":
+    {
+        "method":"post",
+        "description":"查询数据检查日志数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/datachecklogqry",   
+        "params":{}
+    },
 }
 
 QUERY_CMD_LIST = [
@@ -483,7 +524,8 @@ QUERY_CMD_LIST = [
     "cashflowqry",
     "indicatorqry",
     "userstocklistqry",
-]
+    "datachecklogqry",
+    ]
 #common end
 
 class StockServer:
@@ -609,7 +651,7 @@ class StockServer:
     
         return result   
     
-
+    ##处理查询结果
     def handleQueryResult(self,cmd,dataSet):
         result = False
         try:
@@ -620,12 +662,16 @@ class StockServer:
                     self._indexTotal = int(data.get("total",0))
                     self._indexBeginNum = int(data.get("beginNum",0))
                     self._indexEndNum = int(data.get("endNum",0))
+                    self._restNum = self._indexTotal - self._indexEndNum - 1
         except Exception as e:
             errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
             self._errMsg = errMsg
     
         return result   
 
+    ##获取剩余数据条数
+    def getRestNum(self):
+        return self._restNum
 
     #获取下一批数据
     def getNext(self,num = 100):

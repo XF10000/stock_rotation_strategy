@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260202"
+_VERSION="20260206"
 
 
 import os
@@ -30,9 +30,9 @@ _SYS_SERVER_NAME = local_settings._SYS_SERVER_NAME
 
 
 _HOME_DIR = {
-    "local":r"/data/stock_rotation_strategy",
-    "server_01":r"/data/stock_rotation_strategy", 
-    "server_02":r"/data/stock_rotation_strategy", 
+    "local":r"/data/stockappp",
+    "server_01":r"/data/stockappp", 
+    "server_02":r"/data/stockappp", 
     # "home":r"../..",  
     "home":r"..",  
     }[_SYS]
@@ -247,6 +247,7 @@ ROLE_CMD_LIST =\
     "cashflowadd","cashflowdel","cashflowmodify","cashflowqry",
     "indicatoradd","indicatordel","indicatormodify","indicatorqry",
     "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
     #stock related end
     ], 
 "manager":    [
@@ -268,6 +269,7 @@ ROLE_CMD_LIST =\
     "cashflowadd","cashflowdel","cashflowmodify","cashflowqry",
     "indicatoradd","indicatordel","indicatormodify","indicatorqry",
     "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
     #stock related end
     ], 
 "operator":[
@@ -554,5 +556,4 @@ if __name__ == "__main__":
     print ("LOCAL_FILE_SERVER_BASE", LOCAL_FILE_SERVER_BASE)
     print ("LOCAL_FILE_SERVER_PATH", LOCAL_FILE_SERVER_PATH)
 
-    print ("DATA_RECV_SERVICE_URL", DATA_RECV_SERVICE_URL)
 

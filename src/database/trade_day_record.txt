@@ -1,0 +1,25 @@
+id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
+trade_day VARCHAR(10) COMMENT '交易日'
+description VARCHAR(50) COMMENT '检查类型'
+stock_day VARCHAR(1) COMMENT '股票日数据'
+stock_day_qfq VARCHAR(1) COMMENT '股票日数据前复权'
+stock_day_hfq VARCHAR(1) COMMENT '股票后数据后复权'
+stock_week VARCHAR(1) COMMENT '股票周数据'
+stock_week_qfq VARCHAR(1) COMMENT '股票周数据前复权'
+stock_week_hfq VARCHAR(1) COMMENT '股票周数据后复权'
+stock_week VARCHAR(1) COMMENT '股票月数据'
+stock_week_qfq VARCHAR(1) COMMENT '股票月数据前复权'
+stock_week_hfq VARCHAR(1) COMMENT '股票月数据后复权'
+industry_day VARCHAR(1) COMMENT '行业日数据'
+industry_week VARCHAR(1) COMMENT '行业周数据'
+industry_month VARCHAR(1) COMMENT '行业月数据'
+label1 VARCHAR(32) NULL
+label2 VARCHAR(32) NULL
+label3 VARCHAR(32) NULL
+memo VARCHAR(200) NULL
+regID VARCHAR(32) NOT NULL COMMENT '注册ID'
+regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日'
+modifyID VARCHAR(32) COMMENT '修改ID'
+modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日'
+dispFlag VARCHAR(1) COMMENT '是否显示标记'
+delFlag VARCHAR(1) COMMENT '是否删除标记'

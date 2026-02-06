@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260203"
+_VERSION="20260204"
 
 #add src directory
 import os
@@ -9194,6 +9194,266 @@ def get_unique_user_stock_list():
 #user_stock_list end 
 
 
+#data_check_log begin 
+
+def tablename_convertor_data_check_log():
+    tableName = "data_check_log"
+    tableName = tableName.lower()
+    return tableName
+
+
+def decode_tablename_data_check_log(tableName):
+    result = {}
+    aList = tableName.split("_")
+    
+    return result
+
+
+#创建data_check_log表
+def create_data_check_log(tableName):
+    aList = ["CREATE TABLE IF NOT EXISTS %s("
+    "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号',",
+    "check_processor VARCHAR(32) COMMENT '检查进程',",
+    "check_type VARCHAR(32) COMMENT '检查类型',",
+    "report_date VARCHAR(10) COMMENT '报告日期YMD',",
+    "`description` VARCHAR(100) COMMENT '描述',",
+    "start_date VARCHAR(20) COMMENT '开始时间',",
+    "end_date VARCHAR(20) COMMENT '结束时间',",
+    "error_desc VARCHAR(48) COMMENT '错误描述',",
+    "proc_num INT COMMENT '处理个数',",
+    "label1 VARCHAR(32) NULL,",
+    "label2 VARCHAR(32) NULL,",
+    "label3 VARCHAR(32) NULL,",
+    "memo VARCHAR(200) NULL,",
+    "regID VARCHAR(32) NOT NULL COMMENT '注册ID',",
+    "regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日',",
+    "modifyID VARCHAR(32) COMMENT '修改ID',",
+    "modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日',",
+    "dispFlag VARCHAR(1) COMMENT '是否显示标记',",
+    "delFlag VARCHAR(1) COMMENT '是否删除标记'"
+    ")  ENGINE=INNODB DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    ]
+    tempStr = "".join(aList)
+    sqlStr = tempStr % (tableName)
+    rtn = mysqlDB.executeWrite(sqlStr)
+    result = chkTableExist(tableName)
+    if result:
+        pass
+        sqlStr = "CREATE INDEX {1} ON {0}({1}) ".format(tableName, "check_processor")
+        rtn = mysqlDB.executeWrite(sqlStr)
+        #sqlStr = "ALTER TABLE {0} auto_increment = {1} ".format(tableName,auto_increment_default_value)
+        #rtn = mysqlDB.executeWrite(sqlStr)
+
+    return result
+
+
+#删除data_check_log表
+def drop_data_check_log(tableName):
+    result = dropTableGeneral(tableName)
+    return result
+
+
+#data_check_log 删除记录
+def delete_data_check_log(tableName,id):
+    result = 0
+    sqlStr = f"DELETE FROM {tableName}"
+    try:
+
+        sqlStr += " WHERE id = %s"
+        valuesList = [id] 
+        result = mysqlDB.executeWrite(sqlStr,tuple(valuesList))
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#data_check_log 增加记录
+def insert_data_check_log(tableName,dataSet):
+    result = 0
+    try:
+
+        saveSet = {}
+
+        saveSet["check_processor"] = dataSet.get("check_processor", "") 
+
+        saveSet["check_type"] = dataSet.get("check_type", "") 
+
+        saveSet["report_date"] = dataSet.get("report_date", "") 
+
+        saveSet["description"] = dataSet.get("description", "") 
+
+        saveSet["start_date"] = dataSet.get("start_date", "") 
+
+        saveSet["end_date"] = dataSet.get("end_date", "") 
+
+        saveSet["error_desc"] = dataSet.get("error_desc", "") 
+
+        try:
+            proc_num = int(dataSet.get("proc_num")) 
+        except:
+            proc_num = 0 
+        saveSet["proc_num"] = proc_num
+
+        saveSet["label1"] = dataSet.get("label1", "") 
+
+        saveSet["label2"] = dataSet.get("label2", "") 
+
+        saveSet["label3"] = dataSet.get("label3", "") 
+
+        saveSet["memo"] = dataSet.get("memo", "") 
+
+        saveSet["regID"] = dataSet.get("regID", "") 
+
+        saveSet["regYMDHMS"] = dataSet.get("regYMDHMS", "") 
+
+        saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+
+        saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+
+        result = insertTableGeneral(tableName, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#data_check_log 修改记录
+def update_data_check_log(tableName,id,dataSet):
+    result = -2
+    try:
+        saveSet = {}
+
+        check_processor = dataSet.get("check_processor") 
+        if check_processor:
+            saveSet["check_processor"] = check_processor
+
+        check_type = dataSet.get("check_type") 
+        if check_type:
+            saveSet["check_type"] = check_type
+
+        report_date = dataSet.get("report_date") 
+        if report_date:
+            saveSet["report_date"] = report_date
+
+        description = dataSet.get("description") 
+        if description:
+            saveSet["description"] = description
+
+        start_date = dataSet.get("start_date") 
+        if start_date:
+            saveSet["start_date"] = start_date
+
+        end_date = dataSet.get("end_date") 
+        if end_date:
+            saveSet["end_date"] = end_date
+
+        error_desc = dataSet.get("error_desc") 
+        if error_desc:
+            saveSet["error_desc"] = error_desc
+
+        proc_num = dataSet.get("proc_num") 
+        if proc_num:
+            try:
+                proc_num = int(dataSet.get("proc_num")) 
+                saveSet["proc_num"] = proc_num
+            except:
+                pass
+
+        label1 = dataSet.get("label1") 
+        if label1:
+            saveSet["label1"] = label1
+
+        label2 = dataSet.get("label2") 
+        if label2:
+            saveSet["label2"] = label2
+
+        label3 = dataSet.get("label3") 
+        if label3:
+            saveSet["label3"] = label3
+
+        memo = dataSet.get("memo") 
+        if memo:
+            saveSet["memo"] = memo
+
+        modifyID = dataSet.get("modifyID") 
+        if modifyID:
+            saveSet["modifyID"] = modifyID
+
+        modifyYMDHMS = dataSet.get("modifyYMDHMS") 
+        if modifyYMDHMS:
+            saveSet["modifyYMDHMS"] = modifyYMDHMS
+
+        dispFlag = dataSet.get("dispFlag") 
+        if dispFlag:
+            saveSet["dispFlag"] = dispFlag
+
+        delFlag = dataSet.get("delFlag") 
+        if delFlag:
+            saveSet["delFlag"] = delFlag
+
+        keySqlstr = "id = %s"
+        keyValues = [id]
+
+        result = updateTableGeneral(tableName, keySqlstr,  keyValues, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#data_check_log 查询记录
+def query_data_check_log(tableName,id = "0", delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+    result = []
+    columns = "*"
+    valuesList = []
+    sqlStr = f"SELECT {columns} FROM {tableName}"
+
+    try:
+
+        try:
+            id = int(id)
+
+        except:
+            id = 0
+
+        if id > 0:
+            sqlStr =  sqlStr + " WHERE id = %s" 
+            valuesList = [id]  
+
+        #if limitNum > 0:
+            #sqlStr += " LIMIT {0}".format(limitNum)
+
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            dataList = dataFormatConvert(dataList)
+            result = list(dataList)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#data_check_log end 
+
+
 #application end
 
 
@@ -9264,6 +9524,10 @@ def checkMySqlDataBase():
     if chkTableExist(tableName) == False:
         rtn = create_user_stock_list(tableName)
 
+    tableName = tablename_convertor_data_check_log()
+    if chkTableExist(tableName) == False:
+        rtn = create_data_check_log(tableName)
+
 
 def dropMySqlDataBase():
     YMDHMS = misc.getTime()
@@ -9332,6 +9596,9 @@ def dropMySqlDataBase():
     if chkTableExist(tableName):
         rtn = drop_user_stock_list(tableName)
 
+    tableName = tablename_convertor_data_check_log()
+    if chkTableExist(tableName):
+        rtn = drop_data_check_log(tableName)
 
 checkMySqlDataBase()
 #check mysql database end

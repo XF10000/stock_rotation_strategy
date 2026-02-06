@@ -1,0 +1,18 @@
+# M H D m d cmd
+0 0 * * * sh /data/accountService/src/schedule/logslice.sh > /data/accountService/log/logslice.log 2>&1
+
+0 0 * * * sh /data/stockapp/src/schedule/logslice.sh > /data/stockapp/log/logslice.log 2>&1
+
+#定时获取股票信息
+10 19 * * * sh /data/stockapp/src/schedule/restore_regular.sh > /data/stockapp/log/restore_regular.log 2>&1
+
+#*/5 * * * * sh /data/stockapp/src/monitor/restore_monitor.sh > /data/stockapp/log/restore_monitor.log 2>&1
+
+#10 0 * * * sh /data/stockapp/src/schedule/restore_clean.sh > /data/stockapp/log/restore_clean.log 2>&1
+#10 1 * * * sh /data/stockapp/src/schedule/restore_file.sh > /data/stockapp/log/restore_file.log 2>&1
+#*/5 * * * * sh /data/stockapp/src/schedule/restore_reporter.sh > /data/stockapp/log/restore_reporter.log 2>&1
+
+@reboot sh /data/accountService/src/schedule/logslice.sh > /data/accountService/log/logslice.log 2>&1
+@reboot sh /data/stockapp/src/schedule/logslice.sh > /data/stockapp/log/logslice.log 2>&1
+#@reboot sh /data/stockapp/src/schedule/restore_clean.sh > /data/stockapp/log/restore_clean.log 2>&1
+#@reboot sh /data/stockapp/src/schedule/restore_file.sh > /data/stockapp/log/restore_file.log 2>&1

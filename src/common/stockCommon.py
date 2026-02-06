@@ -15,7 +15,7 @@
 # 4. 股票筛选器(包括,量能筛选器, 价格筛选器等)
 
 
-_VERSION="20260129"
+_VERSION="20260205"
 
 
 import os
@@ -50,7 +50,8 @@ from common import swIndustryRules as comIndustryRules
 
 from config import basicSettings as settings
 
-
+import pdb
+pdb.set_trace()
 if "_LOG" not in dir() or not _LOG:
     logDir = os.path.join(settings._HOME_DIR, "log")
     _LOG = misc.setLogNew("STOCK",comGD._DEF_LOG_STOCK_TEST_NAME, logDir)
@@ -382,6 +383,10 @@ def getHistoryStockData(symbol,startYMD,endYMD,period="",adjust=""):
                 result = comAK.sinoGetHistroryData(symbol, startYMD, endYMD,period,adjust)
                 if result == None:
                     _LOG.warning(f"E: 获取新浪股票历史数据失败, 股票代码:{symbol}, 开始日期:{startYMD}, 结束日期:{endYMD}, 周期:{period}, 调整:{adjust}")
+                else:
+                    _LOG.info(f"I: 获取新浪股票历史数据成功, 股票代码:{symbol}, 开始日期:{startYMD}, 结束日期:{endYMD}, 周期:{period}, 调整:{adjust}")
+            else:
+                _LOG.info(f"I:获取东方财富股票历史数据成功, 股票代码:{symbol}, 开始日期:{startYMD}, 结束日期:{endYMD}, 周期:{period}, 调整:{adjust}")
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -1186,13 +1191,14 @@ def detectEmaTrend(ema: pd.Series, regression_periods: int = 8, flat_threshold: 
   └── 买入判断：价值比 < 70%
 '''
 def valueInvestingScreener(symbol,currentPrice,dcfValue,technicalData,backtestSettings):
-    result = {"scores":{"trend_filter_low":False,"trend_filter_high":False}}
+    result = {"scores":{"trend_filter_low":False,"trend_filter_high":False},"intermediate_data":{}}
     try:
         result["symbol"] = symbol
         result["currentPrice"] = currentPrice
         result["dcfValue"] = dcfValue
         result["valueRatio"] = 0.0
         scores = result["scores"]
+        intermediate_data = result["intermediate_data"]
 
         if dcfValue > 0.0:
             #获取价值比过滤器参数
@@ -1205,6 +1211,10 @@ def valueInvestingScreener(symbol,currentPrice,dcfValue,technicalData,backtestSe
             except:
                 valueRatioSellThresold = 0.70
             result["method"] = "valueRatio"
+
+            intermediate_data["value_ratio_buy_threshold"] = valueRatioBuyThresold #保留中间计算值, 用于后续判断
+            intermediate_data["value_ratio_sell_threshold"] = valueRatioSellThresold #保留中间计算值, 用于后续判断
+            
             valueRatio = currentPrice / dcfValue 
             valueRatio = round(valueRatio,2)
             #价值比过滤器判断
@@ -1240,10 +1250,11 @@ def valueInvestingScreener(symbol,currentPrice,dcfValue,technicalData,backtestSe
 
 #维度二：超买超卖
 def calcOverBuySellFactor(symbol,backtestData):
-    result = {"scores":{"overbought_oversold_high":False,"overbought_oversold_low":False}}
+    result = {"scores":{"overbought_oversold_high":False,"overbought_oversold_low":False},"intermediate_data":{}}
     try:
         result["symbol"] = symbol
         scores = result["scores"]
+        intermediate_data = result["intermediate_data"]
 
         #获取股票行业映射
         industryMapping = backtestData.get("industryMapping",{})
@@ -1256,12 +1267,31 @@ def calcOverBuySellFactor(symbol,backtestData):
         #获取行业RSI数据
         industryRSIData = backtestData.get("industryRSIData",{})
         currIndustryRSI = industryRSIData.get(industry_code,{})
+
+        extermeOversold = currIndustryRSI.get("extreme_oversold",0.0)
+        extermeOverbought = currIndustryRSI.get("extreme_overbought",0.0)       
+        oversold = currIndustryRSI.get("oversold",0.0)
+        overbought = currIndustryRSI.get("overbought",0.0)
+       
+        intermediate_data["extreme_overbought"] = extermeOverbought #保留中间计算值, 用于后续判断
+        intermediate_data["extreme_oversold"] = extermeOversold #保留中间计算值, 用于后续判断
+        intermediate_data["oversold"] = oversold #保留中间计算值, 用于后续判断
+        intermediate_data["overbought"] = overbought #保留中间计算值, 用于后续判断
+
         #获取当前行业的RSI值
         currRSI = currIndustryRSI.get("current_rsi",0.0)
+        intermediate_data["current_rsi"] = currRSI #保留中间计算值, 用于后续判断
 
         #获取背离数据
         divergenceData = backtestData.get("divergenceData",{})
         currDivergence = divergenceData.get(symbol,{})
+        currRSIDivergence = currDivergence.get("rsi",{})
+
+        topDivergence = currRSIDivergence.get("top_divergence",False)
+        bottomDivergence = currRSIDivergence.get("bottom_divergence",False)
+
+        intermediate_data["top_divergence"] = topDivergence #保留中间计算值, 用于后续判断
+        intermediate_data["bottom_divergence"] = bottomDivergence #保留中间计算值, 用于后续判断
 
         #获取行业规则
         industryRule = comIndustryRules.get_comprehensive_industry_rules(industry_name)
@@ -1269,10 +1299,10 @@ def calcOverBuySellFactor(symbol,backtestData):
             _LOG.warning(f"industryRule is None, industry_name: {industry_name}")
         #是否考虑背离情况
         needDivergenceBuySell = industryRule['divergence_required']
+
+        intermediate_data["divergence_required"] = needDivergenceBuySell #保留中间计算值, 用于后续判断
         
         #1. 判断是否是极端超买/超卖
-        extermeOversold = currIndustryRSI.get("extreme_oversold",0.0)
-        extermeOverbought = currIndustryRSI.get("extreme_overbought",0.0)
         if extermeOverbought and currRSI >= extermeOverbought:
             #极端超买
             scores["overbought_oversold_high"] = True #为啥是oversold_high? 应该 是overbought = True
@@ -1281,10 +1311,7 @@ def calcOverBuySellFactor(symbol,backtestData):
             scores["overbought_oversold_low"] = True #为啥是oversold_low? 应该 oversold = True
         else:
             #其他情况, 要考虑是否 背离情况
-            oversold = currIndustryRSI.get("oversold",0.0)
-            overbought = currIndustryRSI.get("overbought",0.0)
-            topDivergence = currDivergence.get("top_divergence",False)
-            bottomDivergence = currDivergence.get("bottom_divergence",False)
+
             # 2. 普通RSI阈值：需要考虑背离条件
             # 阶段高点：14周RSI > 行业特定超买阈值 且 (出现顶背离 或 不要求背离)
             # if needDivergenceBuySell:
@@ -1308,10 +1335,11 @@ def calcOverBuySellFactor(symbol,backtestData):
 
 #动能确认
 def calcMomentumValidation(symbol,backtestData):
-    result = {"scores":{"momentum_high":False,"momentum_low":False}}
+    result = {"scores":{"momentum_high":False,"momentum_low":False},"intermediate_data":{}}
     try:
         result["symbol"] = symbol
         scores = result["scores"]
+        intermediate_data = result["intermediate_data"]
 
         stockIndicators = backtestData.get("stockIndicators",{})
         currStockIndicators = stockIndicators.get(symbol,{})
@@ -1320,9 +1348,16 @@ def calcMomentumValidation(symbol,backtestData):
             currDEA = currStockIndicators[-1].get("macd_signal",0.0) # 当前DEA值,macdsignal（即 DEA）：DIF的EMA（信号线）
             currMACDHist = currStockIndicators[-1].get("macd_hist",0.0) # 当前DIF与DEA的差值
 
+            intermediate_data["macd_dif"] = currDIF #保留中间计算值, 用于后续判断
+            intermediate_data["macd_dea"] = currDEA #保留中间计算值, 用于后续判断
+            intermediate_data["macd_hist"] = currMACDHist #保留中间计算值, 用于后续判断
+
             if len(currStockIndicators) > 3: 
                 macdHistPrev1 = currStockIndicators[-2].get("macd_hist",0.0) # 当前DIF与DEA的差值
                 macdHistPrev2 = currStockIndicators[-3].get("macd_hist",0.0) # 当前DIF与DEA的差值
+
+                intermediate_data["macd_hist_prev1"] = macdHistPrev1 #保留中间计算值, 用于后续判断
+                intermediate_data["macd_hist_prev2"] = macdHistPrev2 #保留中间计算值, 用于后续判断
 
                 # 红色柱体连续2根缩短（用于卖出信号）
                 redHistShrinking = False
@@ -1340,6 +1375,9 @@ def calcMomentumValidation(symbol,backtestData):
                 isMACDGreen = currMACDHist < 0 # 当前为绿色柱体
                 isMACDRed = currMACDHist > 0 # 当前为红色柱体
 
+                intermediate_data["macd_green"] = isMACDGreen #保留中间计算值, 用于后续判断
+                intermediate_data["macd_red"] = isMACDRed #保留中间计算值, 用于后续判断
+
                 # 金叉死叉
                 difCrossUp = False
                 difCrossDown = False
@@ -1349,6 +1387,9 @@ def calcMomentumValidation(symbol,backtestData):
                     difCrossUp = True
                 if currDIF < currDEA and difPrev >= deaPrev: # 死叉
                     difCrossDown = True
+                
+                intermediate_data["macd_dif_cross_up"] = difCrossUp #保留中间计算值, 用于后续判断
+                intermediate_data["macd_dif_cross_down"] = difCrossDown #保留中间计算值, 用于后续判断
 
                 # 检查前期柱体缩短 + 当前转色的严谨条件
                 # 买入：前2根绿柱缩短 + 当前转红
@@ -1357,6 +1398,8 @@ def calcMomentumValidation(symbol,backtestData):
                     abs(macdHistPrev1) < abs(macdHistPrev2) and  # 前期绿柱在缩短
                     currMACDHist > 0):  # 当前转为红柱
                     green2redTransition = True
+                
+                intermediate_data["macd_green2red_transition"] = green2redTransition #保留中间计算值, 用于后续判断
 
                 # 卖出：前2根红柱缩短 + 当前转绿
                 red2greenTransition = False
@@ -1364,6 +1407,8 @@ def calcMomentumValidation(symbol,backtestData):
                     macdHistPrev1 < macdHistPrev2 and  # 前期红柱在缩短
                     currMACDHist < 0):  # 当前转为绿柱
                     red2greenTransition = True
+                
+                intermediate_data["macd_red2green_transition"] = red2greenTransition #保留中间计算值, 用于后续判断
 
                 # 阶段高点（卖出）：MACD红色柱体连续2根缩短 或 前期红柱缩短+当前转绿 或 DIF死叉DEA
                 sellCondition = [redHistShrinking, red2greenTransition, difCrossDown]
@@ -1384,10 +1429,11 @@ def calcMomentumValidation(symbol,backtestData):
 
 #极端价格 + 量能
 def calcExtremePriceVolume(symbol,backtestData):
-    result = {"scores":{"extreme_price_volume_high":False,"extreme_price_volume_low":False}}
+    result = {"scores":{"extreme_price_volume_high":False,"extreme_price_volume_low":False},"intermediate_data":{}}
     try:
         result["symbol"] = symbol
         scores = result["scores"]
+        intermediate_data = result["intermediate_data"]
 
         backtestSettings = backtestData.get("backtestSettings",{})
 
@@ -1402,11 +1448,19 @@ def calcExtremePriceVolume(symbol,backtestData):
 
             currVolumeMA = currStockIndicators[-1].get("volume_ma",0.0) # 当前量能移动平均线
 
+            intermediate_data["extreme_price_volume_curr_price"] = currPrice #保留中间计算值, 用于后续判断
+            intermediate_data["extreme_price_volume_curr_volume"] = currVolume #保留中间计算值, 用于后续判断
+            intermediate_data["extreme_price_volume_curr_bb_upper"] = currBBUpper #保留中间计算值, 用于后续判断
+            intermediate_data["extreme_price_volume_curr_bb_lower"] = currBBLower #保留中间计算值, 用于后续判断
+            intermediate_data["extreme_price_volume_curr_volume_ma"] = currVolumeMA #保留中间计算值, 用于后续判断
+
             # 阶段高点：收盘价 ≥ 布林上轨 且 本周量 ≥ 4周均量 × 1.3
             try:
                 valumeSellRatio = settings.STOCK_STRATEGY_PARAMS.get("volume_multiplier_high")
             except:
                 valumeSellRatio = 1.3
+            
+            intermediate_data["volume_sell_ratio"] = valumeSellRatio #保留中间计算值, 用于后续判断
 
             if currPrice >= currBBUpper and currVolume >= currVolumeMA * valumeSellRatio:
                 scores["extreme_price_volume_high"] = True
@@ -1416,12 +1470,12 @@ def calcExtremePriceVolume(symbol,backtestData):
                 valumeBuyRatio = settings.STOCK_STRATEGY_PARAMS.get("volume_multiplier_low")
             except:
                 valumeBuyRatio = 0.8
+            
+            intermediate_data["volume_buy_ratio"] = valumeBuyRatio #保留中间计算值, 用于后续判断
 
             if currPrice <= currBBLower and currVolume >= currVolumeMA * valumeBuyRatio:
                 scores["extreme_price_volume_low"] = True
-
             pass
-
         pass
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -1448,14 +1502,14 @@ def twoOutOfThreeFactors(symbol,backtestData):
         #计算动能确认因子
         momentumFactor = calcMomentumValidation(symbol,backtestData)
 
-        buyParameters.append(buySellFactor["scores"]["momentum_high"])
-        sellParameters.append(buySellFactor["scores"]["momentum_low"])
+        buyParameters.append(momentumFactor["scores"]["momentum_high"])
+        sellParameters.append(momentumFactor["scores"]["momentum_low"])
 
         #极端价格 + 量能
         extremePriceVolumeFactor = calcExtremePriceVolume(symbol,backtestData)
 
-        buyParameters.append(buySellFactor["scores"]["extreme_price_volume_high"])
-        sellParameters.append(buySellFactor["scores"]["extreme_price_volume_low"])
+        buyParameters.append(extremePriceVolumeFactor["scores"]["extreme_price_volume_high"])
+        sellParameters.append(extremePriceVolumeFactor["scores"]["extreme_price_volume_low"])
 
         #合并因子
         scores = {**buySellFactor["scores"],**momentumFactor["scores"],**extremePriceVolumeFactor["scores"]}

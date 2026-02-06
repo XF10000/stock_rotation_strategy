@@ -7,7 +7,7 @@
 #Date: 2019-08-01
 #Description:   定义全局常量
 
-_VERSION="20260124"
+_VERSION="20260205"
 
 #导入具体应用的全局变量
 
@@ -330,6 +330,16 @@ _DEF_STOCK_BACKTEST_DAYS = (365*2) #默认回测2年数据
 _DEF_STOCK_VALUE_SCREEN_SELL = "sell" #价值比大于80%
 _DEF_STOCK_VALUE_SCREEN_BUY = "buy" #价值比小于70%
 _DEF_STOCK_VALUE_SCREEN_HOLD = "hold" #价值比在70%到80%之间
+
+_DEF_STOCK_ACTION_BUY = "buy" #购买
+_DEF_STOCK_ACTION_SELL = "sell" #卖出
+_DEF_STOCK_ACTION_HOLD = "hold" #持仓
+
+_DEF_STOCK_ACTION_CN = {
+    _DEF_STOCK_ACTION_BUY:"购买",
+    _DEF_STOCK_ACTION_SELL:"卖出",
+    _DEF_STOCK_ACTION_HOLD:"持仓",
+}
 
 #EMA趋势过滤器判断
 _DEF_STOCK_EMA_TREND_DOWN = "down" #20周EMA趋势过滤器, 趋势向下

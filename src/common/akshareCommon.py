@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260131"
+_VERSION = "20260205"
 
 import os
 import sys
@@ -78,6 +78,22 @@ def symbolWithMarket2symbole(symbol):
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
+    return result
+
+
+#股票市场总体情况
+def getStockMarketSummary(YMD=""):
+    result = {}
+    try:
+        if not YMD:
+            YMD = misc.getTime()[0:8]
+        df = ak.stock_szse_summary(date=YMD)
+        df.rename(columns={"证券类别":"security_type","数量":"volume","成交金额":"amount","总市值":"market_cap","流通市值":"free_market_cap"},inplace=True)
+        result = df.to_dict(orient='records')
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
     return result
 
 

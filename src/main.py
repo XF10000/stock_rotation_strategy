@@ -177,10 +177,19 @@ def calcFourFactorData(backtestData):
         dividendData = backtestData.get("dividendData",{})
         backtestSettings = backtestData.get("backtestSettings",{})
 
+        #获取数据最后一天的日期
+        lastDate = ""
+        for k, v in stockDailyData.items():
+            for item in v:
+                currDate = item.get("date","")
+                if currDate > lastDate:
+                    lastDate = currDate
+            break
+
         #首先计算 维度一：价值准入过滤器 结果
-        valueResult = {}
         for stockInfo in stockPortfolio:
             symbol = stockInfo.get("symbol", "")
+            stockName = stockInfo.get("Stock_name", "")
             stockDataList = stockDailyData.get(symbol,[])
             stockIndicatorList = stockIndicators.get(symbol,[])
             dcfValue = stockInfo.get("DCF_value_per_share",0.0)
@@ -192,6 +201,27 @@ def calcFourFactorData(backtestData):
                 #action == hold 时, 考虑其他过滤器,三选二. 暂时都计算其他过滤器, 后续再根据需要筛选
                 otherResult = comStock.twoOutOfThreeFactors(symbol,backtestData)
                 otherAction = otherResult.get("action", comGD._DEF_STOCK_VALUE_SCREEN_HOLD)
+
+                result[symbol] = {}
+                result[symbol]["valueResult"] = valueResult
+                result[symbol]["valueAction"] = valueAction
+                result[symbol]["otherResult"] = otherResult
+                result[symbol]["otherAction"] = otherAction
+                #根据价值比过滤器和其他过滤器的结果, 最终建议
+                #1. 价值比过滤器建议 buy, 则其他过滤器建议 buy, 则最终建议 buy
+                #2. 价值比过滤器建议 sell, 则其他过滤器建议 sell, 则最终建议 sell
+                if valueAction == otherAction:
+                    result[symbol]["action"] = valueAction
+                else:
+                    result[symbol]["action"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
+                finalAction = result[symbol]["action"]
+
+                #转换为中文
+                valueActionCN = comGD._DEF_STOCK_ACTION_CN.get(valueAction,"")
+                otherActionCN = comGD._DEF_STOCK_ACTION_CN.get(otherAction,"")
+                finalActionCN = comGD._DEF_STOCK_ACTION_CN.get(finalAction,"")
+                
+                _LOG.info(f"  - {lastDate}: 计算股票:{symbol} {stockName} 的四维度数据... 价值比过滤器:{valueActionCN}, 其他过滤器:{otherActionCN}, 最终建议:{finalActionCN} ")
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"

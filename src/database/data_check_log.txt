@@ -1,0 +1,19 @@
+id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
+check_processor VARCHAR(32) COMMENT '检查进程'
+check_type VARCHAR(32) COMMENT '检查类型'
+report_date VARCHAR(10) COMMENT '报告日期YMD'
+description VARCHAR(100) COMMENT '描述'
+start_date VARCHAR(20) COMMENT '开始时间'
+end_date VARCHAR(20) COMMENT '结束时间'
+error_desc VARCHAR(48) COMMENT '错误描述'
+proc_num INT COMMENT '处理个数'
+label1 VARCHAR(32) NULL
+label2 VARCHAR(32) NULL
+label3 VARCHAR(32) NULL
+memo VARCHAR(200) NULL
+regID VARCHAR(32) NOT NULL COMMENT '注册ID'
+regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日'
+modifyID VARCHAR(32) COMMENT '修改ID'
+modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日'
+dispFlag VARCHAR(1) COMMENT '是否显示标记'
+delFlag VARCHAR(1) COMMENT '是否删除标记'

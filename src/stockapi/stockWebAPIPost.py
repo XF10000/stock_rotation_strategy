@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260203"
+_VERSION="20260204"
 
 
 import os
@@ -3189,7 +3189,7 @@ def funcIndustryInfoModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_industry_info()
-                                rtn = comMysql.update_industry_info(tableName,id,saveSet)
+                                rtn = comMysql.update_industry_info(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -3678,7 +3678,7 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_stock_info()
-                                rtn = comMysql.update_stock_info(tableName,id,saveSet)
+                                rtn = comMysql.update_stock_info(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -4190,7 +4190,7 @@ def funcStockHistoryModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_stock_history_data(period=period,adjust=adjust)
-                                rtn = comMysql.update_stock_history_data(tableName,id,saveSet)
+                                rtn = comMysql.update_stock_history_data(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -4681,7 +4681,7 @@ def funcStockDividendModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_stock_dividend_data()
-                                rtn = comMysql.update_stock_dividend_data(tableName,id,saveSet)
+                                rtn = comMysql.update_stock_dividend_data(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -5168,7 +5168,7 @@ def funcIndustryHistoryModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_industry_history_data()
-                                rtn = comMysql.update_industry_history_data(tableName,id,saveSet)
+                                rtn = comMysql.update_industry_history_data(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -6302,7 +6302,7 @@ def funcBalanceSheetModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_balance_sheets()
-                                rtn = comMysql.update_balance_sheets(tableName,id,saveSet)
+                                rtn = comMysql.update_balance_sheets(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -7272,7 +7272,7 @@ def funcIncomeStatementsModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_income_statements()
-                                rtn = comMysql.update_income_statements(tableName,id,saveSet)
+                                rtn = comMysql.update_income_statements(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -8162,7 +8162,7 @@ def funcCashFlowModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_cash_flow_statements()
-                                rtn = comMysql.update_cash_flow_statements(tableName,id,saveSet)
+                                rtn = comMysql.update_cash_flow_statements(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -8680,7 +8680,7 @@ def funcIndicatorModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_indicator_medians()
-                                rtn = comMysql.update_indicator_medians(tableName,id,saveSet)
+                                rtn = comMysql.update_indicator_medians(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -9154,7 +9154,7 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
 
                                 #保存数据
                                 tableName = comMysql.tablename_convertor_user_stock_list()
-                                rtn = comMysql.update_user_stock_list(tableName,id,saveSet)
+                                rtn = comMysql.update_user_stock_list(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
                                 if rtn < 0:
@@ -9356,6 +9356,457 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
     return result
 
 
+#数据检查日志增加代码
+def funcDataCheckLogAdd(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+                if dataValidFlag:
+                    saveSet = {}
+                    saveSet["check_processor"] = dataSet.get("check_processor", "") 
+                    saveSet["check_type"] = dataSet.get("check_type", "") 
+                    saveSet["report_date"] = dataSet.get("report_date", "") 
+                    saveSet["description"] = dataSet.get("description", "") 
+                    saveSet["start_date"] = dataSet.get("start_date", "") 
+                    saveSet["end_date"] = dataSet.get("end_date", "") 
+                    saveSet["error_desc"] = dataSet.get("error_desc", "") 
+                    saveSet["proc_num"] = dataSet.get("proc_num", "") 
+                    saveSet["label1"] = dataSet.get("label1", "") 
+                    saveSet["label2"] = dataSet.get("label2", "") 
+                    saveSet["label3"] = dataSet.get("label3", "") 
+                    saveSet["memo"] = dataSet.get("memo", "") 
+                    saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+                    saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+                    saveSet["regID"] = loginID
+                    saveSet["regYMDHMS"] = misc.getTime()
+
+                    tableName = comMysql.tablename_convertor_data_check_log()
+                    recID = comMysql.insert_data_check_log(tableName,saveSet)
+                    rtnData["recID"] = str(recID)
+
+                    if recID <= 0:
+                        #记录添加失败
+                        errCode = "CG"
+                        _LOG.warning(f"rtn:{recID},saveSet:{saveSet}")
+                    else:
+                        if _DEBUG:
+                            pass
+                            _LOG.info(f"D: recID:{recID}")
+
+                    result = rtnData
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#数据检查日志删除代码
+def funcDataCheckLogDel(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                id = dataSet.get("id", "")
+                tableName = comMysql.tablename_convertor_data_check_log()
+                currDataList = comMysql.query_data_check_log(tableName,id)
+                if len(currDataList) == 1:
+                    saveSet = {}
+                    saveSet["modifyID"] = loginID
+                    saveSet["modifyYMDHMS"] = misc.getTime()
+                    #saveSet["delFlag"] = "1"
+
+                    rtn = comMysql.delete_data_check_log(tableName,id)
+                    rtnData["rtn"] = str(rtn)
+
+                    if _DEBUG:
+                        _LOG.info(f"D: rtn:{rtn}")
+
+                    result = rtnData
+
+                else:
+                    errCode = "CB"
+
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#数据检查日志修改代码
+def funcDataCheckLogModify(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查/功能检测
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+
+                check_processor = dataSet.get("check_processor") 
+                check_type = dataSet.get("check_type") 
+                report_date = dataSet.get("report_date") 
+                description = dataSet.get("description") 
+                start_date = dataSet.get("start_date") 
+                end_date = dataSet.get("end_date") 
+                error_desc = dataSet.get("error_desc") 
+                proc_num = dataSet.get("proc_num") 
+                label1 = dataSet.get("label1") 
+                label2 = dataSet.get("label2") 
+                label3 = dataSet.get("label3") 
+                memo = dataSet.get("memo") 
+                dispFlag = dataSet.get("dispFlag") 
+                delFlag = dataSet.get("delFlag") 
+                #data valid 检查
+
+                if dataValidFlag:
+                    #当前记录获取
+                    recID = dataSet.get("id", "")
+
+                    tableName = comMysql.tablename_convertor_data_check_log()
+                    currDataList = comMysql.query_data_check_log(tableName,recID)
+
+                    if len(currDataList) == 1:
+                        currDataSet = currDataList[0]
+
+                        #权限或其他检查
+                        if errCode == "B0": #
+
+                            saveSet = {}
+
+                            if check_processor != currDataSet.get("check_processor") and check_processor:
+                                saveSet["check_processor"] = check_processor
+
+                            if check_type != currDataSet.get("check_type") and check_type:
+                                saveSet["check_type"] = check_type
+
+                            if report_date != currDataSet.get("report_date") and report_date:
+                                saveSet["report_date"] = report_date
+
+                            if description != currDataSet.get("description") and description:
+                                saveSet["description"] = description
+
+                            if start_date != currDataSet.get("start_date") and start_date:
+                                saveSet["start_date"] = start_date
+
+                            if end_date != currDataSet.get("end_date") and end_date:
+                                saveSet["end_date"] = end_date
+
+                            if error_desc != currDataSet.get("error_desc") and error_desc:
+                                saveSet["error_desc"] = error_desc
+
+                            if proc_num != currDataSet.get("proc_num") and proc_num:
+                                saveSet["proc_num"] = proc_num
+
+                            if label1 != currDataSet.get("label1") and label1:
+                                saveSet["label1"] = label1
+
+                            if label2 != currDataSet.get("label2") and label2:
+                                saveSet["label2"] = label2
+
+                            if label3 != currDataSet.get("label3") and label3:
+                                saveSet["label3"] = label3
+
+                            if memo != currDataSet.get("memo") and memo:
+                                saveSet["memo"] = memo
+
+                            if dispFlag != currDataSet.get("dispFlag") and dispFlag:
+                                saveSet["dispFlag"] = dispFlag
+
+                            if delFlag != currDataSet.get("delFlag") and delFlag:
+                                saveSet["delFlag"] = delFlag
+
+                            if saveSet:
+                                #saveSet["delFlag"] = "0"
+                                saveSet["modifyID"] = loginID
+                                saveSet["modifyYMDHMS"] = misc.getTime()
+
+                                #保存数据
+                                tableName = comMysql.tablename_convertor_data_check_log()
+                                rtn = comMysql.update_data_check_log(tableName,recID,saveSet)
+                                rtnData["rtn"] = str(rtn)
+
+                                if rtn < 0:
+                                    _LOG.warning(f"D: rtn:{rtn},saveSet:{saveSet}")
+                                else:
+                                    if _DEBUG:
+                                        pass
+                                        _LOG.info(f"D: rtn:{rtn}")
+
+                                result = rtnData
+
+                        else:
+                            #BT
+                            errCode = "BT"
+
+                    else:
+                        #CB
+                        errCode = "CB"
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#数据检查日志查询代码
+def funcDataCheckLogQry(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+                #获取查询输入参数
+                id = dataSet.get("id", "")
+
+                #houseID = dataSet.get("houseID", "")
+
+                forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
+
+                searchOption = dataSet.get("searchOption")
+
+                mode = dataSet.get("mode", "full")
+
+                #limitNum = dataSet.get("limitNum",0)
+
+                #权限检查/功能检测
+
+                rightCheckFlag = True
+
+                if rightCheckFlag:
+
+                    #生成indexKey
+                    indexKeyDataSet = {} #查询生成index的因素
+                    if id:
+                        indexKeyDataSet["id"] = id
+                    if searchOption:
+                        indexKeyDataSet["searchOption"] = searchOption
+                    if mode:
+                        indexKeyDataSet["mode"] = mode
+
+                    #if limitNum:
+                        #indexKeyDataSet["limitNum"] = limitNum
+
+                    sessionID = sessionIDSet.get("sessionID", "")
+                    indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
+                    beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
+                    endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
+
+                    #判断数据是否在缓冲区:
+                    if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+
+                        if searchOption:
+                            currDataList = []
+                            tableName = comMysql.tablename_convertor_data_check_log()
+                            allDataList = comMysql.query_data_check_log(tableName,mode = mode)
+                            allowList = ["description", "label"] #筛选字段
+                            serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
+                            if serachResultSet["rtn"] == "B0":
+                                currDataList = serachResultSet.get("data", [])
+                        else:
+                            if id:
+                                tableName = comMysql.tablename_convertor_data_check_log()
+                                currDataList = comMysql.query_data_check_log(tableName,id,mode = mode)
+                            else:
+                                tableName = comMysql.tablename_convertor_data_check_log()
+                                currDataList = comMysql.query_data_check_log(tableName)
+
+                        dataList = []
+
+                        for currDataSet in currDataList:
+                            aSet = {}
+
+                            #需要把文件转移到public domain
+                            #appendixFileID00 =  currDataSet.get("appendixFileID00", "")
+                            #appendixFileID00 = getTempLocation(appendixFileID00, privateFlag = True)
+
+                            #if mode == "full":
+                                #aSet["houseID"] = currDataSet.get("houseID", "")
+
+                            aSet["id"] = currDataSet.get("id","")
+                            aSet["check_processor"] = currDataSet.get("check_processor","")
+                            aSet["check_type"] = currDataSet.get("check_type","")
+                            aSet["report_date"] = currDataSet.get("report_date","")
+                            aSet["description"] = currDataSet.get("description","")
+                            aSet["start_date"] = currDataSet.get("start_date","")
+                            aSet["end_date"] = currDataSet.get("end_date","")
+                            aSet["error_desc"] = currDataSet.get("error_desc","")
+                            aSet["proc_num"] = currDataSet.get("proc_num","")
+                            aSet["label1"] = currDataSet.get("label1","")
+                            aSet["label2"] = currDataSet.get("label2","")
+                            aSet["label3"] = currDataSet.get("label3","")
+                            aSet["memo"] = currDataSet.get("memo","")
+                            aSet["regID"] = currDataSet.get("regID","")
+                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                            aSet["modifyID"] = currDataSet.get("modifyID","")
+                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                            dataList.append(aSet)
+
+                        #临时缓存机制,改进型, 2023/10/16
+                        indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+
+                    rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
+
+                    #rtnData["limitNum"] = limitNum
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
 #application functions end
 
 
@@ -9474,7 +9925,12 @@ urlPathMap = {
     "userstocklistdel":funcUserStockListDel,
     "userstocklistmodify":funcUserStockListModify,
     "userstocklistqry":funcUserStockListQry,
-    
+
+    "datachecklogadd":funcDataCheckLogAdd,
+    "datachecklogdel":funcDataCheckLogDel,
+    "datachecklogmodify":funcDataCheckLogModify,
+    "datachecklogqry":funcDataCheckLogQry,
+
     #stock related end
 
     #application functions end
