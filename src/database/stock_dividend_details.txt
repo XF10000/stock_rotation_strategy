@@ -1,18 +1,12 @@
 id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
 stock_code VARCHAR(10) COMMENT '股票代码'
 stock_name VARCHAR(12) COMMENT '股票名称'
-total_shares_outstanding double COMMENT '总股本'
-public_float double COMMENT '流通股'
-market_cap double COMMENT '总市值'
-free_market_cap double COMMENT '流通市值'
-dcf_value_pre_share float COMMENT '每股贴现现金流价值'
-industry_code VARCHAR(10) COMMENT '行业代码'
-industry_name VARCHAR(48) COMMENT '行业名称'
-industry_name_sw VARCHAR(48) COMMENT '行业申银万国'
-industry_name_em VARCHAR(48) COMMENT '行业东方财富'
-area VARCHAR(40) COMMENT '地点'
-market VARCHAR(10) COMMENT '市场区域'
 ipo_date VARCHAR(10) COMMENT '上市时间'
+cumulative_dividend double COMMENT '累计股息'
+annual_dividend double COMMENT '年均股息'
+dividend_count float COMMENT '分红次数'
+total_financing double COMMENT '融资总额'
+financing_count float COMMENT '融资次数'
 label1 VARCHAR(32) NULL
 label2 VARCHAR(32) NULL
 label3 VARCHAR(32) NULL

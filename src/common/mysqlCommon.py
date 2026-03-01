@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260204"
+_VERSION="20260228"
 
 #add src directory
 import os
@@ -8857,10 +8857,12 @@ def decode_tablename_user_stock_list(tableName):
 def create_user_stock_list(tableName):
     aList = ["CREATE TABLE IF NOT EXISTS %s("
     "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号',",
-    "loginID VARCHAR(32) COMMENT '用户登录名称',",
+    "userID VARCHAR(32) COMMENT '用户ID',",
     "username VARCHAR(48) COMMENT '用户名称',",
     "stock_code VARCHAR(10) COMMENT '股票代码',",
     "stock_name VARCHAR(12) COMMENT '股票名称',",
+    "user_plan VARCHAR(8) COMMENT '用户计划',",
+    "plan_status VARCHAR(1) COMMENT '用户计划状态',",
     "initial_weight FLOAT COMMENT '初始占比',",
     "current_weight FLOAT COMMENT '当前占比',",
     "initial_cap DOUBLE COMMENT '初始总额',",
@@ -8885,7 +8887,7 @@ def create_user_stock_list(tableName):
     result = chkTableExist(tableName)
     if result:
         pass
-        sqlStr = "CREATE UNIQUE INDEX loginid_stock_code_index ON {0} ({1},{2}) ".format(tableName, "loginID","stock_code")
+        sqlStr = "CREATE UNIQUE INDEX idx_user_stock_plan ON {0} ({1},{2},{3}) ".format(tableName, "userID","stock_code","user_plan")
         rtn = mysqlDB.executeWrite(sqlStr)
         #sqlStr = "ALTER TABLE {0} auto_increment = {1} ".format(tableName,auto_increment_default_value)
         #rtn = mysqlDB.executeWrite(sqlStr)
@@ -8925,13 +8927,17 @@ def insert_user_stock_list(tableName,dataSet):
 
         saveSet = {}
 
-        saveSet["loginID"] = dataSet.get("loginID", "") 
+        saveSet["userID"] = dataSet.get("userID", "") 
 
         saveSet["username"] = dataSet.get("username", "") 
 
         saveSet["stock_code"] = dataSet.get("stock_code", "") 
 
         saveSet["stock_name"] = dataSet.get("stock_name", "") 
+
+        saveSet["user_plan"] = dataSet.get("user_plan", "") 
+
+        saveSet["plan_status"] = dataSet.get("plan_status", "") 
 
         try:
             initial_weight = float(dataSet.get("initial_weight")) 
@@ -9002,9 +9008,9 @@ def update_user_stock_list(tableName,id,dataSet):
     try:
         saveSet = {}
 
-        loginID = dataSet.get("loginID") 
-        if loginID:
-            saveSet["loginID"] = loginID
+        userID = dataSet.get("userID") 
+        if userID:
+            saveSet["userID"] = userID
 
         username = dataSet.get("username") 
         if username:
@@ -9017,6 +9023,14 @@ def update_user_stock_list(tableName,id,dataSet):
         stock_name = dataSet.get("stock_name") 
         if stock_name:
             saveSet["stock_name"] = stock_name
+
+        user_plan = dataSet.get("user_plan") 
+        if user_plan:
+            saveSet["user_plan"] = user_plan
+
+        plan_status = dataSet.get("plan_status") 
+        if plan_status:
+            saveSet["plan_status"] = plan_status
 
         initial_weight = dataSet.get("initial_weight") 
         if initial_weight:
@@ -9117,7 +9131,8 @@ def update_user_stock_list(tableName,id,dataSet):
 
 
 #user_stock_list 查询记录
-def query_user_stock_list(tableName,id = "0", loginID = "", stock_code = "", delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", user_plan = "default" ,plan_status = "Y",
+                             delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
     valuesList = []
@@ -9135,12 +9150,30 @@ def query_user_stock_list(tableName,id = "0", loginID = "", stock_code = "", del
             sqlStr =  sqlStr + " WHERE id = %s" 
             valuesList = [id]  
         else:
-            if loginID:
+            if userID:
                 if valuesList:
-                    sqlStr =  sqlStr + " AND loginID = %s" 
+                    sqlStr =  sqlStr + " AND userID = %s" 
                 else:
-                    sqlStr =  sqlStr + " WHERE loginID = %s" 
-                valuesList.append(loginID)
+                    sqlStr =  sqlStr + " WHERE userID = %s" 
+                valuesList.append(userID)
+            if user_plan:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND user_plan = %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE user_plan = %s" 
+                valuesList.append(user_plan)
+            if plan_status:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND plan_status = %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE plan_status = %s" 
+                valuesList.append(plan_status)
+            if stock_code:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND stock_code = %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE stock_code = %s" 
+                valuesList.append(stock_code)
             if stock_code:
                 if valuesList:
                     sqlStr =  sqlStr + " AND stock_code = %s" 
@@ -9453,6 +9486,319 @@ def query_data_check_log(tableName,id = "0", delFlag = "0", mode = "full",limitN
 
 #data_check_log end 
 
+#trade_day_record begin 
+
+def tablename_convertor_trade_day_record():
+    tableName = "trade_day_record"
+    tableName = tableName.lower()
+    return tableName
+
+
+def decode_tablename_trade_day_record(tableName):
+    result = {}
+    aList = tableName.split("_")
+    
+    return result
+
+
+#创建trade_day_record表
+def create_trade_day_record(tableName):
+    aList = ["CREATE TABLE IF NOT EXISTS %s("
+    "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号',",
+    "trade_day VARCHAR(10) COMMENT '交易日',",
+    "`description` VARCHAR(50) COMMENT '检查类型',",
+    "stock_day VARCHAR(1) COMMENT '股票日数据',",
+    "stock_day_qfq VARCHAR(1) COMMENT '股票日数据前复权',",
+    "stock_day_hfq VARCHAR(1) COMMENT '股票后数据后复权',",
+    "stock_week VARCHAR(1) COMMENT '股票周数据',",
+    "stock_week_qfq VARCHAR(1) COMMENT '股票周数据前复权',",
+    "stock_week_hfq VARCHAR(1) COMMENT '股票周数据后复权',",
+    "stock_month VARCHAR(1) COMMENT '股票月数据',",
+    "stock_month_qfq VARCHAR(1) COMMENT '股票月数据前复权',",
+    "stock_month_hfq VARCHAR(1) COMMENT '股票月数据后复权',",
+    "industry_day VARCHAR(1) COMMENT '行业日数据',",
+    "industry_week VARCHAR(1) COMMENT '行业周数据',",
+    "industry_month VARCHAR(1) COMMENT '行业月数据',",
+    "label1 VARCHAR(32) NULL,",
+    "label2 VARCHAR(32) NULL,",
+    "label3 VARCHAR(32) NULL,",
+    "memo VARCHAR(200) NULL,",
+    "regID VARCHAR(32) NOT NULL COMMENT '注册ID',",
+    "regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日',",
+    "modifyID VARCHAR(32) COMMENT '修改ID',",
+    "modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日',",
+    "dispFlag VARCHAR(1) COMMENT '是否显示标记',",
+    "delFlag VARCHAR(1) COMMENT '是否删除标记'"
+    ")  ENGINE=INNODB DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    ]
+    tempStr = "".join(aList)
+    sqlStr = tempStr % (tableName)
+    rtn = mysqlDB.executeWrite(sqlStr)
+    result = chkTableExist(tableName)
+    if result:
+        pass
+        sqlStr = "CREATE UNIQUE INDEX {1} ON {0}({1}) ".format(tableName, "trade_day")
+        rtn = mysqlDB.executeWrite(sqlStr)
+        #sqlStr = "ALTER TABLE {0} auto_increment = {1} ".format(tableName,auto_increment_default_value)
+        #rtn = mysqlDB.executeWrite(sqlStr)
+
+    return result
+
+
+#删除trade_day_record表
+def drop_trade_day_record(tableName):
+    result = dropTableGeneral(tableName)
+    return result
+
+
+#trade_day_record 删除记录
+def delete_trade_day_record(tableName,id):
+    result = 0
+    sqlStr = f"DELETE FROM {tableName}"
+    try:
+
+        sqlStr += " WHERE id = %s"
+        valuesList = [id] 
+        result = mysqlDB.executeWrite(sqlStr,tuple(valuesList))
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#trade_day_record 增加记录
+def insert_trade_day_record(tableName,dataSet):
+    result = 0
+    try:
+
+        saveSet = {}
+
+        saveSet["trade_day"] = dataSet.get("trade_day", "") 
+
+        saveSet["description"] = dataSet.get("description", "") 
+
+        saveSet["stock_day"] = dataSet.get("stock_day", "") 
+
+        saveSet["stock_day_qfq"] = dataSet.get("stock_day_qfq", "") 
+
+        saveSet["stock_day_hfq"] = dataSet.get("stock_day_hfq", "") 
+
+        saveSet["stock_week"] = dataSet.get("stock_week", "") 
+
+        saveSet["stock_week_qfq"] = dataSet.get("stock_week_qfq", "") 
+
+        saveSet["stock_week_hfq"] = dataSet.get("stock_week_hfq", "") 
+
+        saveSet["stock_month"] = dataSet.get("stock_month", "") 
+
+        saveSet["stock_month_qfq"] = dataSet.get("stock_month_qfq", "") 
+
+        saveSet["stock_month_hfq"] = dataSet.get("stock_month_hfq", "") 
+
+        saveSet["industry_day"] = dataSet.get("industry_day", "") 
+
+        saveSet["industry_week"] = dataSet.get("industry_week", "") 
+
+        saveSet["industry_month"] = dataSet.get("industry_month", "") 
+
+        saveSet["label1"] = dataSet.get("label1", "") 
+
+        saveSet["label2"] = dataSet.get("label2", "") 
+
+        saveSet["label3"] = dataSet.get("label3", "") 
+
+        saveSet["memo"] = dataSet.get("memo", "") 
+
+        saveSet["regID"] = dataSet.get("regID", "") 
+
+        saveSet["regYMDHMS"] = dataSet.get("regYMDHMS", "") 
+
+        saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+
+        saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+
+        result = insertTableGeneral(tableName, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#trade_day_record 修改记录
+def update_trade_day_record(tableName,id,dataSet):
+    result = -2
+    try:
+        saveSet = {}
+
+        trade_day = dataSet.get("trade_day") 
+        if trade_day:
+            saveSet["trade_day"] = trade_day
+
+        description = dataSet.get("description") 
+        if description:
+            saveSet["description"] = description
+
+        stock_day = dataSet.get("stock_day") 
+        if stock_day:
+            saveSet["stock_day"] = stock_day
+
+        stock_day_qfq = dataSet.get("stock_day_qfq") 
+        if stock_day_qfq:
+            saveSet["stock_day_qfq"] = stock_day_qfq
+
+        stock_day_hfq = dataSet.get("stock_day_hfq") 
+        if stock_day_hfq:
+            saveSet["stock_day_hfq"] = stock_day_hfq
+
+        stock_week = dataSet.get("stock_week") 
+        if stock_week:
+            saveSet["stock_week"] = stock_week
+
+        stock_week_qfq = dataSet.get("stock_week_qfq") 
+        if stock_week_qfq:
+            saveSet["stock_week_qfq"] = stock_week_qfq
+
+        stock_week_hfq = dataSet.get("stock_week_hfq") 
+        if stock_week_hfq:
+            saveSet["stock_week_hfq"] = stock_week_hfq
+
+        stock_month = dataSet.get("stock_month") 
+        if stock_month:
+            saveSet["stock_month"] = stock_month
+
+        stock_month_qfq = dataSet.get("stock_month_qfq") 
+        if stock_month_qfq:
+            saveSet["stock_month_qfq"] = stock_month_qfq
+
+        stock_month_hfq = dataSet.get("stock_month_hfq") 
+        if stock_month_hfq:
+            saveSet["stock_month_hfq"] = stock_month_hfq
+
+        industry_day = dataSet.get("industry_day") 
+        if industry_day:
+            saveSet["industry_day"] = industry_day
+
+        industry_week = dataSet.get("industry_week") 
+        if industry_week:
+            saveSet["industry_week"] = industry_week
+
+        industry_month = dataSet.get("industry_month") 
+        if industry_month:
+            saveSet["industry_month"] = industry_month
+
+        label1 = dataSet.get("label1") 
+        if label1:
+            saveSet["label1"] = label1
+
+        label2 = dataSet.get("label2") 
+        if label2:
+            saveSet["label2"] = label2
+
+        label3 = dataSet.get("label3") 
+        if label3:
+            saveSet["label3"] = label3
+
+        memo = dataSet.get("memo") 
+        if memo:
+            saveSet["memo"] = memo
+
+        modifyID = dataSet.get("modifyID") 
+        if modifyID:
+            saveSet["modifyID"] = modifyID
+
+        modifyYMDHMS = dataSet.get("modifyYMDHMS") 
+        if modifyYMDHMS:
+            saveSet["modifyYMDHMS"] = modifyYMDHMS
+
+        dispFlag = dataSet.get("dispFlag") 
+        if dispFlag:
+            saveSet["dispFlag"] = dispFlag
+
+        delFlag = dataSet.get("delFlag") 
+        if delFlag:
+            saveSet["delFlag"] = delFlag
+
+        keySqlstr = "id = %s"
+        keyValues = [id]
+
+        result = updateTableGeneral(tableName, keySqlstr,  keyValues, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#trade_day_record 查询记录
+def query_trade_day_record(tableName,id = "0", beginDate="",endDate="",tradeDay="",delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+    result = []
+    columns = "*"
+    valuesList = []
+    sqlStr = f"SELECT {columns} FROM {tableName}"
+
+    try:
+
+        try:
+            id = int(id)
+        except:
+            id = 0
+
+        if id > 0:
+            sqlStr =  sqlStr + " WHERE id = %s" 
+            valuesList = [id]  
+        else:
+            if tradeDay:
+                if valuesList:
+                    sqlStr += " AND trade_day = %s"
+                else:
+                    sqlStr += " WHERE trade_day = %s"
+                valuesList.append(tradeDay)
+
+            if beginDate:
+                if valuesList:
+                    sqlStr += " AND trade_day >= %s"
+                else:
+                    sqlStr += " WHERE trade_day >= %s"
+                valuesList.append(beginDate)
+
+            if endDate:
+                if valuesList:
+                    sqlStr += " AND trade_day >= %s"
+                else:
+                    sqlStr += " WHERE trade_day >= %s"
+                valuesList.append(endDate)
+
+        #if limitNum > 0:
+            #sqlStr += " LIMIT {0}".format(limitNum)
+
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            dataList = dataFormatConvert(dataList)
+            result = list(dataList)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#trade_day_record end 
+
 
 #application end
 
@@ -9528,6 +9874,10 @@ def checkMySqlDataBase():
     if chkTableExist(tableName) == False:
         rtn = create_data_check_log(tableName)
 
+    tableName = tablename_convertor_trade_day_record()
+    if chkTableExist(tableName) == False:
+        rtn = create_trade_day_record(tableName)
+
 
 def dropMySqlDataBase():
     YMDHMS = misc.getTime()
@@ -9599,6 +9949,11 @@ def dropMySqlDataBase():
     tableName = tablename_convertor_data_check_log()
     if chkTableExist(tableName):
         rtn = drop_data_check_log(tableName)
+
+    tableName = tablename_convertor_trade_day_record()
+    if chkTableExist(tableName):
+        rtn = drop_trade_day_record(tableName)
+
 
 checkMySqlDataBase()
 #check mysql database end

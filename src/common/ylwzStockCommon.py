@@ -9,7 +9,7 @@
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
 
-_VERSION="20260203"
+_VERSION="20260224"
 
 
 import os
@@ -509,6 +509,47 @@ YLWZ_STOCK_API_URL_DATA = {
         "port":80,
         "headers":{"content-type": "application/json"},
         "urlPath":"stockapi/datachecklogqry",   
+        "params":{}
+    },
+    #trade day
+    "tradedayadd":
+    {
+        "method":"post",
+        "description":"添加交易日数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/tradedayadd",  
+        "params":{}
+    },
+    "tradedaydel":
+    {
+        "method":"post",
+        "description":"删除交易日数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/tradedaydel",  
+        "params":{}
+    },
+    "tradedaymodify":
+    {
+        "method":"post",
+        "description":"修改交易日数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/tradedaymodify",  
+        "params":{}
+    },
+    "tradedayqry":
+    {
+        "method":"post",
+        "description":"查询交易日数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/tradedayqry",   
         "params":{}
     },
 }

@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch stock data from web and upload to database
 
-_VERSION="20260204"
+_VERSION="20260225"
 
 _DEBUG=True
 
@@ -54,6 +54,8 @@ if "_LOG" not in dir() or not _LOG:
 systemVersion = str(sys.version_info.major) + "." + str(sys.version_info.minor ) + "." + str(sys.version_info.micro )
 _LOG.info(f"PID:{_processorPID}, python version:{systemVersion}, main code version:{_VERSION}")
 
+comStock._LOG = _LOG
+comYlwz._LOG = _LOG
 
 #common function begin
 def ifTradeDay():
@@ -70,6 +72,9 @@ def ifTradeDay():
             isPublicHoliday = comFC.isPublicHoliday(currYMD)
             if isPublicHoliday:
                 result = False
+            else:
+                #其次判断深交所数据
+                result = comStock.ifSzseTradeDay(currYMD)
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -80,6 +85,12 @@ def ifTradeDay():
 def readSessionIDFromEnv():
     try:
         sessionID = os.getenv("YLWZ_SESSION_ID")
+        if not sessionID:
+            fileName = settings.STOCK_YLWZ_SESSION_ID_FILE
+            filePath = os.path.join(settings.STOCK_CONFIG_DIR_NAME, fileName)
+            sessionIDSet = misc.loadJsonData(filePath,"dict")
+            if sessionIDSet:
+                sessionID = sessionIDSet.get("sessionID","")
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -229,13 +240,14 @@ def checkSingleStockExist(ylwzStockServer,symbol,stock_name):
 
 
 #更新单只股票数据
-def updateSingleStockCloseData(ylwzStockServer,symbol,stockData):
+def updateSingleStockCloseData(ylwzStockServer,symbol,stockData,rightYMD):
     result = 0
     try:
         _LOG.info(f"I: 更新单只股票数据开始... 股票代码:{symbol}")
-        rightYMD  = getRightStockDate()
-        #如果时间不是收盘时间,则不更新
-        if rightYMD:
+        # rightYMD  = getRightStockDate()
+        # #如果时间不是收盘时间,则不更新
+        # if rightYMD:
+        if True:
             #格式转换
             saveSet = {}
 
@@ -257,6 +269,7 @@ def updateSingleStockCloseData(ylwzStockServer,symbol,stockData):
             saveSet["adjust"] = ""
             saveSet["date"] = rightYMD
 
+            uploadSuccess = False
             cmd = "stockhistoryadd"
             rtnData = ylwzStockServer.query(cmd,saveSet)
             if rtnData:
@@ -265,9 +278,9 @@ def updateSingleStockCloseData(ylwzStockServer,symbol,stockData):
                 if int(recID) > 0:
                     uploadSuccess = True
 
-        if uploadSuccess:
-            result += 1
-            _LOG.info(f"I: 更新单只股票数据完成... 股票代码:{symbol}")
+            if uploadSuccess:
+                result += 1
+                _LOG.info(f"I: 更新单只股票数据完成... 股票代码:{symbol}")
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -275,8 +288,24 @@ def updateSingleStockCloseData(ylwzStockServer,symbol,stockData):
     return result
 
 
+#检查股票数据是否是正确的
+def checkStockDataValid(stockDataList):
+    result = False
+    try:
+        if stockDataList:
+            stockData = stockDataList[0]
+            price = float(stockData["high"])
+            lastTime = stockData["datetime"]
+            if price > 0.0 and lastTime >= "15:30:00":
+                result = True
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
 #更新股票收盘数据
-def updateStockCloseData(ylwzStockServer):
+def updateStockCloseData(ylwzStockServer,rightYMD):
     result = 0
     try:
         _LOG.info(f"I: 更新股票收盘数据开始...,请等待,大约2分钟 ")
@@ -298,23 +327,28 @@ def updateStockCloseData(ylwzStockServer):
                 tryTimes -= 1
                 _LOG.error(f"E: 获取股票列表失败, 等待{sleepTime}秒后重试...")
                 misc.time.sleep(sleepTime)
+        
+        validDataFlag = checkStockDataValid(stockDataList)
+        if validDataFlag:       
+            for stockData in stockDataList:
+                sinoSymbol = stockData["symbol"]
+                symbol = comAK.symbolWithMarket2symbole(sinoSymbol)
+                stock_name = stockData["stock_name"]
+                #首先查询系统是否存在该股票, 如果不存在,自动增加
+                checkSingleStockExist(ylwzStockServer,symbol,stock_name)
+                #其次把股票收盘数据上传到系统
+                rtn = updateSingleStockCloseData(ylwzStockServer,symbol,stockData,rightYMD)
+                result += 1
 
-        for stockData in stockDataList:
-            sinoSymbol = stockData["symbol"]
-            symbol = comAK.symbolWithMarket2symbole(sinoSymbol)
-            stock_name = stockData["stock_name"]
-            #首先查询系统是否存在该股票, 如果不存在,自动增加
-            checkSingleStockExist(ylwzStockServer,symbol,stock_name)
-            #其次把股票收盘数据上传到系统
-            rtn = updateSingleStockCloseData(ylwzStockServer,symbol,stockData)
-            result += 1
+            if logRecID:
+                logSet = {}
+                logSet["proc_num"] = result
+                modifyDataCheckLog(ylwzStockServer,logRecID,logSet)
 
-        if logRecID:
-            logSet = {}
-            logSet["proc_num"] = result
-            modifyDataCheckLog(ylwzStockServer,logRecID,logSet)
+            _LOG.info(f"I: 更新股票收盘数据完成, 股票数量:{result}")
+        else:
+            _LOG.info(f"I: 股票数据不完整, 请检查...")
 
-        _LOG.info(f"I: 更新股票收盘数据完成, 股票数量:{result}")
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -702,33 +736,74 @@ def uploadIndicatorMediansData():
     return result
 
 
+#上传股票交易日数据
+def updateTradeDayInfo(ylwzStockServer,tradeDay):
+    result = 0
+    try:
+        uploadSuccess = False
+        saveSet={"trade_day":tradeDay }
+        cmd = "tradedayqry"
+        querySet = {"trade_day":tradeDay}
+        rtnData = ylwzStockServer.query(cmd,querySet)
+        if rtnData:
+            data = rtnData.get("data", {})
+            dataList = data.get("data", [])
+            #如果交易日数据不存在,则上传
+            if not dataList:
+                cmd = "tradedayadd"
+                rtnData = ylwzStockServer.query(cmd,saveSet)
+                if rtnData:
+                    data = rtnData.get("data",[])
+                    recID = data.get("recID",0)
+                    if int(recID) > 0:
+                        uploadSuccess = True
+
+                if uploadSuccess:
+                    _LOG.info(f"I: 上传股票交易日数据完成... 交易日:{tradeDay},recID:{recID}")
+                    result = 1
+                else:
+                    _LOG.error(f"E: 上传股票交易日数据失败... 交易日:{tradeDay}")
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
 #上传股票相关数据
 def regularDataUpdater(sessionID):
     result = {}
     try:
-        #判断是否是交易日
-        if not ifTradeDay():
-            _LOG.info(f"I: 非交易日, 不更新股票数据")
+        if not ifTradeDay(): #非交易日, 不更新股票数据,第一次总是出错
+            _LOG.info(f"I: 非交易日, 不更新股票数据,第一次")
             return result
 
-        host = "www.iottest.online"
-        if not sessionID:
-            sessionID = readSessionIDFromEnv()
-            if not sessionID:
-                errMsg = f"PID: {_processorPID},errMsg:sessionID is empty"
-                _LOG.error(f"{errMsg}, {traceback.format_exc()}")
-                return result
+        #判断是否是交易日
+        if not ifTradeDay():
+            _LOG.info(f"I: 非交易日, 不更新股票数据,第二次")
+            return result
 
+        host = settings.YLWZ_SERVER_HOST
+        sessionID = readSessionIDFromEnv()
+        if not sessionID:
+            errMsg = f"PID: {_processorPID},errMsg:sessionID is empty"
+            _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+            return result
+
+        _LOG.info(f"I: 交易日, 准备更新股票数据")
         ylwzStockServer = comYlwz.StockServer(host=host, sessionID=sessionID)
 
         rightYMD  = getRightStockDate()
         #如果时间不是收盘时间,则不更新
         if rightYMD:
+            #更新交易日数据
+            _LOG.info(f"I: 更新更新交易日数据 ...{rightYMD}... ")
+            rtn = updateTradeDayInfo(ylwzStockServer,rightYMD)
+
             #收盘时间,才更新数据的业务 
             _LOG.info(f"I: 收盘时间, 需要更新股票数据的业务 ...{rightYMD}... ")
 
             #首先获取当日收盘数据
-            rtn = updateStockCloseData(ylwzStockServer)
+            rtn = updateStockCloseData(ylwzStockServer,rightYMD)
 
             #首先升级股票基本信息
             # rtn = uploadStockIndustryMappingFile()

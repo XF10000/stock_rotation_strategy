@@ -1,6 +1,8 @@
 data/cache/stock_data
 data/cache/rsi_data
 data/cache/*.json
+data/config/ylwz_session_id.json
+data/config/tushare_token.json
 log/*
 src/database/word_table_*.csv
 src/database/auto_gen_code_*.py

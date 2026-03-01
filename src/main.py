@@ -116,26 +116,6 @@ def prepareBacktestData(configData):
         #读取行业数据
         industryRSIData = comStock.readSWRSIThresholdData()
 
-        #读取最近的 daily 数据,并保存最近的10天数据
-        stockDailyData = {}
-        passedYMD = misc.getPassday(10)
-        for stockInfo in stockPortfolio:
-            symbol = stockInfo.get("symbol", "")
-            period = "daily"
-            stockInfo,stockDataList = comStock.readStockData(symbol,period,startYMD=passedYMD)
-            if stockDataList:
-                stockDailyData[symbol] = stockDataList
-
-        #读取最近的周数据,并保存最近的30周数据
-        stockWeeklyData = {}
-        passedYMD = misc.getPassday(7*30)
-        for stockInfo in stockPortfolio:
-            symbol = stockInfo.get("symbol", "")
-            period = "weekly"
-            stockInfo,stockDataList = comStock.readStockData(symbol,period,startYMD=passedYMD)
-            if stockDataList:
-                stockWeeklyData[symbol] = stockDataList
-
         #计算背离数据
         divergenceData = {}
         for stockInfo in stockPortfolio:
@@ -143,10 +123,41 @@ def prepareBacktestData(configData):
             techIndicators = stockIndicators.get(symbol,[])
             # symbolWeeklyData = stockWeeklyData.get(symbol,[])
             symbolRSIDivergenceData = comStock.calcRSIDivergence(techIndicators)
-            symbolMacdDivergenceData = comStock.calcMacdDivergence(techIndicators,)
+            symbolMacdDivergenceData = comStock.calcMacdDivergence(techIndicators)
             divergenceData[symbol] = {}
             divergenceData[symbol]["rsi"] = symbolRSIDivergenceData
             divergenceData[symbol]["macd"] = symbolMacdDivergenceData
+
+        #计算日期数据,根据stockIndicators中的日期数据
+        tradingWeekDays = []
+        for symbol,techIndicators in stockIndicators.items():
+            if techIndicators:
+                for indicator in techIndicators:
+                    date = indicator.get("date", "")
+                    if date:
+                        tradingWeekDays.append(date)
+            #只从第一个股票中获取日期数据
+            break
+
+        #读取最近的 daily 数据,从第一个交易日开始
+        stockDailyData = {}
+        passedYMD = tradingWeekDays[0]
+        for stockInfo in stockPortfolio:
+            symbol = stockInfo.get("symbol", "")
+            period = "daily"
+            stockInfo,stockDataList = comStock.readStockData(symbol,period,startYMD=passedYMD)
+            if stockDataList:
+                stockDailyData[symbol] = stockDataList
+
+        #读取最近的周数据,从第一个交易日开始
+        stockWeeklyData = {}
+        passedYMD = tradingWeekDays[0]
+        for stockInfo in stockPortfolio:
+            symbol = stockInfo.get("symbol", "")
+            period = "weekly"
+            stockInfo,stockDataList = comStock.readStockData(symbol,period,startYMD=passedYMD)
+            if stockDataList:
+                stockWeeklyData[symbol] = stockDataList
 
         result["stockIndicators"] = stockIndicators
         result["industryMapping"] = mapping
@@ -154,74 +165,12 @@ def prepareBacktestData(configData):
         result["stockDailyData"] = stockDailyData
         result["stockWeeklyData"] = stockWeeklyData
         result["divergenceData"] = divergenceData
+        result["tradingWeekDays"] = tradingWeekDays
 
-    except Exception as e:
-        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
-        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
-
-    return result
-
-
-#计算回测数据的四维度数据
-def calcFourFactorData(backtestData):
-    result = {}
-    try:
-        #计算回测数据的四维度数据
-        _LOG.info(f"3: 计算回测数据的四维度数据开始,... ")
-
-        stockPortfolio = backtestData.get("stockPortfolio",[])
-        stockDailyData = backtestData.get("stockDailyData",{})
-        stockWeeklyData = backtestData.get("stockWeeklyData",{})
-        divergenceData = backtestData.get("divergenceData",{})
-        stockIndicators = backtestData.get("stockIndicators",{})
-        dividendData = backtestData.get("dividendData",{})
-        backtestSettings = backtestData.get("backtestSettings",{})
-
-        #获取数据最后一天的日期
-        lastDate = ""
-        for k, v in stockDailyData.items():
-            for item in v:
-                currDate = item.get("date","")
-                if currDate > lastDate:
-                    lastDate = currDate
-            break
-
-        #首先计算 维度一：价值准入过滤器 结果
-        for stockInfo in stockPortfolio:
-            symbol = stockInfo.get("symbol", "")
-            stockName = stockInfo.get("Stock_name", "")
-            stockDataList = stockDailyData.get(symbol,[])
-            stockIndicatorList = stockIndicators.get(symbol,[])
-            dcfValue = stockInfo.get("DCF_value_per_share",0.0)
-            if stockDataList:
-                currStockPrice = stockDataList[-1].get("close",0.0)
-                valueResult = comStock.valueInvestingScreener(symbol,currStockPrice,dcfValue,stockIndicatorList,backtestSettings)
-                valueAction = valueResult.get("action", comGD._DEF_STOCK_VALUE_SCREEN_HOLD)
-
-                #action == hold 时, 考虑其他过滤器,三选二. 暂时都计算其他过滤器, 后续再根据需要筛选
-                otherResult = comStock.twoOutOfThreeFactors(symbol,backtestData)
-                otherAction = otherResult.get("action", comGD._DEF_STOCK_VALUE_SCREEN_HOLD)
-
-                result[symbol] = {}
-                result[symbol]["valueResult"] = valueResult
-                result[symbol]["valueAction"] = valueAction
-                result[symbol]["otherResult"] = otherResult
-                result[symbol]["otherAction"] = otherAction
-                #根据价值比过滤器和其他过滤器的结果, 最终建议
-                #1. 价值比过滤器建议 buy, 则其他过滤器建议 buy, 则最终建议 buy
-                #2. 价值比过滤器建议 sell, 则其他过滤器建议 sell, 则最终建议 sell
-                if valueAction == otherAction:
-                    result[symbol]["action"] = valueAction
-                else:
-                    result[symbol]["action"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
-                finalAction = result[symbol]["action"]
-
-                #转换为中文
-                valueActionCN = comGD._DEF_STOCK_ACTION_CN.get(valueAction,"")
-                otherActionCN = comGD._DEF_STOCK_ACTION_CN.get(otherAction,"")
-                finalActionCN = comGD._DEF_STOCK_ACTION_CN.get(finalAction,"")
-                
-                _LOG.info(f"  - {lastDate}: 计算股票:{symbol} {stockName} 的四维度数据... 价值比过滤器:{valueActionCN}, 其他过滤器:{otherActionCN}, 最终建议:{finalActionCN} ")
+        #保存股票配置文件中的股票列表, 股息数据, 回测设置
+        result["stockPortfolio"] = configData.get("stockPortfolio",[])
+        result["dividendData"] = configData.get("dividendData", {})
+        result["backtestSettings"] = configData.get("backtestSettings", {})
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -231,25 +180,27 @@ def calcFourFactorData(backtestData):
 
 
 #主处理函数
-def mainProcessor(inputPortfolioFileName=""):
+def mainProcessor(method,inputPortfolioFileName=""):
     result = {}
     try:
         #开始处理
-        _LOG.info(f"I: 中线轮动策略系统开始处理... ")
-
+        _LOG.info(f"I: 中线轮动策略系统开始处理... {method}")
         configData = fetchStockData(inputPortfolioFileName)
         if configData:
             backtestData = prepareBacktestData(configData)
-
+            #开始回测数据
             if backtestData:
-                #合并股票配置文件中的股票列表和回测数据中的股票列表
-                backtestData["stockPortfolio"] = configData.get("stockPortfolio",[])
-                backtestData["dividendData"] = configData.get("dividendData", {})
-                backtestData["backtestSettings"] = configData.get("backtestSettings", {})
-
-                #计算回测数据的四维度数据
-                fourFactorData = calcFourFactorData(backtestData)
-                backtestData["fourFactorData"] = fourFactorData
+                #计算回测买卖结果
+                tradeWeekDays = backtestData.get("tradingWeekDays",[])
+                startDate = tradeWeekDays[0]
+                endDate = tradeWeekDays[-1]
+                _LOG.info(f"I: 回测开始日期:{startDate}, 回测结束日期:{endDate},开始计算买卖结果...")
+                backtestBuySellResult = comStock.calcBacktestBuySellResult(method,backtestData)
+                _LOG.info(f"  - 回测买卖结果数量:{len(backtestBuySellResult)}")
+                #计算回测利润
+                _LOG.info(f"I: 计算回测利润...")
+                backtestProfit = comStock.calcBacktestProfit(startDate,endDate,backtestBuySellResult,backtestData)
+                _LOG.info(f"I: 计算回测利润结束")
             pass
         
         _LOG.info(f"I: 中线轮动策略系统...结束 ")
@@ -263,11 +214,14 @@ def mainProcessor(inputPortfolioFileName=""):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hdi:", ["help", "debug", "input="])
+        opts, args = getopt.getopt(sys.argv[1:], "hdi:m:", ["help", "debug", "input=","method="])
     except getopt.GetoptError:
         sys.exit()
 
     debugFlag = False
+
+    #默认计算方法
+    method = comGD._DEF_STOCK_CALC_METHOD_4FACTOR
     inputPortfolioFileName = ""
 
     for name, value in opts:
@@ -281,16 +235,18 @@ def main():
 
         elif name in ("-i", "--input"):
             inputPortfolioFileName = value
+        elif name in ("-m", "--method"):
+            method = value  
 
     if debugFlag:
         import pdb
         pdb.set_trace()
     if inputPortfolioFileName:
-        _LOG.info(f"I: PID:{_processorPID}, debug:{debugFlag}, portfolioFileName:{inputPortfolioFileName}") 
+        _LOG.info(f"I: PID:{_processorPID}, debug:{debugFlag}, portfolioFileName:{inputPortfolioFileName}, method:{method}") 
     else:
-        _LOG.info(f"I: PID:{_processorPID}, debug:{debugFlag}, portfolioFileName:默认") 
+        _LOG.info(f"I: PID:{_processorPID}, debug:{debugFlag}, portfolioFileName:默认, method:{method}") 
 
-    mainProcessor(inputPortfolioFileName)
+    mainProcessor(method,inputPortfolioFileName)
 
 
 if __name__ == "__main__":

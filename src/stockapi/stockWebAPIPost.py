@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260204"
+_VERSION="20260228"
 
 
 import os
@@ -8908,10 +8908,17 @@ def funcUserStockListAdd(CMD,dataSet,sessionIDSet):
                     dataValidFlag = True
                 else:
                     dataValiFlag = False
+
+                userID = dataSet.get("userID")
+                if not userID:
+                    userID = loginID
+
                 if dataValidFlag:
                     saveSet = {}
-                    saveSet["loginID"] = loginID
+                    saveSet["userID"] = userID
                     saveSet["username"] = dataSet.get("username", "") 
+                    saveSet["user_plan"] = dataSet.get("user_plan", "default") 
+                    saveSet["plan_status"] = dataSet.get("plan_status", comGD._COSNT_YES) 
                     saveSet["stock_code"] = stock_code
                     saveSet["stock_name"] = dataSet.get("stock_name", "") 
                     saveSet["initial_weight"] = dataSet.get("initial_weight", "") 
@@ -9062,7 +9069,10 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
                 dataValidFlag = True
 
                 # loginID = loginID 
+                userID = dataSet.get("userID")
                 username = dataSet.get("username") 
+                user_plan = dataSet.get("user_plan") 
+                plan_status = dataSet.get("plan_status") 
                 stock_code = dataSet.get("stock_code") 
                 stock_name = dataSet.get("stock_name") 
                 initial_weight = dataSet.get("initial_weight") 
@@ -9092,11 +9102,17 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
 
                             saveSet = {}
 
-                            # if loginID != currDataSet.get("loginID") and loginID:
-                            #     saveSet["loginID"] = loginID
+                            if userID != currDataSet.get("userID") and userID:
+                                saveSet["userID"] = userID
 
                             if username != currDataSet.get("username") and username:
                                 saveSet["username"] = username
+
+                            if user_plan != currDataSet.get("user_plan") and user_plan:
+                                saveSet["user_plan"] = user_plan
+
+                            if plan_status != currDataSet.get("plan_status") and plan_status:
+                                saveSet["plan_status"] = plan_status
 
                             if stock_code != currDataSet.get("stock_code") and stock_code:
                                 saveSet["stock_code"] = stock_code
@@ -9228,6 +9244,11 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                 #获取查询输入参数
                 id = dataSet.get("id", "")
 
+                if comFC.chkIsManager(roleName):
+                    userID = dataSet.get("userID","")
+                else:
+                    userID = loginID
+
                 #houseID = dataSet.get("houseID", "")
                 symbol = dataSet.get("symbol","")
                 if symbol:
@@ -9253,8 +9274,6 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                     indexKeyDataSet = {} #查询生成index的因素
                     if id:
                         indexKeyDataSet["id"] = id
-                    if loginID:
-                        indexKeyDataSet["loginID"] = loginID
                     if stock_code:
                         indexKeyDataSet["stock_code"] = stock_code
                     if searchOption:
@@ -9287,7 +9306,8 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                                 currDataList = comMysql.query_user_stock_list(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_user_stock_list()
-                                currDataList = comMysql.query_user_stock_list(tableName,loginID=loginID,stock_code=stock_code,limitNum=limitNum)
+                                currDataList = comMysql.query_user_stock_list(tableName,userID=userID,stock_code=stock_code,
+                                                    user_plan=user_plan,plan_status=plan_status,limitNum=limitNum)
 
                         dataList = []
 
@@ -9302,8 +9322,10 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                                 #aSet["houseID"] = currDataSet.get("houseID", "")
 
                             aSet["id"] = currDataSet.get("id","")
-                            aSet["loginID"] = currDataSet.get("loginID","")
+                            aSet["userID"] = currDataSet.get("userID","")
                             aSet["username"] = currDataSet.get("username","")
+                            aSet["user_plan"] = currDataSet.get("user_plan","")
+                            aSet["plan_status"] = currDataSet.get("plan_status","")
                             aSet["stock_code"] = currDataSet.get("stock_code","")
                             aSet["stock_name"] = currDataSet.get("stock_name","")
                             aSet["initial_weight"] = currDataSet.get("initial_weight","")
@@ -9807,6 +9829,497 @@ def funcDataCheckLogQry(CMD,dataSet,sessionIDSet):
     return result
 
 
+#交易日 增加代码
+def funcTradeDayAdd(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+                if dataValidFlag:
+                    saveSet = {}
+                    saveSet["trade_day"] = dataSet.get("trade_day", "") 
+                    saveSet["description"] = dataSet.get("description", "") 
+                    saveSet["stock_day"] = dataSet.get("stock_day", "") 
+                    saveSet["stock_day_qfq"] = dataSet.get("stock_day_qfq", "") 
+                    saveSet["stock_day_hfq"] = dataSet.get("stock_day_hfq", "") 
+                    saveSet["stock_week"] = dataSet.get("stock_week", "") 
+                    saveSet["stock_week_qfq"] = dataSet.get("stock_week_qfq", "") 
+                    saveSet["stock_week_hfq"] = dataSet.get("stock_week_hfq", "") 
+                    saveSet["stock_month"] = dataSet.get("stock_month", "") 
+                    saveSet["stock_month_qfq"] = dataSet.get("stock_month_qfq", "") 
+                    saveSet["stock_month_hfq"] = dataSet.get("stock_month_hfq", "") 
+                    saveSet["industry_day"] = dataSet.get("industry_day", "") 
+                    saveSet["industry_week"] = dataSet.get("industry_week", "") 
+                    saveSet["industry_month"] = dataSet.get("industry_month", "") 
+                    saveSet["label1"] = dataSet.get("label1", "") 
+                    saveSet["label2"] = dataSet.get("label2", "") 
+                    saveSet["label3"] = dataSet.get("label3", "") 
+                    saveSet["memo"] = dataSet.get("memo", "") 
+                    saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+                    saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+                    saveSet["regID"] = loginID
+                    saveSet["regYMDHMS"] = misc.getTime()
+
+                    tableName = comMysql.tablename_convertor_trade_day_record()
+                    recID = comMysql.insert_trade_day_record(tableName,saveSet)
+                    rtnData["recID"] = str(recID)
+
+                    if recID <= 0:
+                        #记录添加失败
+                        errCode = "CG"
+                        _LOG.warning(f"rtn:{recID},saveSet:{saveSet}")
+                    else:
+                        if _DEBUG:
+                            pass
+                            _LOG.info(f"D: recID:{recID}")
+
+                    result = rtnData
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#交易日 删除代码
+def funcTradeDayDel(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                id = dataSet.get("id", "")
+                tableName = comMysql.tablename_convertor_trade_day_record()
+                currDataList = comMysql.query_trade_day_record(tableName,id)
+                if len(currDataList) == 1:
+                    saveSet = {}
+                    saveSet["modifyID"] = loginID
+                    saveSet["modifyYMDHMS"] = misc.getTime()
+                    #saveSet["delFlag"] = "1"
+
+                    rtn = comMysql.delete_trade_day_record(tableName,id)
+                    rtnData["rtn"] = str(rtn)
+
+                    if _DEBUG:
+                        _LOG.info(f"D: rtn:{rtn}")
+
+                    result = rtnData
+
+                else:
+                    errCode = "CB"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#交易日 修改代码
+def funcTradeDayModify(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查/功能检测
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+
+                trade_day = dataSet.get("trade_day") 
+                description = dataSet.get("description") 
+                stock_day = dataSet.get("stock_day") 
+                stock_day_qfq = dataSet.get("stock_day_qfq") 
+                stock_day_hfq = dataSet.get("stock_day_hfq") 
+                stock_week = dataSet.get("stock_week") 
+                stock_week_qfq = dataSet.get("stock_week_qfq") 
+                stock_week_hfq = dataSet.get("stock_week_hfq") 
+                stock_month = dataSet.get("stock_month") 
+                stock_month_qfq = dataSet.get("stock_month_qfq") 
+                stock_month_hfq = dataSet.get("stock_month_hfq") 
+                industry_day = dataSet.get("industry_day") 
+                industry_week = dataSet.get("industry_week") 
+                industry_month = dataSet.get("industry_month") 
+                label1 = dataSet.get("label1") 
+                label2 = dataSet.get("label2") 
+                label3 = dataSet.get("label3") 
+                memo = dataSet.get("memo") 
+                dispFlag = dataSet.get("dispFlag") 
+                delFlag = dataSet.get("delFlag") 
+                #data valid 检查
+
+                if dataValidFlag:
+                    #当前记录获取
+                    recID = dataSet.get("id", "")
+
+                    tableName = comMysql.tablename_convertor_trade_day_record()
+                    currDataList = comMysql.query_trade_day_record(tableName,recID)
+
+                    if len(currDataList) == 1:
+                        currDataSet = currDataList[0]
+
+                        #权限或其他检查
+                        if errCode == "B0": #
+
+                            saveSet = {}
+
+                            if trade_day != currDataSet.get("trade_day") and trade_day:
+                                saveSet["trade_day"] = trade_day
+
+                            if description != currDataSet.get("description") and description:
+                                saveSet["description"] = description
+
+                            if stock_day != currDataSet.get("stock_day") and stock_day:
+                                saveSet["stock_day"] = stock_day
+
+                            if stock_day_qfq != currDataSet.get("stock_day_qfq") and stock_day_qfq:
+                                saveSet["stock_day_qfq"] = stock_day_qfq
+
+                            if stock_day_hfq != currDataSet.get("stock_day_hfq") and stock_day_hfq:
+                                saveSet["stock_day_hfq"] = stock_day_hfq
+
+                            if stock_week != currDataSet.get("stock_week") and stock_week:
+                                saveSet["stock_week"] = stock_week
+
+                            if stock_week_qfq != currDataSet.get("stock_week_qfq") and stock_week_qfq:
+                                saveSet["stock_week_qfq"] = stock_week_qfq
+
+                            if stock_week_hfq != currDataSet.get("stock_week_hfq") and stock_week_hfq:
+                                saveSet["stock_week_hfq"] = stock_week_hfq
+
+                            if stock_month != currDataSet.get("stock_month") and stock_month:
+                                saveSet["stock_month"] = stock_month
+
+                            if stock_month_qfq != currDataSet.get("stock_month_qfq") and stock_month_qfq:
+                                saveSet["stock_month_qfq"] = stock_month_qfq
+
+                            if stock_month_hfq != currDataSet.get("stock_month_hfq") and stock_month_hfq:
+                                saveSet["stock_month_hfq"] = stock_month_hfq
+
+                            if industry_day != currDataSet.get("industry_day") and industry_day:
+                                saveSet["industry_day"] = industry_day
+
+                            if industry_week != currDataSet.get("industry_week") and industry_week:
+                                saveSet["industry_week"] = industry_week
+
+                            if industry_month != currDataSet.get("industry_month") and industry_month:
+                                saveSet["industry_month"] = industry_month
+
+                            if label1 != currDataSet.get("label1") and label1:
+                                saveSet["label1"] = label1
+
+                            if label2 != currDataSet.get("label2") and label2:
+                                saveSet["label2"] = label2
+
+                            if label3 != currDataSet.get("label3") and label3:
+                                saveSet["label3"] = label3
+
+                            if memo != currDataSet.get("memo") and memo:
+                                saveSet["memo"] = memo
+
+                            if dispFlag != currDataSet.get("dispFlag") and dispFlag:
+                                saveSet["dispFlag"] = dispFlag
+
+                            if delFlag != currDataSet.get("delFlag") and delFlag:
+                                saveSet["delFlag"] = delFlag
+
+                            if saveSet:
+                                #saveSet["delFlag"] = "0"
+                                saveSet["modifyID"] = loginID
+                                saveSet["modifyYMDHMS"] = misc.getTime()
+
+                                #保存数据
+                                tableName = comMysql.tablename_convertor_trade_day_record()
+                                rtn = comMysql.update_trade_day_record(tableName,recID,saveSet)
+                                rtnData["rtn"] = str(rtn)
+
+                                if rtn < 0:
+                                    _LOG.warning(f"D: rtn:{rtn},saveSet:{saveSet}")
+                                else:
+                                    if _DEBUG:
+                                        pass
+                                        _LOG.info(f"D: rtn:{rtn}")
+
+                                result = rtnData
+
+                        else:
+                            #BT
+                            errCode = "BT"
+
+                    else:
+                        #CB
+                        errCode = "CB"
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#交易日 查询代码
+def funcTradeDayQry(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+                #获取查询输入参数
+                id = dataSet.get("id", "")
+
+                #houseID = dataSet.get("houseID", "")
+                beginDate = dataSet.get("beginDate", "")
+                endDate = dataSet.get("endDate", "")
+
+                forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
+
+                searchOption = dataSet.get("searchOption")
+
+                mode = dataSet.get("mode", "full")
+
+                #limitNum = dataSet.get("limitNum",0)
+
+                #权限检查/功能检测
+
+                rightCheckFlag = True
+
+                if rightCheckFlag:
+
+                    #生成indexKey
+                    indexKeyDataSet = {} #查询生成index的因素
+                    if id:
+                        indexKeyDataSet["id"] = id
+                    if beginDate:
+                        indexKeyDataSet["beginDate"] = beginDate
+                    if endDate:
+                        indexKeyDataSet["endDate"] = endDate
+                    if searchOption:
+                        indexKeyDataSet["searchOption"] = searchOption
+                    if mode:
+                        indexKeyDataSet["mode"] = mode
+
+                    #if limitNum:
+                        #indexKeyDataSet["limitNum"] = limitNum
+
+                    sessionID = sessionIDSet.get("sessionID", "")
+                    indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
+                    beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
+                    endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
+
+                    #判断数据是否在缓冲区:
+                    if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+
+                        if searchOption:
+                            currDataList = []
+                            tableName = comMysql.tablename_convertor_trade_day_record()
+                            allDataList = comMysql.query_trade_day_record(tableName,mode = mode)
+                            allowList = ["description", "label"] #筛选字段
+                            serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
+                            if serachResultSet["rtn"] == "B0":
+                                currDataList = serachResultSet.get("data", [])
+                        else:
+                            if id:
+                                tableName = comMysql.tablename_convertor_trade_day_record()
+                                currDataList = comMysql.query_trade_day_record(tableName,id,mode = mode)
+                            else:
+                                tableName = comMysql.tablename_convertor_trade_day_record()
+                                currDataList = comMysql.query_trade_day_record(tableName,beginDate=beginDate,endDate=endDate,mode = mode)
+
+                        dataList = []
+
+                        for currDataSet in currDataList:
+                            aSet = {}
+
+                            #需要把文件转移到public domain
+                            #appendixFileID00 =  currDataSet.get("appendixFileID00", "")
+                            #appendixFileID00 = getTempLocation(appendixFileID00, privateFlag = True)
+
+                            #if mode == "full":
+                                #aSet["houseID"] = currDataSet.get("houseID", "")
+
+                            aSet["id"] = currDataSet.get("id","")
+                            aSet["trade_day"] = currDataSet.get("trade_day","")
+                            aSet["description"] = currDataSet.get("description","")
+                            aSet["stock_day"] = currDataSet.get("stock_day","")
+                            aSet["stock_day_qfq"] = currDataSet.get("stock_day_qfq","")
+                            aSet["stock_day_hfq"] = currDataSet.get("stock_day_hfq","")
+                            aSet["stock_week"] = currDataSet.get("stock_week","")
+                            aSet["stock_week_qfq"] = currDataSet.get("stock_week_qfq","")
+                            aSet["stock_week_hfq"] = currDataSet.get("stock_week_hfq","")
+                            aSet["stock_month"] = currDataSet.get("stock_month","")
+                            aSet["stock_month_qfq"] = currDataSet.get("stock_month_qfq","")
+                            aSet["stock_month_hfq"] = currDataSet.get("stock_month_hfq","")
+                            aSet["industry_day"] = currDataSet.get("industry_day","")
+                            aSet["industry_week"] = currDataSet.get("industry_week","")
+                            aSet["industry_month"] = currDataSet.get("industry_month","")
+                            aSet["label1"] = currDataSet.get("label1","")
+                            aSet["label2"] = currDataSet.get("label2","")
+                            aSet["label3"] = currDataSet.get("label3","")
+                            aSet["memo"] = currDataSet.get("memo","")
+                            aSet["regID"] = currDataSet.get("regID","")
+                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                            aSet["modifyID"] = currDataSet.get("modifyID","")
+                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                            dataList.append(aSet)
+
+                        #临时缓存机制,改进型, 2023/10/16
+                        indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+
+                    rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
+
+                    #rtnData["limitNum"] = limitNum
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
 #application functions end
 
 
@@ -9930,6 +10443,11 @@ urlPathMap = {
     "datachecklogdel":funcDataCheckLogDel,
     "datachecklogmodify":funcDataCheckLogModify,
     "datachecklogqry":funcDataCheckLogQry,
+
+    "tradedayadd":funcTradeDayAdd,
+    "tradedaydel":funcTradeDayDel,
+    "tradedaymodify":funcTradeDayModify,
+    "tradedayqry":funcTradeDayQry,
 
     #stock related end
 

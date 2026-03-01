@@ -57,10 +57,17 @@ fileName=checkuploaddblog
 /bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
 /bin/echo '' > ${logsourcedir}/${fileName}
 
+fileName=stockregularupdatelog
+/bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
+/bin/echo '' > ${logsourcedir}/${fileName}
+
 fileName=stocktestlog
 /bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
 /bin/echo '' > ${logsourcedir}/${fileName}
 
+fileName=stockmainlog
+/bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
+/bin/echo '' > ${logsourcedir}/${fileName}
 
 cd ${logbackupdir}
 backday=`date -d "-7 days" +%Y%m%d`

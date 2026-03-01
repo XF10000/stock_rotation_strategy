@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260206"
+_VERSION="20260225"
 
 
 import os
@@ -30,9 +30,9 @@ _SYS_SERVER_NAME = local_settings._SYS_SERVER_NAME
 
 
 _HOME_DIR = {
-    "local":r"/data/stockappp",
-    "server_01":r"/data/stockappp", 
-    "server_02":r"/data/stockappp", 
+    "local":r"/data/stockapp",
+    "server_01":r"/data/stockapp", 
+    "server_02":r"/data/stockapp", 
     # "home":r"../..",  
     "home":r"..",  
     }[_SYS]
@@ -61,6 +61,14 @@ ACCOUNT_SERVICE_URL ={
 
 
 #服务器地址等信息
+YLWZ_SERVER_HOST ={
+    "local":"127.0.0.1",
+    "server_01":"www.iottest.online", 
+    "server_02":"www.iottest.online", 
+    "home":"www.iottest.online", 
+}[_SYS]
+
+
 FILE_SYSTEM_MODE = {
     # "local":"ALIOSS",
     "local":"SELFFILE",
@@ -89,18 +97,18 @@ FASTDFS_CLIENT_CONF_PATH ={
 #fastdfs server path 
 FASTDFS_SERVER_PATH ={
     "local":"http://127.0.0.1:8080/",
-    "server_01":"http://www.aifortest.tech:8080/", 
-    "server_02":"http://www.aifortest.tech:8080/", 
+    "server_01":"http://www.iottest.online:8080/", 
+    "server_02":"http://www.iottest.online:8080/", 
     "home":"http://192.168.100.100:8080/", 
 }[_SYS]
 
 #local server path 
 LOCAL_FILE_SERVER_PATH ={
-    # "local":"http://www.aifortest.tech:9000/temp/",
-    "local":"http://www.aifortest.tech:9000/temp/",
-    "server_01":"http://www.aifortest.tech:9000/temp/", 
-    "server_02":"http://www.aifortest.tech:9000/temp/", 
-    "home":"http://stevenlian.asuscomm.com:9000/temp/", 
+    # "local":"http://www.iottest.online:9000/temp/",
+    "local":"http://www.iottest.online:9000/temp/",
+    "server_01":"http://www.iottest.online:9000/temp/", 
+    "server_02":"http://www.iottest.online:9000/temp/", 
+    "home":"http://192.168.100.100:9000/temp/", 
 }[_SYS]
 
 #local server path 
@@ -145,16 +153,16 @@ GEN_DIGIST_KEY ={
 
 #file server upload url dataSet, 注意这个是一个字典
 FILE_UPLOAD_URL ={
-    "local":"http://www.aifortest.tech:9000/upload",
-    "server_01":"http://www.aifortest.tech:9000/upload", 
-    "server_02":"http://www.aifortest.tech:9000/upload", 
+    "local":"http://www.iottest.online:9000/upload",
+    "server_01":"http://www.iottest.online:9000/upload", 
+    "server_02":"http://www.iottest.online:9000/upload", 
     "home":"http://192.168.100.100:9000/upload", 
 }[_SYS]
 
 #file server url dataSet, 注意这个是一个字典
 FILE_SERVER_URL ={
-    "local":"http://www.aifortest.tech:9000/hfile",
-    "server_01":"http://www.aifortest.tech:9000/hfile", 
+    "local":"http://www.iottest.online:9000/hfile",
+    "server_01":"http://www.iottest.online:9000/hfile", 
     "server_02":"http://app.iottest.online/hfile", 
     "home":"http://192.168.100.100/hfile", 
 }
@@ -248,6 +256,7 @@ ROLE_CMD_LIST =\
     "indicatoradd","indicatordel","indicatormodify","indicatorqry",
     "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
     "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
+    "tradedayadd","tradedaydel","tradedaymodify","tradedayqry",
     #stock related end
     ], 
 "manager":    [
@@ -270,6 +279,7 @@ ROLE_CMD_LIST =\
     "indicatoradd","indicatordel","indicatormodify","indicatorqry",
     "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
     "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
+    "tradedayadd","tradedaydel","tradedaymodify","tradedayqry",
     #stock related end
     ], 
 "operator":[
@@ -397,6 +407,9 @@ STOCK_BACKTEST_SETTINGS_FILE = "backtest_settings.csv" #回测配置文件,存�
 STOCK_BACKTEST_SETTINGS_JSON_FILE = "backtest_settings.json" #回测配置文件,存储在 STOCK_CONFIG_DIR_NAME 下
 
 STOCK_DIVIDEND_DATA_FILE = "stock_dividend.json" #股票分红数据文件,存储在 STOCK_DATA_CACHE_DIR_NAME 下
+
+STOCK_YLWZ_SESSION_ID_FILE = "ylwz_session_id.json" #YLWZ数据接口会话ID文件,存储在 STOCK_CONFIG_DIR_NAME 下
+STOCK_TUSHARE_TOKEN_FILE = "tushare_token.json" #tushare token文件,存储在 STOCK_CONFIG_DIR_NAME 下
 
 """
 申万二级行业RSI阈值计算配置文件

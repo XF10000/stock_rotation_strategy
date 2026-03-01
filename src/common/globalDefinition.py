@@ -7,7 +7,7 @@
 #Date: 2019-08-01
 #Description:   定义全局常量
 
-_VERSION="20260205"
+_VERSION="20260228"
 
 #导入具体应用的全局变量
 
@@ -325,6 +325,11 @@ _DEF_STOCK_DIVIDEND_DATA_DAYS = 90 #默认股票分红数据文件更新间隔90
 _DEF_STOCK_INDUSTRY_UPDATE_DAYS = 7 #默认股票行业更新间隔7天
 
 _DEF_STOCK_BACKTEST_DAYS = (365*2) #默认回测2年数据
+_DEF_STOCK_BACKTEST_WEEK = 125 #默认回测125周数据
+_DEF_STOCK_BACKTEST_WINDOWS = 14 #默认回测至少保留14个数据
+
+#默认初始资金
+_DEF_STOCK_INITIAL_CAPITAL = 1000000 #默认初始资金1000000元
 
 #价值比过滤器判断
 _DEF_STOCK_VALUE_SCREEN_SELL = "sell" #价值比大于80%
@@ -341,10 +346,24 @@ _DEF_STOCK_ACTION_CN = {
     _DEF_STOCK_ACTION_HOLD:"持仓",
 }
 
+#价值比判断
+_DEF_STOCK_VALUE_RATIO_EXTREME_UNDERVALUE = 0.6 #价值比 <= 此值为极度低估
+_DEF_STOCK_VALUE_RATIO_OBVIOUS_UNDERVALUE = 0.7 #价值比 (0.7, 0.8] 为明显低估
+_DEF_STOCK_VALUE_RATIO_SLIGHT_UNDERVALUE = 0.8 #价值比 (0.8, 1.0] 为合理区间
+_DEF_STOCK_VALUE_RATIO_FAIR_VALUE = 1.0 #价值比 (0.8, 1.0] 为合理区间
+_DEF_STOCK_VALUE_RATIO_SLIGHT_OVERVALUE = 1.2 #价值比 (1.0, 1.2] 为轻度高估, >1.2为极度高估
+_DEF_STOCK_VALUE_RATIO_EXTREME_OVERVALUE = 1.6 # >1.2为极度高估
+
 #EMA趋势过滤器判断
 _DEF_STOCK_EMA_TREND_DOWN = "down" #20周EMA趋势过滤器, 趋势向下
 _DEF_STOCK_EMA_TREND_UP = "up" #20周EMA趋势过滤器, 趋势向上
 _DEF_STOCK_EMA_TREND_HOLD = "hold" #20周EMA趋势过滤器, 趋势无明显变化
+
+#计算判断方法
+_DEF_STOCK_CALC_METHOD_4FACTOR = "four_factor" #四维度数据判断方法
+
+#tushare access control 
+_DEF_STOCK_TUSHARE_DPM_LIMIT = 80 #默认tushare数据获取限制1000条
 
 #log name
 _DEF_GENRAL_MYSQL_LOG_NAME = "mysqllog"

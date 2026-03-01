@@ -7,7 +7,7 @@
 #Date: 2019-08-02
 #Description:   这个应用的通用函数
 
-_VERSION="20260203"
+_VERSION="20260219"
 
 
 import os
@@ -1789,7 +1789,7 @@ https://api.haoshenqi.top/holiday?date=2023-10-01
 status: 0普通工作日1周末双休日2需要补班的工作日3法定节假日
 '''
 def getPublicHolidayInfo(YMD):
-    result = {}
+    result = {"isHoliday":True}
     try:
         url = "http://api.haoshenqi.top/holiday"
         currDate = YMD[0:4] + "-" + YMD[4:6] + "-" + YMD[6:8]

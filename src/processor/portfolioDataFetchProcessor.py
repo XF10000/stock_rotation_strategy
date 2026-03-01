@@ -13,7 +13,7 @@ _DEBUG=True
 
 import os
 import sys
-from turtle import up
+
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parentdir)
 
@@ -228,6 +228,9 @@ def checkDividendData():
             currTime = misc.time.time()
             if (currTime - fileModTime ) > (comGD._DEF_STOCK_DIVIDEND_DATA_DAYS * 24 * 60 * 60):
                 dividendData = comStock.getDividendData()
+                if dividendData:
+                    #保存数据
+                    comStock.saveDividendData(dividendData)
             else:
                 dividendData = comStock.readDividendData()
             if dividendData:

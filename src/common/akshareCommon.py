@@ -12,10 +12,12 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260205"
+_VERSION = "20260224"
 
 import os
 import sys
+
+from pandas_ta.utils import df_dates
 parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, parentdir)
 
@@ -88,8 +90,9 @@ def getStockMarketSummary(YMD=""):
         if not YMD:
             YMD = misc.getTime()[0:8]
         df = ak.stock_szse_summary(date=YMD)
-        df.rename(columns={"证券类别":"security_type","数量":"volume","成交金额":"amount","总市值":"market_cap","流通市值":"free_market_cap"},inplace=True)
-        result = df.to_dict(orient='records')
+        if not df.empty:
+            df.rename(columns={"证券类别":"security_type","数量":"volume","成交金额":"amount","总市值":"market_cap","流通市值":"free_market_cap"},inplace=True)
+            result = df.to_dict(orient='records')
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -554,17 +557,43 @@ def getIntradayData(symbol):
 def getDividendData():
     result = {}
     try:
-        dividendList = ak.stock_history_dividend()
-        dividendList.rename(columns={'代码': 'symbol', '名称': 'stock_name','上市日期':'ipo_date',
+        df = ak.stock_history_dividend()
+        df.rename(columns={'代码': 'symbol', '名称': 'stock_name','上市日期':'ipo_date',
         '累计股息':'cumulative_dividend','年均股息':'annual_dividend',
         '分红次数':'dividend_count','融资总额':'total_financing','融资次数':'financing_count'}, inplace=True)
-        dividendList = dividendList.to_dict(orient='records')
+        dividendList = df.to_dict(orient='records')
         for item in dividendList:
             symbol = item.get("symbol")
             item["ipo_date"] = item["ipo_date"].strftime(f"%Y-%m-%d")
-            if symbol not in result:               
-                result[symbol] = []
-            result[symbol].append(item) 
+            result[symbol] = item
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+    return result
+
+
+#获取股票分红/配股详情数据
+stockDivIndicators = {"分红":"dividend","配股":"right_issue"}
+def getDividendDetails(symbol,indicator,date=""):
+    result = {}
+    try:
+        df = ak.stock_history_dividend_detail(symbol=symbol, indicator=indicator, date=date)
+        if indicator == "分红":
+            df.rename(columns={'公告日期': 'ann_date','送股':'bonus_share_issue','转增':'cap_issue','派息':'cash_dividend',
+            '进度':'status','股权登记日':'record_date','红股上市日':'bonus_share_listing_date'}, inplace=True)
+        else:
+            df.rename(columns={'公告日期': 'annoucement_date','配股方案':'term_issue','配股价格':'sub_price','基准股本':'base_share_cap',
+            '除权日':'ex_rights_date','股权登记日':'record_date','缴款起始日':'sub_start_date','缴款终止日':'sub_end_date',
+            '配股上市日':'new_share_listing_date','募集资金合计':'totoal_proceeds_raised'}, inplace=True)
+
+        dividendList = df.to_dict(orient='records')
+        for item in dividendList:
+            item["annoucement_date"] = item["annoucement_date"].strftime(f"%Y-%m-%d")
+            for k,v in item.items():
+                if pd.isna(v):
+                    item[k] = ""
+            result.append(item)
 
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
@@ -572,6 +601,19 @@ def getDividendData():
     return result
 #history data end
 
+
+#sina新浪获取交易日信息
+def sinaGetTradeDate():
+    result = []
+    try:
+        df = ak.tool_trade_date_hist_sina()
+        df["trade_date"] = df["trade_date"].astype(str)
+        result = df["trade_date"].tolist()
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+    return result
 
 #analysis tool begin
 

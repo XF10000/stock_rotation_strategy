@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch portfolio data from server
 
-_VERSION="20260201"
+_VERSION="20260225"
 
 _DEBUG=True
 
@@ -56,8 +56,22 @@ _LOG.info(f"PID:{_processorPID}, python version:{systemVersion}, main code versi
 
 
 #common function begin
-sessionID = "ylwz-wwdukrb3peywxiwphlwnpfzutkq0spwr8urmqvoa"
-host = "www.iottest.online"
+def readSessionIDFromEnv():
+    try:
+        sessionID = os.getenv("YLWZ_SESSION_ID")
+        if not sessionID:
+            fileName = settings.STOCK_YLWZ_SESSION_ID_FILE
+            filePath = os.path.join(settings.STOCK_CONFIG_DIR_NAME, fileName)
+            sessionIDSet = misc.loadJsonData(filePath,"dict")
+            if sessionIDSet:
+                sessionID = sessionIDSet.get("sessionID","")
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return sessionID
+
+sessionID = readSessionIDFromEnv()
+host = settings.YLWZ_SERVER_HOST
 
 ylwzStockServer = comYlwz.StockServer(host=host, sessionID=sessionID)
 #common function end
