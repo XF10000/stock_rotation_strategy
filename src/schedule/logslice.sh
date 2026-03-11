@@ -8,6 +8,10 @@ fileName=datacleanlog
 /bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
 /bin/echo '' > ${logsourcedir}/${fileName}
 
+fileName=databackuplog
+/bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
+/bin/echo '' > ${logsourcedir}/${fileName}
+
 fileName=filecleanlog
 /bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
 /bin/echo '' > ${logsourcedir}/${fileName}
@@ -58,6 +62,10 @@ fileName=checkuploaddblog
 /bin/echo '' > ${logsourcedir}/${fileName}
 
 fileName=stockregularupdatelog
+/bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
+/bin/echo '' > ${logsourcedir}/${fileName}
+
+fileName=stockuserupdatelog
 /bin/cp ${logsourcedir}/${fileName}  ${logbackupdir}/${fileName}$lastday 
 /bin/echo '' > ${logsourcedir}/${fileName}
 

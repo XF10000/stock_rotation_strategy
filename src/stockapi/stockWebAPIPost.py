@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260228"
+_VERSION="20260310"
 
 
 import os
@@ -2887,7 +2887,7 @@ def funcIndustryInfoAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -2983,7 +2983,7 @@ def funcIndustryInfoDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -3049,7 +3049,7 @@ def funcIndustryInfoModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -3249,7 +3249,7 @@ def funcIndustryInfoQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -3408,7 +3408,7 @@ def funcStockInfoAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -3505,7 +3505,7 @@ def funcStockInfoDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -3571,7 +3571,7 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -3738,7 +3738,7 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -3907,7 +3907,7 @@ def funcStockHistoryAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4007,7 +4007,7 @@ def funcStockHistoryDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4075,7 +4075,7 @@ def funcStockHistoryModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4250,7 +4250,7 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4275,7 +4275,13 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
 
                 adjust = dataSet.get("adjust", "")
                 
-                stock_name = dataSet.get("stock_name", "")                 
+                stock_name = dataSet.get("stock_name", "")
+
+                queryDate = dataSet.get("date", "")
+
+                startDate = dataSet.get("start_date", "")                 
+
+                endDate = dataSet.get("end_date", "")                 
 
                 forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
 
@@ -4297,6 +4303,12 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                         indexKeyDataSet["id"] = id
                     if stock_code:
                         indexKeyDataSet["stock_code"] = stock_code
+                    if queryDate:
+                        indexKeyDataSet["queryDate"] = queryDate    
+                    if startDate:
+                        indexKeyDataSet["startDate"] = startDate
+                    if endDate:
+                        indexKeyDataSet["endDate"] = endDate
                     if period:
                         indexKeyDataSet["period"] = period
                     if adjust:
@@ -4335,7 +4347,8 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                                 currDataList = comMysql.query_stock_history_data(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_stock_history_data(period=period,adjust=adjust)
-                                currDataList = comMysql.query_stock_history_data(tableName,stock_code=stock_code,stock_name=stock_name,limitNum=limitNum)
+                                currDataList = comMysql.query_stock_history_data(tableName,stock_code=stock_code,stock_name=stock_name,date=queryDate,
+                                                                                start_date=startDate,end_date=endDate,limitNum=limitNum)
 
                         dataList = []
 
@@ -4411,6 +4424,663 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
     return result
 
 
+#股票技术参数增加代码
+def funcTechnicalIndicatorsAdd(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+                if dataValidFlag:
+                    saveSet = {}
+                    saveSet["stock_code"] = dataSet.get("stock_code", "") 
+                    saveSet["date"] = dataSet.get("date", "") 
+                    saveSet["close"] = dataSet.get("close", "") 
+                    saveSet["ma_5"] = dataSet.get("ma_5", "") 
+                    saveSet["ma_10"] = dataSet.get("ma_10", "") 
+                    saveSet["ma_20"] = dataSet.get("ma_20", "") 
+                    saveSet["ma_60"] = dataSet.get("ma_60", "") 
+                    saveSet["macd_line"] = dataSet.get("macd_line", "") 
+                    saveSet["macd_signal"] = dataSet.get("macd_signal", "") 
+                    saveSet["macd_histogram"] = dataSet.get("macd_histogram", "") 
+                    saveSet["boll_upper"] = dataSet.get("boll_upper", "") 
+                    saveSet["boll_mid"] = dataSet.get("boll_mid", "") 
+                    saveSet["boll_lower"] = dataSet.get("boll_lower", "") 
+                    saveSet["ene_upper"] = dataSet.get("ene_upper", "") 
+                    saveSet["ene_mid"] = dataSet.get("ene_mid", "") 
+                    saveSet["ene_lower"] = dataSet.get("ene_lower", "") 
+                    saveSet["dmi_pdi"] = dataSet.get("dmi_pdi", "") 
+                    saveSet["dmi_mdi"] = dataSet.get("dmi_mdi", "") 
+                    saveSet["dmi_adx"] = dataSet.get("dmi_adx", "") 
+                    saveSet["dma_line"] = dataSet.get("dma_line", "") 
+                    saveSet["ama_line"] = dataSet.get("ama_line", "") 
+                    saveSet["sar"] = dataSet.get("sar", "") 
+                    saveSet["kdj_k"] = dataSet.get("kdj_k", "") 
+                    saveSet["kdj_d"] = dataSet.get("kdj_d", "") 
+                    saveSet["kdj_j"] = dataSet.get("kdj_j", "") 
+                    saveSet["rsi_6"] = dataSet.get("rsi_6", "") 
+                    saveSet["rsi_12"] = dataSet.get("rsi_12", "") 
+                    saveSet["rsi_24"] = dataSet.get("rsi_24", "") 
+                    saveSet["cci"] = dataSet.get("cci", "") 
+                    saveSet["bias_5"] = dataSet.get("bias_5", "") 
+                    saveSet["bias_10"] = dataSet.get("bias_10", "") 
+                    saveSet["bias_20"] = dataSet.get("bias_20", "") 
+                    saveSet["wr_6"] = dataSet.get("wr_6", "") 
+                    saveSet["wr_14"] = dataSet.get("wr_14", "") 
+                    saveSet["volume"] = dataSet.get("volume", "") 
+                    saveSet["turnover_rate"] = dataSet.get("turnover_rate", "") 
+                    saveSet["obv"] = dataSet.get("obv", "") 
+                    saveSet["hashval"] = dataSet.get("hashval", "") 
+                    saveSet["label1"] = dataSet.get("label1", "") 
+                    saveSet["label2"] = dataSet.get("label2", "") 
+                    saveSet["label3"] = dataSet.get("label3", "") 
+                    saveSet["memo"] = dataSet.get("memo", "") 
+                    saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+                    saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+                    saveSet["regID"] = loginID
+                    saveSet["regYMDHMS"] = misc.getTime()
+
+                    tableName = comMysql.tablename_convertor_technical_indicators()
+                    recID = comMysql.insert_technical_indicators(tableName,saveSet)
+                    rtnData["recID"] = str(recID)
+
+                    if recID <= 0:
+                        #记录添加失败
+                        errCode = "CG"
+                        _LOG.warning(f"rtn:{recID},saveSet:{saveSet}")
+                    else:
+                        if _DEBUG:
+                            pass
+                            _LOG.info(f"D: recID:{recID}")
+
+                    result = rtnData
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#股票技术参数删除代码
+def funcTechnicalIndicatorsDel(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                id = dataSet.get("id", "")
+                tableName = comMysql.tablename_convertor_technical_indicators()
+                currDataList = comMysql.query_technical_indicators(tableName,id)
+                if len(currDataList) == 1:
+                    saveSet = {}
+                    saveSet["modifyID"] = loginID
+                    saveSet["modifyYMDHMS"] = misc.getTime()
+                    #saveSet["delFlag"] = "1"
+
+                    rtn = comMysql.delete_technical_indicators(tableName,id)
+                    rtnData["rtn"] = str(rtn)
+
+                    if _DEBUG:
+                        _LOG.info(f"D: rtn:{rtn}")
+
+                    result = rtnData
+
+                else:
+                    errCode = "CB"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#股票技术参数修改代码
+def funcTechnicalIndicatorsModify(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查/功能检测
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+
+                stock_code = dataSet.get("stock_code") 
+                date = dataSet.get("date") 
+                close = dataSet.get("close") 
+                ma_5 = dataSet.get("ma_5") 
+                ma_10 = dataSet.get("ma_10") 
+                ma_20 = dataSet.get("ma_20") 
+                ma_60 = dataSet.get("ma_60") 
+                macd_line = dataSet.get("macd_line") 
+                macd_signal = dataSet.get("macd_signal") 
+                macd_histogram = dataSet.get("macd_histogram") 
+                boll_upper = dataSet.get("boll_upper") 
+                boll_mid = dataSet.get("boll_mid") 
+                boll_lower = dataSet.get("boll_lower") 
+                ene_upper = dataSet.get("ene_upper") 
+                ene_mid = dataSet.get("ene_mid") 
+                ene_lower = dataSet.get("ene_lower") 
+                dmi_pdi = dataSet.get("dmi_pdi") 
+                dmi_mdi = dataSet.get("dmi_mdi") 
+                dmi_adx = dataSet.get("dmi_adx") 
+                dma_line = dataSet.get("dma_line") 
+                ama_line = dataSet.get("ama_line") 
+                sar = dataSet.get("sar") 
+                kdj_k = dataSet.get("kdj_k") 
+                kdj_d = dataSet.get("kdj_d") 
+                kdj_j = dataSet.get("kdj_j") 
+                rsi_6 = dataSet.get("rsi_6") 
+                rsi_12 = dataSet.get("rsi_12") 
+                rsi_24 = dataSet.get("rsi_24") 
+                cci = dataSet.get("cci") 
+                bias_5 = dataSet.get("bias_5") 
+                bias_10 = dataSet.get("bias_10") 
+                bias_20 = dataSet.get("bias_20") 
+                wr_6 = dataSet.get("wr_6") 
+                wr_14 = dataSet.get("wr_14") 
+                volume = dataSet.get("volume") 
+                turnover_rate = dataSet.get("turnover_rate") 
+                obv = dataSet.get("obv") 
+                hashval = dataSet.get("hashval") 
+                label1 = dataSet.get("label1") 
+                label2 = dataSet.get("label2") 
+                label3 = dataSet.get("label3") 
+                memo = dataSet.get("memo") 
+                dispFlag = dataSet.get("dispFlag") 
+                delFlag = dataSet.get("delFlag") 
+                #data valid 检查
+
+                if dataValidFlag:
+                    #当前记录获取
+                    recID = dataSet.get("id", "")
+
+                    tableName = comMysql.tablename_convertor_technical_indicators()
+                    currDataList = comMysql.query_technical_indicators(tableName,recID)
+
+                    if len(currDataList) == 1:
+                        currDataSet = currDataList[0]
+
+                        #权限或其他检查
+                        if errCode == "B0": #
+
+                            saveSet = {}
+
+                            if stock_code != currDataSet.get("stock_code") and stock_code:
+                                saveSet["stock_code"] = stock_code
+
+                            if date != currDataSet.get("date") and date:
+                                saveSet["date"] = date
+
+                            if close != currDataSet.get("close") and close:
+                                saveSet["close"] = close
+
+                            if ma_5 != currDataSet.get("ma_5") and ma_5:
+                                saveSet["ma_5"] = ma_5
+
+                            if ma_10 != currDataSet.get("ma_10") and ma_10:
+                                saveSet["ma_10"] = ma_10
+
+                            if ma_20 != currDataSet.get("ma_20") and ma_20:
+                                saveSet["ma_20"] = ma_20
+
+                            if ma_60 != currDataSet.get("ma_60") and ma_60:
+                                saveSet["ma_60"] = ma_60
+
+                            if macd_line != currDataSet.get("macd_line") and macd_line:
+                                saveSet["macd_line"] = macd_line
+
+                            if macd_signal != currDataSet.get("macd_signal") and macd_signal:
+                                saveSet["macd_signal"] = macd_signal
+
+                            if macd_histogram != currDataSet.get("macd_histogram") and macd_histogram:
+                                saveSet["macd_histogram"] = macd_histogram
+
+                            if boll_upper != currDataSet.get("boll_upper") and boll_upper:
+                                saveSet["boll_upper"] = boll_upper
+
+                            if boll_mid != currDataSet.get("boll_mid") and boll_mid:
+                                saveSet["boll_mid"] = boll_mid
+
+                            if boll_lower != currDataSet.get("boll_lower") and boll_lower:
+                                saveSet["boll_lower"] = boll_lower
+
+                            if ene_upper != currDataSet.get("ene_upper") and ene_upper:
+                                saveSet["ene_upper"] = ene_upper
+
+                            if ene_mid != currDataSet.get("ene_mid") and ene_mid:
+                                saveSet["ene_mid"] = ene_mid
+
+                            if ene_lower != currDataSet.get("ene_lower") and ene_lower:
+                                saveSet["ene_lower"] = ene_lower
+
+                            if dmi_pdi != currDataSet.get("dmi_pdi") and dmi_pdi:
+                                saveSet["dmi_pdi"] = dmi_pdi
+
+                            if dmi_mdi != currDataSet.get("dmi_mdi") and dmi_mdi:
+                                saveSet["dmi_mdi"] = dmi_mdi
+
+                            if dmi_adx != currDataSet.get("dmi_adx") and dmi_adx:
+                                saveSet["dmi_adx"] = dmi_adx
+
+                            if dma_line != currDataSet.get("dma_line") and dma_line:
+                                saveSet["dma_line"] = dma_line
+
+                            if ama_line != currDataSet.get("ama_line") and ama_line:
+                                saveSet["ama_line"] = ama_line
+
+                            if sar != currDataSet.get("sar") and sar:
+                                saveSet["sar"] = sar
+
+                            if kdj_k != currDataSet.get("kdj_k") and kdj_k:
+                                saveSet["kdj_k"] = kdj_k
+
+                            if kdj_d != currDataSet.get("kdj_d") and kdj_d:
+                                saveSet["kdj_d"] = kdj_d
+
+                            if kdj_j != currDataSet.get("kdj_j") and kdj_j:
+                                saveSet["kdj_j"] = kdj_j
+
+                            if rsi_6 != currDataSet.get("rsi_6") and rsi_6:
+                                saveSet["rsi_6"] = rsi_6
+
+                            if rsi_12 != currDataSet.get("rsi_12") and rsi_12:
+                                saveSet["rsi_12"] = rsi_12
+
+                            if rsi_24 != currDataSet.get("rsi_24") and rsi_24:
+                                saveSet["rsi_24"] = rsi_24
+
+                            if cci != currDataSet.get("cci") and cci:
+                                saveSet["cci"] = cci
+
+                            if bias_5 != currDataSet.get("bias_5") and bias_5:
+                                saveSet["bias_5"] = bias_5
+
+                            if bias_10 != currDataSet.get("bias_10") and bias_10:
+                                saveSet["bias_10"] = bias_10
+
+                            if bias_20 != currDataSet.get("bias_20") and bias_20:
+                                saveSet["bias_20"] = bias_20
+
+                            if wr_6 != currDataSet.get("wr_6") and wr_6:
+                                saveSet["wr_6"] = wr_6
+
+                            if wr_14 != currDataSet.get("wr_14") and wr_14:
+                                saveSet["wr_14"] = wr_14
+
+                            if volume != currDataSet.get("volume") and volume:
+                                saveSet["volume"] = volume
+
+                            if turnover_rate != currDataSet.get("turnover_rate") and turnover_rate:
+                                saveSet["turnover_rate"] = turnover_rate
+
+                            if obv != currDataSet.get("obv") and obv:
+                                saveSet["obv"] = obv
+
+                            if hashval != currDataSet.get("hashval") and hashval:
+                                saveSet["hashval"] = hashval
+
+                            if label1 != currDataSet.get("label1") and label1:
+                                saveSet["label1"] = label1
+
+                            if label2 != currDataSet.get("label2") and label2:
+                                saveSet["label2"] = label2
+
+                            if label3 != currDataSet.get("label3") and label3:
+                                saveSet["label3"] = label3
+
+                            if memo != currDataSet.get("memo") and memo:
+                                saveSet["memo"] = memo
+
+                            if dispFlag != currDataSet.get("dispFlag") and dispFlag:
+                                saveSet["dispFlag"] = dispFlag
+
+                            if delFlag != currDataSet.get("delFlag") and delFlag:
+                                saveSet["delFlag"] = delFlag
+
+                            if saveSet:
+                                #saveSet["delFlag"] = "0"
+                                saveSet["modifyID"] = loginID
+                                saveSet["modifyYMDHMS"] = misc.getTime()
+
+                                #保存数据
+                                tableName = comMysql.tablename_convertor_technical_indicators()
+                                rtn = comMysql.update_technical_indicators(tableName,recID,saveSet)
+                                rtnData["rtn"] = str(rtn)
+
+                                if rtn < 0:
+                                    _LOG.warning(f"D: rtn:{rtn},saveSet:{saveSet}")
+                                else:
+                                    if _DEBUG:
+                                        pass
+                                        _LOG.info(f"D: rtn:{rtn}")
+
+                                result = rtnData
+
+                        else:
+                            #BT
+                            errCode = "BT"
+
+                    else:
+                        #CB
+                        errCode = "CB"
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#股票技术参数查询代码
+def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+                #获取查询输入参数
+                id = dataSet.get("id", "")
+
+                period = dataSet.get("period", "day")
+                adjust = dataSet.get("adjust", "")
+
+                queryDate = dataSet.get("date", "")
+
+                startDate = dataSet.get("start_date", "")
+                
+                endDate = dataSet.get("end_date", "")
+
+                symbol = dataSet.get("symbol", "")
+                if symbol:
+                    stock_code = symbol
+                else:
+                    stock_code = dataSet.get("stock_code","")
+
+                forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
+
+                searchOption = dataSet.get("searchOption")
+
+                mode = dataSet.get("mode", "full")
+
+                #limitNum = dataSet.get("limitNum",0)
+
+                #权限检查/功能检测
+                if comFC.chkIsManager(roleName) == False:
+                    rightCheckFlag = False
+                else:
+                    rightCheckFlag = True
+
+                if rightCheckFlag:
+
+                    #生成indexKey
+                    indexKeyDataSet = {} #查询生成index的因素
+                    if stock_code:
+                        indexKeyDataSet["stock_code"] = stock_code
+                    if period:
+                        indexKeyDataSet["period"] = period
+                    if adjust:
+                        indexKeyDataSet["adjust"] = adjust
+                    if queryDate:
+                        indexKeyDataSet["queryDate"] = queryDate    
+                    if startDate:
+                        indexKeyDataSet["startDate"] = startDate
+                    if endDate:
+                        indexKeyDataSet["endDate"] = endDate
+                    if id:
+                        indexKeyDataSet["id"] = id
+                    if searchOption:
+                        indexKeyDataSet["searchOption"] = searchOption
+                    if mode:
+                        indexKeyDataSet["mode"] = mode
+
+                    #if limitNum:
+                        #indexKeyDataSet["limitNum"] = limitNum
+
+                    sessionID = sessionIDSet.get("sessionID", "")
+                    indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
+                    beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
+                    endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
+
+                    #判断数据是否在缓冲区:
+                    if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+
+                        if searchOption:
+                            currDataList = []
+                            tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
+                            allDataList = comMysql.query_technical_indicators(tableName,mode = mode)
+                            allowList = ["description", "label"] #筛选字段
+                            serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
+                            if serachResultSet["rtn"] == "B0":
+                                currDataList = serachResultSet.get("data", [])
+                        else:
+                            if id:
+                                tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
+                                currDataList = comMysql.query_technical_indicators(tableName,id,mode = mode)
+                            else:
+                                tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
+                                currDataList = comMysql.query_technical_indicators(tableName,stock_code=stock_code,date=date,
+                                                start_date=startDate,end_date=endDate,limitNum=limitNum)
+
+                        dataList = []
+
+                        for currDataSet in currDataList:
+                            aSet = {}
+
+                            #需要把文件转移到public domain
+                            #appendixFileID00 =  currDataSet.get("appendixFileID00", "")
+                            #appendixFileID00 = getTempLocation(appendixFileID00, privateFlag = True)
+
+                            #if mode == "full":
+                                #aSet["houseID"] = currDataSet.get("houseID", "")
+
+                            aSet["id"] = currDataSet.get("id","")
+                            aSet["stock_code"] = currDataSet.get("stock_code","")
+                            aSet["date"] = currDataSet.get("date","")
+                            aSet["close"] = currDataSet.get("close","")
+                            aSet["ma_5"] = currDataSet.get("ma_5","")
+                            aSet["ma_10"] = currDataSet.get("ma_10","")
+                            aSet["ma_20"] = currDataSet.get("ma_20","")
+                            aSet["ma_60"] = currDataSet.get("ma_60","")
+                            aSet["macd_line"] = currDataSet.get("macd_line","")
+                            aSet["macd_signal"] = currDataSet.get("macd_signal","")
+                            aSet["macd_histogram"] = currDataSet.get("macd_histogram","")
+                            aSet["boll_upper"] = currDataSet.get("boll_upper","")
+                            aSet["boll_mid"] = currDataSet.get("boll_mid","")
+                            aSet["boll_lower"] = currDataSet.get("boll_lower","")
+                            aSet["ene_upper"] = currDataSet.get("ene_upper","")
+                            aSet["ene_mid"] = currDataSet.get("ene_mid","")
+                            aSet["ene_lower"] = currDataSet.get("ene_lower","")
+                            aSet["dmi_pdi"] = currDataSet.get("dmi_pdi","")
+                            aSet["dmi_mdi"] = currDataSet.get("dmi_mdi","")
+                            aSet["dmi_adx"] = currDataSet.get("dmi_adx","")
+                            aSet["dma_line"] = currDataSet.get("dma_line","")
+                            aSet["ama_line"] = currDataSet.get("ama_line","")
+                            aSet["sar"] = currDataSet.get("sar","")
+                            aSet["kdj_k"] = currDataSet.get("kdj_k","")
+                            aSet["kdj_d"] = currDataSet.get("kdj_d","")
+                            aSet["kdj_j"] = currDataSet.get("kdj_j","")
+                            aSet["rsi_6"] = currDataSet.get("rsi_6","")
+                            aSet["rsi_12"] = currDataSet.get("rsi_12","")
+                            aSet["rsi_24"] = currDataSet.get("rsi_24","")
+                            aSet["cci"] = currDataSet.get("cci","")
+                            aSet["bias_5"] = currDataSet.get("bias_5","")
+                            aSet["bias_10"] = currDataSet.get("bias_10","")
+                            aSet["bias_20"] = currDataSet.get("bias_20","")
+                            aSet["wr_6"] = currDataSet.get("wr_6","")
+                            aSet["wr_14"] = currDataSet.get("wr_14","")
+                            aSet["volume"] = currDataSet.get("volume","")
+                            aSet["turnover_rate"] = currDataSet.get("turnover_rate","")
+                            aSet["obv"] = currDataSet.get("obv","")
+                            aSet["hashval"] = currDataSet.get("hashval","")
+                            aSet["label1"] = currDataSet.get("label1","")
+                            aSet["label2"] = currDataSet.get("label2","")
+                            aSet["label3"] = currDataSet.get("label3","")
+                            aSet["memo"] = currDataSet.get("memo","")
+                            aSet["regID"] = currDataSet.get("regID","")
+                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                            aSet["modifyID"] = currDataSet.get("modifyID","")
+                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                            dataList.append(aSet)
+
+                        #临时缓存机制,改进型, 2023/10/16
+                        indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+
+                    rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
+
+                    #rtnData["limitNum"] = limitNum
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
 #股票分红数据增加代码
 def funcStockDividendAdd(CMD,dataSet,sessionIDSet):
     result = {}
@@ -4424,7 +5094,7 @@ def funcStockDividendAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4518,7 +5188,7 @@ def funcStockDividendDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4582,7 +5252,7 @@ def funcStockDividendModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4741,7 +5411,7 @@ def funcStockDividendQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4897,7 +5567,7 @@ def funcIndustryHistoryAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -4990,7 +5660,7 @@ def funcIndustryHistoryDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -5056,7 +5726,7 @@ def funcIndustryHistoryModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -5228,7 +5898,7 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -5381,7 +6051,7 @@ def funcBalanceSheetAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -5608,7 +6278,7 @@ def funcBalanceSheetDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -5674,7 +6344,7 @@ def funcBalanceSheetModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -6362,7 +7032,7 @@ def funcBalanceSheetQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -6656,7 +7326,7 @@ def funcIncomeStatementsAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -6821,7 +7491,7 @@ def funcIncomeStatementsDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -6885,7 +7555,7 @@ def funcIncomeStatementsModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -7332,7 +8002,7 @@ def funcIncomeStatementsQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -7559,7 +8229,7 @@ def funcCashFlowAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -7722,7 +8392,7 @@ def funcCashFlowDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -7788,7 +8458,7 @@ def funcCashFlowModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -8222,7 +8892,7 @@ def funcCashFlowQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -8449,7 +9119,7 @@ def funcIndicatorAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -8534,7 +9204,7 @@ def funcIndicatorDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -8600,7 +9270,7 @@ def funcIndicatorModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -8740,7 +9410,7 @@ def funcIndicatorQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -8888,7 +9558,7 @@ def funcUserStockListAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -8919,6 +9589,9 @@ def funcUserStockListAdd(CMD,dataSet,sessionIDSet):
                     saveSet["username"] = dataSet.get("username", "") 
                     saveSet["user_plan"] = dataSet.get("user_plan", "default") 
                     saveSet["plan_status"] = dataSet.get("plan_status", comGD._COSNT_YES) 
+                    saveSet["history_update"] = dataSet.get("history_update", "") 
+                    saveSet["history_start_date"] = dataSet.get("history_start_date", "") 
+                    saveSet["history_end_date"] = dataSet.get("history_end_date", "") 
                     saveSet["stock_code"] = stock_code
                     saveSet["stock_name"] = dataSet.get("stock_name", "") 
                     saveSet["initial_weight"] = dataSet.get("initial_weight", "") 
@@ -8988,7 +9661,7 @@ def funcUserStockListDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9054,7 +9727,7 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9073,6 +9746,9 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
                 username = dataSet.get("username") 
                 user_plan = dataSet.get("user_plan") 
                 plan_status = dataSet.get("plan_status") 
+                history_update = dataSet.get("history_update") 
+                history_start_date = dataSet.get("history_start_date") 
+                history_end_date = dataSet.get("history_end_date") 
                 stock_code = dataSet.get("stock_code") 
                 stock_name = dataSet.get("stock_name") 
                 initial_weight = dataSet.get("initial_weight") 
@@ -9114,6 +9790,15 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
                             if plan_status != currDataSet.get("plan_status") and plan_status:
                                 saveSet["plan_status"] = plan_status
 
+                            if history_update != currDataSet.get("history_update") and history_update:
+                                saveSet["history_update"] = history_update
+
+                            if history_start_date != currDataSet.get("history_start_date") and history_start_date:
+                                saveSet["history_start_date"] = history_start_date
+
+                            if history_end_date != currDataSet.get("history_end_date") and history_end_date:
+                                saveSet["history_end_date"] = history_end_date
+
                             if stock_code != currDataSet.get("stock_code") and stock_code:
                                 saveSet["stock_code"] = stock_code
 
@@ -9144,24 +9829,11 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
                             if memo != currDataSet.get("memo") and memo:
                                 saveSet["memo"] = memo
 
-                            if regID != currDataSet.get("regID") and regID:
-                                saveSet["regID"] = regID
-
-                            if regYMDHMS != currDataSet.get("regYMDHMS") and regYMDHMS:
-                                saveSet["regYMDHMS"] = regYMDHMS
-
-                            if modifyID != currDataSet.get("modifyID") and modifyID:
-                                saveSet["modifyID"] = modifyID
-
-                            if modifyYMDHMS != currDataSet.get("modifyYMDHMS") and modifyYMDHMS:
-                                saveSet["modifyYMDHMS"] = modifyYMDHMS
-
                             if dispFlag != currDataSet.get("dispFlag") and dispFlag:
                                 saveSet["dispFlag"] = dispFlag
 
                             if delFlag != currDataSet.get("delFlag") and delFlag:
                                 saveSet["delFlag"] = delFlag
-
 
                             if saveSet:
                                 #saveSet["delFlag"] = "0"
@@ -9230,7 +9902,7 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9249,12 +9921,17 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                 else:
                     userID = loginID
 
-                #houseID = dataSet.get("houseID", "")
                 symbol = dataSet.get("symbol","")
                 if symbol:
                     stock_code = symbol
                 else:
                     stock_code = dataSet.get("stock_code", "") 
+
+                user_plan = dataSet.get("user_plan","")
+                plan_status = dataSet.get("plan_status","")
+                history_update = dataSet.get("history_update","")
+                history_start_date = dataSet.get("history_start_date","")
+                history_end_date = dataSet.get("history_end_date","")
 
                 forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
 
@@ -9274,8 +9951,20 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                     indexKeyDataSet = {} #查询生成index的因素
                     if id:
                         indexKeyDataSet["id"] = id
+                    if userID:
+                        indexKeyDataSet["userID"] = userID
                     if stock_code:
                         indexKeyDataSet["stock_code"] = stock_code
+                    if user_plan:
+                        indexKeyDataSet["user_plan"] = user_plan
+                    if plan_status:
+                        indexKeyDataSet["plan_status"] = plan_status
+                    if history_update:
+                        indexKeyDataSet["history_update"] = history_update
+                    if history_start_date:
+                        indexKeyDataSet["history_start_date"] = history_start_date
+                    if history_end_date:
+                        indexKeyDataSet["history_end_date"] = history_end_date
                     if searchOption:
                         indexKeyDataSet["searchOption"] = searchOption
                     if mode:
@@ -9307,7 +9996,9 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                             else:
                                 tableName = comMysql.tablename_convertor_user_stock_list()
                                 currDataList = comMysql.query_user_stock_list(tableName,userID=userID,stock_code=stock_code,
-                                                    user_plan=user_plan,plan_status=plan_status,limitNum=limitNum)
+                                                    user_plan=user_plan,plan_status=plan_status,history_update=history_update,
+                                                    history_start_date=history_start_date,history_end_date=history_end_date,
+                                                    limitNum=limitNum)
 
                         dataList = []
 
@@ -9326,6 +10017,9 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                             aSet["username"] = currDataSet.get("username","")
                             aSet["user_plan"] = currDataSet.get("user_plan","")
                             aSet["plan_status"] = currDataSet.get("plan_status","")
+                            aSet["history_update"] = currDataSet.get("history_update","")
+                            aSet["history_start_date"] = currDataSet.get("history_start_date","")
+                            aSet["history_end_date"] = currDataSet.get("history_end_date","")
                             aSet["stock_code"] = currDataSet.get("stock_code","")
                             aSet["stock_name"] = currDataSet.get("stock_name","")
                             aSet["initial_weight"] = currDataSet.get("initial_weight","")
@@ -9391,7 +10085,7 @@ def funcDataCheckLogAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9476,7 +10170,7 @@ def funcDataCheckLogDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9542,7 +10236,7 @@ def funcDataCheckLogModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9696,7 +10390,7 @@ def funcDataCheckLogQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9842,7 +10536,7 @@ def funcTradeDayAdd(CMD,dataSet,sessionIDSet):
 
     try:
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9933,7 +10627,7 @@ def funcTradeDayDel(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -9998,7 +10692,7 @@ def funcTradeDayModify(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -10175,7 +10869,7 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
     try:
 
         lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
-        msgKey = "applicationMsgKey"
+        msgKey = "stock_msg"
         openID = sessionIDSet.get("openID", "")
         roleName = sessionIDSet.get("roleName", "")
         tempUserID = sessionIDSet.get("loginID", "")
@@ -10191,7 +10885,11 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
 
                 #houseID = dataSet.get("houseID", "")
                 beginDate = dataSet.get("beginDate", "")
+                if not beginDate:
+                    beginDate = dataSet.get("start_date")
                 endDate = dataSet.get("endDate", "")
+                if not endDate:
+                    endDate = dataSet.get("end_date","")
 
                 forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
 
@@ -10199,7 +10897,7 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",0)
 
                 #权限检查/功能检测
 
@@ -10220,16 +10918,17 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = limitNum
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
-                    indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
-                    beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
-                    endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
+                    # indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
+                    # beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
+                    # endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
 
                     #判断数据是否在缓冲区:
-                    if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+                    # if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+                    if True:
 
                         if searchOption:
                             currDataList = []
@@ -10245,7 +10944,7 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
                                 currDataList = comMysql.query_trade_day_record(tableName,id,mode = mode)
                             else:
                                 tableName = comMysql.tablename_convertor_trade_day_record()
-                                currDataList = comMysql.query_trade_day_record(tableName,beginDate=beginDate,endDate=endDate,mode = mode)
+                                currDataList = comMysql.query_trade_day_record(tableName,beginDate=beginDate,endDate=endDate,mode = mode,limitNum = limitNum)
 
                         dataList = []
 
@@ -10287,10 +10986,12 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
 
                             dataList.append(aSet)
 
-                        #临时缓存机制,改进型, 2023/10/16
-                        indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+                        rtnData["data"] = dataList
 
-                    rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
+                        #临时缓存机制,改进型, 2023/10/16
+                        # indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+
+                    # rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
 
                     #rtnData["limitNum"] = limitNum
 
@@ -10403,6 +11104,11 @@ urlPathMap = {
     "stockhistorydel":funcStockHistoryDel,
     "stockhistorymodify":funcStockHistoryModify,
     "stockhistoryqry":funcStockHistoryQry,
+
+    "technicalindicatorsadd":funcTechnicalIndicatorsAdd,
+    "technicalindicatorsdel":funcTechnicalIndicatorsDel,
+    "technicalindicatorsmodify":funcTechnicalIndicatorsModify,
+    "technicalindicatorsqry":funcTechnicalIndicatorsQry,
 
     "stockdividendadd":funcStockDividendAdd,
     "stockdividenddel":funcStockDividendDel,

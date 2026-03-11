@@ -7,7 +7,7 @@
 #Date: 2020-8-5
 #Description:  生成标准的mysqlCommon 和RESTful 接口所用的增删改查
 
-_VERSION = "20260204"
+_VERSION = "20260310"
 
 _DEBUG=True
 #auto_increment_default_value = 10000
@@ -276,18 +276,22 @@ def genCreateCode(tableName, dataStructure, primaryKeys = []):
     #fields
     autoIncrementExist = False
     for data in dataStructure:
-        isPrimaryKey = data.get("isPrimaryKey")
-        rest = data.get("rest")
-        if isPrimaryKey:
-            if rest.find("AUTO_INCREMENT") >=0:
-                autoIncrementExist = True        
-        #保留字处理
-        fieldName = data.get("fieldName", "") 
-        fieldNameUppder = fieldName.upper()
-        if fieldNameUppder in mysql_reserved_words:
-            fieldName = "`" + fieldName + "`"
-        tempString = TS + '"' + fieldName 
-        tempString += " " + data.get("dataTypeString", " ") +  " " + data.get("rest", "") +',",' 
+        commentFlag = data.get("commentFlag")
+        if commentFlag:
+            tempString = TS + data.get("rest", "") +',",' 
+        else:
+            isPrimaryKey = data.get("isPrimaryKey")
+            rest = data.get("rest")
+            if isPrimaryKey:
+                if rest.find("AUTO_INCREMENT") >=0:
+                    autoIncrementExist = True        
+            #保留字处理
+            fieldName = data.get("fieldName", "") 
+            fieldNameUppder = fieldName.upper()
+            if fieldNameUppder in mysql_reserved_words:
+                fieldName = "`" + fieldName + "`"
+            tempString = TS + '"' + fieldName 
+            tempString += " " + data.get("dataTypeString", " ") +  " " + data.get("rest", "") +',",' 
         aList.append(tempString)
     
     #primary key
@@ -2055,45 +2059,57 @@ def anaTableData(tableName,  dataList):
     for data in dataList:
         aSet = {}
         try:
-            #find primary key
-            pos = data.upper().find ("PRIMARY")
-            if pos > 0:
-                aSet["isPrimaryKey"] = True
-            else:
-                aSet["isPrimaryKey"] = False
+            #判断是否是注释行
+            commentFlag = False
+            pos = data.upper().find ("#")
+            if pos == 0:
+                commentFlag = True
+            pos = data.upper().find ("--")
+            if pos == 0:
+                commentFlag = True
+            if commentFlag:
+                aSet["commentFlag"] = True
+                aSet["rest"] = '# ' + data
+            else:               
+                #find primary key
+                pos = data.upper().find ("PRIMARY")
+                if pos > 0:
+                    aSet["isPrimaryKey"] = True
+                else:
+                    aSet["isPrimaryKey"] = False
 
-            #分割处理
-            aList = data.split(" ")
-            aSet["fieldName"]  = aList[0]
-            dataTypeString = aList[1].strip()            
-            dataTypeString = dataTypeString.strip(",")
-            
-            aSet["dataTypeString"] = dataTypeString
-            aSet["dataType"] = decodeDataType(aList[1])
-            
-            newList = aList[2:]
-            restString = " ".join(newList)
-            
-            commentString = ""
-            pos  = restString.find("#")
-            if pos >= 0:
-                commentString = restString[pos:]
-                restString = restString[0:pos]
-            
-            pos = restString.find(",")
-            if pos >= 0:
-                restString = restString[0:pos]
-            
-            #查找comment部分,存到 text里面
-            pos = restString.find("COMMENT")
-            if pos >= 0:
-                text = restString[pos+8:]
-                pos = text.find("'")
+                #分割处理
+                aList = data.split(" ")
+                aSet["fieldName"]  = aList[0]
+                dataTypeString = aList[1].strip()            
+                dataTypeString = dataTypeString.strip(",")
+                
+                aSet["dataTypeString"] = dataTypeString
+                aSet["dataType"] = decodeDataType(aList[1])
+                
+                newList = aList[2:]
+                restString = " ".join(newList)
+                
+                commentString = ""
+                pos  = restString.find("#")
                 if pos >= 0:
-                    text = text[pos+1:-1]
-                    aSet["text"] = text
-            aSet["rest"] = restString
-            aSet["comment"] = commentString
+                    commentString = restString[pos:]
+                    restString = restString[0:pos]
+                
+                pos = restString.find(",")
+                if pos >= 0:
+                    restString = restString[0:pos]
+                
+                #查找comment部分,存到 text里面
+                pos = restString.find("COMMENT")
+                if pos >= 0:
+                    text = restString[pos+8:]
+                    pos = text.find("'")
+                    if pos >= 0:
+                        text = text[pos+1:-1]
+                        aSet["text"] = text
+                aSet["rest"] = restString
+                aSet["comment"] = commentString
             
             dataStructure.append(aSet)
 
@@ -2113,6 +2129,9 @@ def  generateFuncs(tableName, dataStructure,  primaryKeys = []):
     result.append(tempString) 
 
     #mysqlCommon 表名生成代码
+    #删除dataStructure 中 commentFlag 为 True 的项
+    dataStructure = [x for x in dataStructure if not x.get("commentFlag")]
+
     keysList = []
     tempString = genTableNameConvertorCode(tableName,keysList)
     result.append(tempString) 
@@ -2124,7 +2143,10 @@ def  generateFuncs(tableName, dataStructure,  primaryKeys = []):
     #mysqlCommon 建表代码
     tempString = genCreateCode(tableName, dataStructure,  primaryKeys)
     result.append(tempString) 
-    
+
+    # #删除dataStructure 中 commentFlag 为 True 的项
+    # dataStructure = [x for x in dataStructure if not x.get("commentFlag")]
+
     #mysqlCommon 删表代码
     tempString = genDropCode(tableName,dataStructure)
     result.append(tempString) 
@@ -2153,7 +2175,7 @@ def  generateFuncs(tableName, dataStructure,  primaryKeys = []):
 
     tempString = "\n#http interface code begin \n"
     result.append(tempString) 
-    
+   
     #Server REST增加代码
     tempString = genCmdAddCode(tableName, dataStructure)
     result.append(tempString) 
@@ -2542,7 +2564,8 @@ def main():
 
     debugFlag = False
 
-    inputFileName = "table.txt"
+    # inputFileName = "table.txt"
+    inputFileName = r"database/stock_technical_indicators.txt"
     for name, value in opts:
         if name in ("-h", "--help"):
             # 打印帮助信息

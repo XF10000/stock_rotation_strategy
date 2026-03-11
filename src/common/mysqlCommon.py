@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260228"
+_VERSION="20260305"
 
 #add src directory
 import os
@@ -2894,7 +2894,7 @@ def update_stock_history_data(tableName,id,dataSet):
 
 
 #stock_history_data 查询记录
-def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",
+def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",start_date="",end_date="",date="",
                             delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
@@ -2916,17 +2916,33 @@ def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",
             if stock_code:
                 if valuesList:
                     sqlStr += " AND stock_code = %s"
-                    valuesList.append(stock_code)
                 else:
                     sqlStr += " WHERE stock_code = %s"
-                    valuesList.append(stock_code)
+                valuesList.append(stock_code)
             if stock_name:
                 if valuesList:
                     sqlStr += " AND stock_name = %s"
-                    valuesList.append(stock_name)
                 else:
                     sqlStr += " WHERE stock_name = %s"
-                    valuesList.append(stock_name)
+                valuesList.append(stock_name)
+            if date:
+                if valuesList:
+                    sqlStr += " AND date = %s"
+                else:
+                    sqlStr += " WHERE date = %s"
+                valuesList.append(date)
+            if start_date:
+                if valuesList:
+                    sqlStr += " AND date >= %s"
+                else:
+                    sqlStr += " WHERE date >= %s"
+                valuesList.append(start_date)
+            if end_date:
+                if valuesList:
+                    sqlStr += " AND date < %s"
+                else:
+                    sqlStr += " WHERE date < %s"
+                valuesList.append(end_date)
 
         if limitNum > 0:
             sqlStr += " LIMIT {0}".format(limitNum)
@@ -2948,6 +2964,817 @@ def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",
 
 #stock_history_data end 
 
+
+#technical_indicators begin 
+
+def tablename_convertor_technical_indicators(period = "day",adjust="",old=""):
+    if old:
+        if adjust:
+            tableName = f"technical_indicators_{period}_{adjust}_{old}"
+        else:
+            tableName = f"technical_indicators_{period}_{old}"
+    else:
+        if adjust:
+            tableName = f"technical_indicators_{period}_{adjust}"
+        else:
+            tableName = f"technical_indicators_{period}"
+    tableName = tableName.lower()
+    return tableName
+
+
+def decode_tablename_technical_indicators(tableName):
+    result = {}
+    aList = tableName.split("_")
+    
+    return result
+
+
+#创建technical_indicators表
+def create_technical_indicators(tableName):
+    aList = ["CREATE TABLE IF NOT EXISTS %s("
+    "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号',",
+    "stock_code VARCHAR(10) NOT NULL COMMENT '股票代码',",
+    "`date` DATE NOT NULL COMMENT '交易日期',",
+    "`close` FLOAT COMMENT '收盘',",
+    "ma_5 FLOAT COMMENT '5日均线',",
+    "ma_10 FLOAT COMMENT '10日均线',",
+    "ma_20 FLOAT COMMENT '20日均线',",
+    "ma_60 FLOAT COMMENT '60日均线',",
+    "macd_line FLOAT COMMENT 'MACD快线(DIF)',",
+    "macd_signal FLOAT COMMENT 'MACD慢线(DEA)',",
+    "macd_histogram FLOAT COMMENT 'MACD柱状图',",
+    "boll_upper FLOAT COMMENT '布林上轨',",
+    "boll_mid FLOAT COMMENT '布林中轨',",
+    "boll_lower FLOAT COMMENT '布林下轨',",
+    "ene_upper FLOAT COMMENT 'ENE上轨' ,",
+    "ene_mid FLOAT COMMENT 'ENE中轨',",
+    "ene_lower FLOAT COMMENT 'ENE下轨',",
+    "dmi_pdi FLOAT COMMENT '上升方向线',",
+    "dmi_mdi FLOAT COMMENT '下降方向线',",
+    "dmi_adx FLOAT COMMENT '趋向平均值',",
+    "dma_line FLOAT COMMENT 'DMA线（白线）',",
+    "ama_line FLOAT COMMENT 'AMA线（黄线）',",
+    "sar FLOAT COMMENT 'SAR停损点（抛物线指标）',",
+    "kdj_k FLOAT COMMENT 'KDJ-K值',",
+    "kdj_d FLOAT COMMENT 'KDJ-D值',",
+    "kdj_j FLOAT COMMENT 'KDJ-J值',",
+    "rsi_6 FLOAT COMMENT '6日RSI',",
+    "rsi_12 FLOAT COMMENT '12日RSI',",
+    "rsi_24 FLOAT COMMENT '24日RSI',",
+    "cci FLOAT COMMENT 'CCI指标',",
+    "bias_5 FLOAT COMMENT '5日乖离率(百分比)',",
+    "bias_10 FLOAT COMMENT '10日乖离率(百分比)',",
+    "bias_20 FLOAT COMMENT '20日乖离率(百分比)',",
+    "wr_6 FLOAT COMMENT '6日威廉指标(百分比)',",
+    "wr_14 FLOAT COMMENT '14日威廉指标(百分比)',",
+    "volume BIGINT COMMENT '成交量(股)',",
+    "turnover_rate FLOAT COMMENT '换手率(百分比)',",
+    "obv BIGINT COMMENT '能量潮指标',",
+    "hashval VARCHAR(32) NULL COMMENT 'hash值',",
+    "label1 VARCHAR(32) NULL,",
+    "label2 VARCHAR(32) NULL,",
+    "label3 VARCHAR(32) NULL,",
+    "memo VARCHAR(200) NULL,",
+    "regID VARCHAR(32) NOT NULL COMMENT '注册ID',",
+    "regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日',",
+    "modifyID VARCHAR(32) COMMENT '修改ID',",
+    "modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日',",
+    "dispFlag VARCHAR(1) COMMENT '是否显示标记',",
+    "delFlag VARCHAR(1) COMMENT '是否删除标记'"
+    ")  ENGINE=INNODB DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    ]
+    tempStr = "".join(aList)
+    sqlStr = tempStr % (tableName)
+    rtn = mysqlDB.executeWrite(sqlStr)
+    result = chkTableExist(tableName)
+    if result:
+        pass
+        index_name = f"{tableName}_stock_date_idx"
+        sqlStr = f"CREATE UNIQUE INDEX {index_name} ON {tableName} ({'stock_code'},{'date'}) "
+        rtn = mysqlDB.executeWrite(sqlStr)
+        #sqlStr = "CREATE INDEX {1} ON {0}({1}) ".format(tableName, "indexKey")
+        #rtn = mysqlDB.executeWrite(sqlStr)
+        #sqlStr = "ALTER TABLE {0} auto_increment = {1} ".format(tableName,auto_increment_default_value)
+        #rtn = mysqlDB.executeWrite(sqlStr)
+
+    return result
+
+
+#删除technical_indicators表
+def drop_technical_indicators(tableName):
+    result = dropTableGeneral(tableName)
+    return result
+
+
+#technical_indicators 删除记录
+def delete_technical_indicators(tableName,id):
+    result = 0
+    sqlStr = f"DELETE FROM {tableName}"
+    try:
+
+        sqlStr += " WHERE id = %s"
+        valuesList = [id] 
+        result = mysqlDB.executeWrite(sqlStr,tuple(valuesList))
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#technical_indicators 增加记录
+def insert_technical_indicators(tableName,dataSet):
+    result = 0
+    try:
+
+        saveSet = {}
+
+        saveSet["stock_code"] = dataSet.get("stock_code", "") 
+
+        saveSet["date"] = dataSet.get("date", "") 
+
+        try:
+            close = float(dataSet.get("close")) 
+        except:
+            close = 0 
+        saveSet["close"] = close
+
+        try:
+            ma_5 = float(dataSet.get("ma_5")) 
+        except:
+            ma_5 = 0 
+        saveSet["ma_5"] = ma_5
+
+        try:
+            ma_10 = float(dataSet.get("ma_10")) 
+        except:
+            ma_10 = 0 
+        saveSet["ma_10"] = ma_10
+
+        try:
+            ma_20 = float(dataSet.get("ma_20")) 
+        except:
+            ma_20 = 0 
+        saveSet["ma_20"] = ma_20
+
+        try:
+            ma_60 = float(dataSet.get("ma_60")) 
+        except:
+            ma_60 = 0 
+        saveSet["ma_60"] = ma_60
+
+        try:
+            macd_line = float(dataSet.get("macd_line")) 
+        except:
+            macd_line = 0 
+        saveSet["macd_line"] = macd_line
+
+        try:
+            macd_signal = float(dataSet.get("macd_signal")) 
+        except:
+            macd_signal = 0 
+        saveSet["macd_signal"] = macd_signal
+
+        try:
+            macd_histogram = float(dataSet.get("macd_histogram")) 
+        except:
+            macd_histogram = 0 
+        saveSet["macd_histogram"] = macd_histogram
+
+        try:
+            boll_upper = float(dataSet.get("boll_upper")) 
+        except:
+            boll_upper = 0 
+        saveSet["boll_upper"] = boll_upper
+
+        try:
+            boll_mid = float(dataSet.get("boll_mid")) 
+        except:
+            boll_mid = 0 
+        saveSet["boll_mid"] = boll_mid
+
+        try:
+            boll_lower = float(dataSet.get("boll_lower")) 
+        except:
+            boll_lower = 0 
+        saveSet["boll_lower"] = boll_lower
+
+        try:
+            ene_upper = float(dataSet.get("ene_upper")) 
+        except:
+            ene_upper = 0 
+        saveSet["ene_upper"] = ene_upper
+
+        try:
+            ene_mid = float(dataSet.get("ene_mid")) 
+        except:
+            ene_mid = 0 
+        saveSet["ene_mid"] = ene_mid
+
+        try:
+            ene_lower = float(dataSet.get("ene_lower")) 
+        except:
+            ene_lower = 0 
+        saveSet["ene_lower"] = ene_lower
+
+        try:
+            dmi_pdi = float(dataSet.get("dmi_pdi")) 
+        except:
+            dmi_pdi = 0 
+        saveSet["dmi_pdi"] = dmi_pdi
+
+        try:
+            dmi_mdi = float(dataSet.get("dmi_mdi")) 
+        except:
+            dmi_mdi = 0 
+        saveSet["dmi_mdi"] = dmi_mdi
+
+        try:
+            dmi_adx = float(dataSet.get("dmi_adx")) 
+        except:
+            dmi_adx = 0 
+        saveSet["dmi_adx"] = dmi_adx
+
+        try:
+            dma_line = float(dataSet.get("dma_line")) 
+        except:
+            dma_line = 0 
+        saveSet["dma_line"] = dma_line
+
+        try:
+            ama_line = float(dataSet.get("ama_line")) 
+        except:
+            ama_line = 0 
+        saveSet["ama_line"] = ama_line
+
+        try:
+            sar = float(dataSet.get("sar")) 
+        except:
+            sar = 0 
+        saveSet["sar"] = sar
+
+        try:
+            kdj_k = float(dataSet.get("kdj_k")) 
+        except:
+            kdj_k = 0 
+        saveSet["kdj_k"] = kdj_k
+
+        try:
+            kdj_d = float(dataSet.get("kdj_d")) 
+        except:
+            kdj_d = 0 
+        saveSet["kdj_d"] = kdj_d
+
+        try:
+            kdj_j = float(dataSet.get("kdj_j")) 
+        except:
+            kdj_j = 0 
+        saveSet["kdj_j"] = kdj_j
+
+        try:
+            rsi_6 = float(dataSet.get("rsi_6")) 
+        except:
+            rsi_6 = 0 
+        saveSet["rsi_6"] = rsi_6
+
+        try:
+            rsi_12 = float(dataSet.get("rsi_12")) 
+        except:
+            rsi_12 = 0 
+        saveSet["rsi_12"] = rsi_12
+
+        try:
+            rsi_24 = float(dataSet.get("rsi_24")) 
+        except:
+            rsi_24 = 0 
+        saveSet["rsi_24"] = rsi_24
+
+        try:
+            cci = float(dataSet.get("cci")) 
+        except:
+            cci = 0 
+        saveSet["cci"] = cci
+
+        try:
+            bias_5 = float(dataSet.get("bias_5")) 
+        except:
+            bias_5 = 0 
+        saveSet["bias_5"] = bias_5
+
+        try:
+            bias_10 = float(dataSet.get("bias_10")) 
+        except:
+            bias_10 = 0 
+        saveSet["bias_10"] = bias_10
+
+        try:
+            bias_20 = float(dataSet.get("bias_20")) 
+        except:
+            bias_20 = 0 
+        saveSet["bias_20"] = bias_20
+
+        try:
+            wr_6 = float(dataSet.get("wr_6")) 
+        except:
+            wr_6 = 0 
+        saveSet["wr_6"] = wr_6
+
+        try:
+            wr_14 = float(dataSet.get("wr_14")) 
+        except:
+            wr_14 = 0 
+        saveSet["wr_14"] = wr_14
+
+        try:
+            volume = int(dataSet.get("volume")) 
+        except:
+            volume = 0 
+        saveSet["volume"] = volume
+
+        try:
+            turnover_rate = float(dataSet.get("turnover_rate")) 
+        except:
+            turnover_rate = 0 
+        saveSet["turnover_rate"] = turnover_rate
+
+        try:
+            obv = int(dataSet.get("obv")) 
+        except:
+            obv = 0 
+        saveSet["obv"] = obv
+
+        saveSet["hashval"] = dataSet.get("hashval", "") 
+
+        saveSet["label1"] = dataSet.get("label1", "") 
+
+        saveSet["label2"] = dataSet.get("label2", "") 
+
+        saveSet["label3"] = dataSet.get("label3", "") 
+
+        saveSet["memo"] = dataSet.get("memo", "") 
+
+        saveSet["regID"] = dataSet.get("regID", "") 
+
+        saveSet["regYMDHMS"] = dataSet.get("regYMDHMS", "") 
+
+        saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+
+        saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+
+        result = insertTableGeneral(tableName, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#technical_indicators 修改记录
+def update_technical_indicators(tableName,id,dataSet):
+    result = -2
+    try:
+        saveSet = {}
+
+        stock_code = dataSet.get("stock_code") 
+        if stock_code:
+            saveSet["stock_code"] = stock_code
+
+        date = dataSet.get("date") 
+        if date:
+            saveSet["date"] = date
+
+        close = dataSet.get("close") 
+        if close:
+
+            try:
+                close = float(dataSet.get("close")) 
+                saveSet["close"] = close
+            except:
+                pass
+
+        ma_5 = dataSet.get("ma_5") 
+        if ma_5:
+
+            try:
+                ma_5 = float(dataSet.get("ma_5")) 
+                saveSet["ma_5"] = ma_5
+            except:
+                pass
+
+        ma_10 = dataSet.get("ma_10") 
+        if ma_10:
+
+            try:
+                ma_10 = float(dataSet.get("ma_10")) 
+                saveSet["ma_10"] = ma_10
+            except:
+                pass
+
+        ma_20 = dataSet.get("ma_20") 
+        if ma_20:
+
+            try:
+                ma_20 = float(dataSet.get("ma_20")) 
+                saveSet["ma_20"] = ma_20
+            except:
+                pass
+
+        ma_60 = dataSet.get("ma_60") 
+        if ma_60:
+
+            try:
+                ma_60 = float(dataSet.get("ma_60")) 
+                saveSet["ma_60"] = ma_60
+            except:
+                pass
+
+        macd_line = dataSet.get("macd_line") 
+        if macd_line:
+
+            try:
+                macd_line = float(dataSet.get("macd_line")) 
+                saveSet["macd_line"] = macd_line
+            except:
+                pass
+
+        macd_signal = dataSet.get("macd_signal") 
+        if macd_signal:
+
+            try:
+                macd_signal = float(dataSet.get("macd_signal")) 
+                saveSet["macd_signal"] = macd_signal
+            except:
+                pass
+
+        macd_histogram = dataSet.get("macd_histogram") 
+        if macd_histogram:
+
+            try:
+                macd_histogram = float(dataSet.get("macd_histogram")) 
+                saveSet["macd_histogram"] = macd_histogram
+            except:
+                pass
+
+        boll_upper = dataSet.get("boll_upper") 
+        if boll_upper:
+
+            try:
+                boll_upper = float(dataSet.get("boll_upper")) 
+                saveSet["boll_upper"] = boll_upper
+            except:
+                pass
+
+        boll_mid = dataSet.get("boll_mid") 
+        if boll_mid:
+
+            try:
+                boll_mid = float(dataSet.get("boll_mid")) 
+                saveSet["boll_mid"] = boll_mid
+            except:
+                pass
+
+        boll_lower = dataSet.get("boll_lower") 
+        if boll_lower:
+
+            try:
+                boll_lower = float(dataSet.get("boll_lower")) 
+                saveSet["boll_lower"] = boll_lower
+            except:
+                pass
+
+        ene_upper = dataSet.get("ene_upper") 
+        if ene_upper:
+
+            try:
+                ene_upper = float(dataSet.get("ene_upper")) 
+                saveSet["ene_upper"] = ene_upper
+            except:
+                pass
+
+        ene_mid = dataSet.get("ene_mid") 
+        if ene_mid:
+
+            try:
+                ene_mid = float(dataSet.get("ene_mid")) 
+                saveSet["ene_mid"] = ene_mid
+            except:
+                pass
+
+        ene_lower = dataSet.get("ene_lower") 
+        if ene_lower:
+
+            try:
+                ene_lower = float(dataSet.get("ene_lower")) 
+                saveSet["ene_lower"] = ene_lower
+            except:
+                pass
+
+        dmi_pdi = dataSet.get("dmi_pdi") 
+        if dmi_pdi:
+
+            try:
+                dmi_pdi = float(dataSet.get("dmi_pdi")) 
+                saveSet["dmi_pdi"] = dmi_pdi
+            except:
+                pass
+
+        dmi_mdi = dataSet.get("dmi_mdi") 
+        if dmi_mdi:
+
+            try:
+                dmi_mdi = float(dataSet.get("dmi_mdi")) 
+                saveSet["dmi_mdi"] = dmi_mdi
+            except:
+                pass
+
+        dmi_adx = dataSet.get("dmi_adx") 
+        if dmi_adx:
+
+            try:
+                dmi_adx = float(dataSet.get("dmi_adx")) 
+                saveSet["dmi_adx"] = dmi_adx
+            except:
+                pass
+
+        dma_line = dataSet.get("dma_line") 
+        if dma_line:
+
+            try:
+                dma_line = float(dataSet.get("dma_line")) 
+                saveSet["dma_line"] = dma_line
+            except:
+                pass
+
+        ama_line = dataSet.get("ama_line") 
+        if ama_line:
+
+            try:
+                ama_line = float(dataSet.get("ama_line")) 
+                saveSet["ama_line"] = ama_line
+            except:
+                pass
+
+        sar = dataSet.get("sar") 
+        if sar:
+
+            try:
+                sar = float(dataSet.get("sar")) 
+                saveSet["sar"] = sar
+            except:
+                pass
+
+        kdj_k = dataSet.get("kdj_k") 
+        if kdj_k:
+
+            try:
+                kdj_k = float(dataSet.get("kdj_k")) 
+                saveSet["kdj_k"] = kdj_k
+            except:
+                pass
+
+        kdj_d = dataSet.get("kdj_d") 
+        if kdj_d:
+
+            try:
+                kdj_d = float(dataSet.get("kdj_d")) 
+                saveSet["kdj_d"] = kdj_d
+            except:
+                pass
+
+        kdj_j = dataSet.get("kdj_j") 
+        if kdj_j:
+
+            try:
+                kdj_j = float(dataSet.get("kdj_j")) 
+                saveSet["kdj_j"] = kdj_j
+            except:
+                pass
+
+        rsi_6 = dataSet.get("rsi_6") 
+        if rsi_6:
+
+            try:
+                rsi_6 = float(dataSet.get("rsi_6")) 
+                saveSet["rsi_6"] = rsi_6
+            except:
+                pass
+
+        rsi_12 = dataSet.get("rsi_12") 
+        if rsi_12:
+
+            try:
+                rsi_12 = float(dataSet.get("rsi_12")) 
+                saveSet["rsi_12"] = rsi_12
+            except:
+                pass
+
+        rsi_24 = dataSet.get("rsi_24") 
+        if rsi_24:
+
+            try:
+                rsi_24 = float(dataSet.get("rsi_24")) 
+                saveSet["rsi_24"] = rsi_24
+            except:
+                pass
+
+        cci = dataSet.get("cci") 
+        if cci:
+
+            try:
+                cci = float(dataSet.get("cci")) 
+                saveSet["cci"] = cci
+            except:
+                pass
+
+        bias_5 = dataSet.get("bias_5") 
+        if bias_5:
+
+            try:
+                bias_5 = float(dataSet.get("bias_5")) 
+                saveSet["bias_5"] = bias_5
+            except:
+                pass
+
+        bias_10 = dataSet.get("bias_10") 
+        if bias_10:
+
+            try:
+                bias_10 = float(dataSet.get("bias_10")) 
+                saveSet["bias_10"] = bias_10
+            except:
+                pass
+
+        bias_20 = dataSet.get("bias_20") 
+        if bias_20:
+
+            try:
+                bias_20 = float(dataSet.get("bias_20")) 
+                saveSet["bias_20"] = bias_20
+            except:
+                pass
+
+        wr_6 = dataSet.get("wr_6") 
+        if wr_6:
+
+            try:
+                wr_6 = float(dataSet.get("wr_6")) 
+                saveSet["wr_6"] = wr_6
+            except:
+                pass
+
+        wr_14 = dataSet.get("wr_14") 
+        if wr_14:
+
+            try:
+                wr_14 = float(dataSet.get("wr_14")) 
+                saveSet["wr_14"] = wr_14
+            except:
+                pass
+
+        volume = dataSet.get("volume") 
+        if volume:
+            try:
+                volume = int(dataSet.get("volume")) 
+                saveSet["volume"] = volume
+            except:
+                pass
+
+        turnover_rate = dataSet.get("turnover_rate") 
+        if turnover_rate:
+
+            try:
+                turnover_rate = float(dataSet.get("turnover_rate")) 
+                saveSet["turnover_rate"] = turnover_rate
+            except:
+                pass
+
+        obv = dataSet.get("obv") 
+        if obv:
+            try:
+                obv = int(dataSet.get("obv")) 
+                saveSet["obv"] = obv
+            except:
+                pass
+
+        hashval = dataSet.get("hashval") 
+        if hashval:
+            saveSet["hashval"] = hashval
+
+        label1 = dataSet.get("label1") 
+        if label1:
+            saveSet["label1"] = label1
+
+        label2 = dataSet.get("label2") 
+        if label2:
+            saveSet["label2"] = label2
+
+        label3 = dataSet.get("label3") 
+        if label3:
+            saveSet["label3"] = label3
+
+        memo = dataSet.get("memo") 
+        if memo:
+            saveSet["memo"] = memo
+
+        modifyID = dataSet.get("modifyID") 
+        if modifyID:
+            saveSet["modifyID"] = modifyID
+
+        modifyYMDHMS = dataSet.get("modifyYMDHMS") 
+        if modifyYMDHMS:
+            saveSet["modifyYMDHMS"] = modifyYMDHMS
+
+        dispFlag = dataSet.get("dispFlag") 
+        if dispFlag:
+            saveSet["dispFlag"] = dispFlag
+
+        delFlag = dataSet.get("delFlag") 
+        if delFlag:
+            saveSet["delFlag"] = delFlag
+
+        keySqlstr = "id = %s"
+        keyValues = [id]
+
+        result = updateTableGeneral(tableName, keySqlstr,  keyValues, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#technical_indicators 查询记录
+def query_technical_indicators(tableName,id = "0", stock_code="",date="",beginDate="",endDate="",
+                                delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+    result = []
+    columns = "*"
+    valuesList = []
+    sqlStr = f"SELECT {columns} FROM {tableName}"
+
+    try:
+
+        try:
+            id = int(id)
+        except:
+            id = 0
+
+        if id > 0:
+            sqlStr =  sqlStr + " WHERE id = %s" 
+            valuesList = [id]  
+        else:
+            if stock_code:
+                if valuesList:
+                    sqlStr += " AND stock_code = %s"
+                else:
+                    sqlStr += " WHERE stock_code = %s"
+                valuesList.append(stock_code)
+            if date:
+                if valuesList:
+                    sqlStr += " AND date = %s"
+                else:
+                    sqlStr += " WHERE date = %s"
+                valuesList.append(date)
+            if beginDate:
+                if valuesList:
+                    sqlStr += " AND date >= %s "
+                else:
+                    sqlStr += " WHERE date >= %s"
+                valuesList.append(beginDate)
+            if endDate:
+                if valuesList:
+                    sqlStr += " AND date < %s"
+                else:
+                    sqlStr += " WHERE date < %s"
+                valuesList.append(endDate)
+
+        if limitNum > 0:
+            sqlStr += " LIMIT {0}".format(limitNum)
+
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            dataList = dataFormatConvert(dataList)
+            result = list(dataList)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#technical_indicators end 
 
 #stock_dividend_data begin 
 
@@ -8863,6 +9690,9 @@ def create_user_stock_list(tableName):
     "stock_name VARCHAR(12) COMMENT '股票名称',",
     "user_plan VARCHAR(8) COMMENT '用户计划',",
     "plan_status VARCHAR(1) COMMENT '用户计划状态',",
+    "history_update VARCHAR(1) COMMENT '历史数据更新',",
+    "history_start_date VARCHAR(10) COMMENT '历史数据更新起始日期',",
+    "history_end_date VARCHAR(10) COMMENT '历史数据更新结束日期',",
     "initial_weight FLOAT COMMENT '初始占比',",
     "current_weight FLOAT COMMENT '当前占比',",
     "initial_cap DOUBLE COMMENT '初始总额',",
@@ -8938,6 +9768,12 @@ def insert_user_stock_list(tableName,dataSet):
         saveSet["user_plan"] = dataSet.get("user_plan", "") 
 
         saveSet["plan_status"] = dataSet.get("plan_status", "") 
+
+        saveSet["history_update"] = dataSet.get("history_update", "") 
+
+        saveSet["history_start_date"] = dataSet.get("history_start_date", "") 
+
+        saveSet["history_end_date"] = dataSet.get("history_end_date", "") 
 
         try:
             initial_weight = float(dataSet.get("initial_weight")) 
@@ -9031,6 +9867,18 @@ def update_user_stock_list(tableName,id,dataSet):
         plan_status = dataSet.get("plan_status") 
         if plan_status:
             saveSet["plan_status"] = plan_status
+
+        history_update = dataSet.get("history_update") 
+        if history_update:
+            saveSet["history_update"] = history_update
+
+        history_start_date = dataSet.get("history_start_date") 
+        if history_start_date:
+            saveSet["history_start_date"] = history_start_date
+
+        history_end_date = dataSet.get("history_end_date") 
+        if history_end_date:
+            saveSet["history_end_date"] = history_end_date
 
         initial_weight = dataSet.get("initial_weight") 
         if initial_weight:
@@ -9131,8 +9979,8 @@ def update_user_stock_list(tableName,id,dataSet):
 
 
 #user_stock_list 查询记录
-def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", user_plan = "default" ,plan_status = "Y",
-                             delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", user_plan = "default" ,plan_status = "Y",history_update = "",
+                            history_start_date="", history_end_date="", delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
     valuesList = []
@@ -9168,6 +10016,24 @@ def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", user
                 else:
                     sqlStr =  sqlStr + " WHERE plan_status = %s" 
                 valuesList.append(plan_status)
+            if history_update:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND history_update = %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE history_update = %s" 
+                valuesList.append(history_update)
+            if history_start_date:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND history_update >= %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE history_update >= %s" 
+                valuesList.append(history_start_date)
+            if history_end_date:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND history_update < %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE history_update < %s" 
+                valuesList.append(history_end_date)
             if stock_code:
                 if valuesList:
                     sqlStr =  sqlStr + " AND stock_code = %s" 
@@ -9774,13 +10640,15 @@ def query_trade_day_record(tableName,id = "0", beginDate="",endDate="",tradeDay=
 
             if endDate:
                 if valuesList:
-                    sqlStr += " AND trade_day >= %s"
+                    sqlStr += " AND trade_day < %s"
                 else:
-                    sqlStr += " WHERE trade_day >= %s"
+                    sqlStr += " WHERE trade_day < %s"
                 valuesList.append(endDate)
 
+        sqlStr += " ORDER BY trade_day"
+
         #if limitNum > 0:
-            #sqlStr += " LIMIT {0}".format(limitNum)
+            #sqlStr += " LIMIT {0}".format(limitNum)       
 
         rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
         if rtn > 0:
@@ -9837,6 +10705,9 @@ def checkMySqlDataBase():
             tableName = tablename_convertor_stock_history_data(period,adjust)
             if chkTableExist(tableName) == False:
                 rtn = create_stock_history_data(tableName)
+            tableName = tablename_convertor_technical_indicators(period,adjust)
+            if chkTableExist(tableName) == False:
+                rtn = create_technical_indicators(tableName)
 
     tableName = tablename_convertor_stock_dividend_data()
     if chkTableExist(tableName) == False:
@@ -9913,6 +10784,9 @@ def dropMySqlDataBase():
             tableName = tablename_convertor_stock_history_data(period,adjust)
             if chkTableExist(tableName):
                 rtn = drop_stock_history_data(tableName)
+            tableName = tablename_convertor_technical_indicators(period,adjust)
+            if chkTableExist(tableName):
+                rtn = drop_stock_history_data(tableName)
 
     tableName = tablename_convertor_stock_dividend_data()
     if chkTableExist(tableName):
@@ -9922,7 +10796,7 @@ def dropMySqlDataBase():
     adjusts = ["","hfq","qfq"]
     for period in periods:
         for adjust in adjusts:
-            tableName = tablename_convertor_stock_history_data(period,adjust)
+            tableName = tablename_convertor_industry_history_data(period,adjust)
             if chkTableExist(tableName):
                 rtn = drop_industry_history_data(tableName)
 

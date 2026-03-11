@@ -15,7 +15,7 @@
 # 4. 股票筛选器(包括,量能筛选器, 价格筛选器等)
 
 
-_VERSION="20260228"
+_VERSION="20260307"
 
 
 import os
@@ -542,8 +542,14 @@ def checkReadStockFullData(symbol, startYMD, endYMD):
                 if os.path.exists(stockJsonFilePath) and os.path.exists(stockDataFilePath):
                     # 读取文件内容
                     savedStockInfo, savedStockDataList = readStockData(symbol, period, adjust)
+                    #确保数据完整, 没有缺失数据
+                    saveStockDataLastDate = savedStockDataList[-1].get("date","")
+                    saveStockDataLastDateYMD = saveStockDataLastDate.replace("-","")
                     # savedStartDate = savedStockInfo.get("start_date","")
                     savedEndDate = savedStockInfo.get("end_date","")
+                    if saveStockDataLastDateYMD < savedEndDate:
+                        savedEndDate = saveStockDataLastDateYMD
+
                     newStartDate = savedEndDate
                     newStockDataList = getHistoryStockData(symbol, newStartDate, endYMD,period,adjust)
                     if newStockDataList:
@@ -1226,6 +1232,9 @@ def calcFourFactorData(backtestData):
 
         #首先计算 维度一：价值准入过滤器 结果
         for stockInfo in stockPortfolio:
+            #初始化4维度指标
+            fourFactorSell = 0
+            fourFactorBuy = 0
             symbol = stockInfo.get("symbol", "")
             stockName = stockInfo.get("Stock_name", "")
             stockDataList = stockDailyData.get(symbol,[])
@@ -1236,15 +1245,42 @@ def calcFourFactorData(backtestData):
                 valueResult = valueInvestingScreener(symbol,currStockPrice,dcfValue,stockIndicatorList,backtestSettings)
                 valueAction = valueResult.get("action", comGD._DEF_STOCK_VALUE_SCREEN_HOLD)
 
+                if valueAction == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                    fourFactorBuy +=1
+                elif valueAction == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                    fourFactorSell +=1
+
                 #action == hold 时, 考虑其他过滤器,三选二. 暂时都计算其他过滤器, 后续再根据需要筛选
                 otherResult = twoOutOfThreeFactors(symbol,backtestData)
                 otherAction = otherResult.get("action", comGD._DEF_STOCK_VALUE_SCREEN_HOLD)
+                if otherAction == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                    if otherResult.get("overboughtsoldAction") == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                        fourFactorBuy +=1
+                    if otherResult.get("momentumAction") == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                        fourFactorBuy +=1
+                    if otherResult.get("extremePriceVolumeAction") == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                        fourFactorBuy +=1
+                elif otherAction == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                    if otherResult.get("overboughtsoldAction") == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                        fourFactorSell +=1
+                    if otherResult.get("momentumAction") == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                        fourFactorSell +=1
+                    if otherResult.get("extremePriceVolumeAction") == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                        fourFactorSell +=1
 
                 result[symbol] = {}
                 result[symbol]["valueResult"] = valueResult
                 result[symbol]["valueAction"] = valueAction
+                
+                result[symbol]["fourFactorBuy"] = fourFactorBuy
+                result[symbol]["fourFactorSell"] = fourFactorSell
+                
                 result[symbol]["otherResult"] = otherResult
                 result[symbol]["otherAction"] = otherAction
+
+                result[symbol]["overboughtsoldAction"] = otherResult.get("overboughtsoldAction")
+                result[symbol]["momentumAction"] = otherResult.get("momentumAction")
+                result[symbol]["extremePriceVolumeAction"] = otherResult.get("extremePriceVolumeAction")
                 #根据价值比过滤器和其他过滤器的结果, 最终建议
                 #1. 价值比过滤器建议 buy, 则其他过滤器建议 buy, 则最终建议 buy
                 #2. 价值比过滤器建议 sell, 则其他过滤器建议 sell, 则最终建议 sell
@@ -1855,9 +1891,11 @@ def twoOutOfThreeFactors(symbol,backtestData):
 
         #计算超买超卖因子
         buySellFactor = calcOverBuySellFactor(symbol,backtestData)
+        overboughtOversoldHighFlag = buySellFactor["scores"]["overbought_oversold_high"]
+        overboughtOversoldLowFlag = buySellFactor["scores"]["overbought_oversold_low"]
 
-        buyParameters.append(buySellFactor["scores"]["overbought_oversold_high"])
-        sellParameters.append(buySellFactor["scores"]["overbought_oversold_low"])
+        buyParameters.append(overboughtOversoldHighFlag)
+        sellParameters.append(overboughtOversoldLowFlag)
 
         #计算动能确认因子
         momentumFactor = calcMomentumValidation(symbol,backtestData)
@@ -1874,13 +1912,35 @@ def twoOutOfThreeFactors(symbol,backtestData):
         #合并因子
         scores = {**buySellFactor["scores"],**momentumFactor["scores"],**extremePriceVolumeFactor["scores"]}
         
+        result["overboughtsoldAction"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
+        result["momentumAction"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
+        result["extremePriceVolumeAction"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
+
         # 从维度二、三、四中至少满足两个
         if buyParameters.count(True) >= 2:
             result["action"] = comGD._DEF_STOCK_VALUE_SCREEN_BUY
+            if buyParameters[0]:
+                result["overboughtsoldAction"] = comGD._DEF_STOCK_VALUE_SCREEN_BUY
+            if buyParameters[1]:
+                result["momentumAction"] = comGD._DEF_STOCK_VALUE_SCREEN_BUY
+            if buyParameters[2]:
+                result["extremePriceVolumeAction"] = comGD._DEF_STOCK_VALUE_SCREEN_BUY
         elif sellParameters.count(True) >= 2:
             result["action"] = comGD._DEF_STOCK_VALUE_SCREEN_SELL
+            if sellParameters[0]:
+                result["overboughtsoldAction"] = comGD._DEF_STOCK_VALUE_SCREEN_SELL
+            if sellParameters[1]:
+                result["momentumAction"] = comGD._DEF_STOCK_VALUE_SCREEN_SELL
+            if sellParameters[2]:
+                result["extremePriceVolumeAction"] = comGD._DEF_STOCK_VALUE_SCREEN_SELL
         else:
             result["action"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
+            if buyParameters[0] == False:
+                result["overboughtsoldAction"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
+            if buyParameters[1] == False:
+                result["momentumAction"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
+            if buyParameters[2] == False:
+                result["extremePriceVolumeAction"] = comGD._DEF_STOCK_VALUE_SCREEN_HOLD
 
         result["scores"] = scores
 
@@ -1896,9 +1956,10 @@ def twoOutOfThreeFactors(symbol,backtestData):
 #回测计算, 返回需要买卖的股票时间和参数,包括两种数据
 #按照买卖时间排序的 dateData, 每个元素是一个字典, 包含日期, 操作, 价值操作, 其他操作
 #按照股票符号排序的 stockData, 每个元素是一个字典, 包含股票符号, 操作, 价值操作, 其他操作
-def calcBacktestBuySellResult(method,backtestData):
+def calcBacktestBuySellResult(method,backtestData,debugFlag = True):
     result = {"stockData":{},"dateData":[]}
     try:
+        buySellCount = 0
         for period in range(comGD._DEF_STOCK_BACKTEST_WINDOWS,comGD._DEF_STOCK_BACKTEST_WEEK + comGD._DEF_STOCK_BACKTEST_WINDOWS):
             currBacktestData = rescaleBacktestData(backtestData,requiredPeriods=period)
             currFourFactorData = calcStrategy(method, currBacktestData)
@@ -1908,6 +1969,10 @@ def calcBacktestBuySellResult(method,backtestData):
                 factorData["symbol"] = symbol
                 action = factorData.get("action","")
                 if action != comGD._DEF_STOCK_VALUE_SCREEN_HOLD:
+                    buySellCount += 1
+                    date = factorData.get("date","")
+                    if debugFlag:
+                        _LOG.info(f" - {buySellCount}: date:{date},symbol:{symbol}, action:{action}")
                     #结果是买或卖, 记录日期, 操作, 价值操作, 其他操作
                     result["dateData"].append(factorData)
                     result["stockData"][symbol].append(factorData)
@@ -1934,22 +1999,29 @@ def simBuySellPrice(priceData):
 
 
 #模拟计算买某个股票的成本和持股数量,考虑手续费和滑点,以及印花税,以及一手100股的问题
+#正数为购买, 负数为卖出
 def simStockBuyCostByCap(priceData,capital):
     result = {}
     try:
         #计算购买股票的成本/利润和持股数量
         currPrice = simBuySellPrice(priceData)
         commissionRate = settings.STOCK_BACKTEST_CONFIG.get("commission_rate",0.0003)
-        # stampTaxRate = settings.STOCK_BACKTEST_CONFIG.get("stamp_tax_rate",0.001)
+        stampTaxRate = settings.STOCK_BACKTEST_CONFIG.get("stamp_tax_rate",0.001)
         slippageRate = settings.STOCK_BACKTEST_CONFIG.get("slippage_rate",0.001)
         #计算购买股票的数量
         stockNum = int(capital / currPrice)
         stockNum = stockNum // 100 * 100
-        #计算购买股票的成本
-        buyCost = stockNum * currPrice * (1 + commissionRate + slippageRate)
+        #计算购买股票的成本, 考虑手续费和滑点, 以及印花税
+        buyValue = stockNum * currPrice 
+        if stockNum > 0:
+            otherCost = abs(buyValue) * (commissionRate + slippageRate)
+        else:
+            otherCost = abs(buyValue) * (commissionRate + slippageRate + stampTaxRate)
+        buyValue += otherCost
         result["stockNum"] = stockNum
-        result["buyCost"] = buyCost
-        result["buyPrice"] = currPrice
+        result["value"] = buyValue
+        result["price"] = currPrice
+        result["otherCost"] = otherCost
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -1963,14 +2035,21 @@ def simStockBuyCostByStockNum(priceData,stockNum):
         #计算购买股票的成本/利润和持股数量
         currPrice = simBuySellPrice(priceData)
         commissionRate = settings.STOCK_BACKTEST_CONFIG.get("commission_rate",0.0003)
-        # stampTaxRate = settings.STOCK_BACKTEST_CONFIG.get("stamp_tax_rate",0.001)
+        stampTaxRate = settings.STOCK_BACKTEST_CONFIG.get("stamp_tax_rate",0.001)
         slippageRate = settings.STOCK_BACKTEST_CONFIG.get("slippage_rate",0.001)
         stockNum = stockNum // 100 * 100
         #计算购买股票的成本
-        buyCost = stockNum * currPrice * (1 + commissionRate + slippageRate)
+        #计算购买股票的成本, 考虑手续费和滑点, 以及印花税
+        buyValue = stockNum * currPrice 
+        if stockNum > 0:
+            otherCost = abs(buyValue) * (commissionRate + slippageRate)
+        else:
+            otherCost = abs(buyValue) * (commissionRate + slippageRate + stampTaxRate)
+        buyValue += otherCost
         result["stockNum"] = stockNum
-        result["buyCost"] = buyCost
-        result["buyPrice"] = currPrice
+        result["value"] = buyValue
+        result["price"] = currPrice
+        result["otherCost"] = otherCost
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -1986,9 +2065,9 @@ def simStockSellProfit(priceData,stockNum):
         commissionRate = settings.STOCK_BACKTEST_CONFIG.get("commission_rate",0.0003)
         stampTaxRate = settings.STOCK_BACKTEST_CONFIG.get("stamp_tax_rate",0.001)
         slippageRate = settings.STOCK_BACKTEST_CONFIG.get("slippage_rate",0.001)
-        #计算购买股票的成本
-        sellAmount = stockNum * currPrice * (1 + commissionRate + stampTaxRate - slippageRate)
-        result["sellAmount"] = sellAmount
+        #计算卖出股票的成本
+        sellValue = stockNum * currPrice * (1 + commissionRate + stampTaxRate - slippageRate)
+        result["sellValue"] = sellValue
         result["sellPrice"] = currPrice
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -2000,33 +2079,46 @@ def simStockSellProfit(priceData,stockNum):
 def addInfo2PositionData(positionData,costData,date):
     result = positionData
     try:
+        #买卖前持仓数据
+        preStockNum = positionData.get("stockNum",0)
+        #当前持仓数据
         stockNum = costData.get("stockNum",0)
+        #买卖后持仓数据
+        postStockNum = preStockNum + stockNum
         if stockNum > 0:
             #购买股票, 记录购买日期, 购买股票数量, 购买成本, 购买价格
             buyInfo = {
                 "date":date,
                 "stockNum":costData["stockNum"],
-                "cost":costData["buyCost"],
-                "price":costData["buyPrice"],
+                "value":costData["value"],
+                "price":costData["price"],
+                "preStockNum":preStockNum,
+                "postStockNum":postStockNum,
+                "otherCost":costData["otherCost"],
             }
             positionData["stockNumList"].append(buyInfo)
             positionData["lastDate"] = date
-            positionData["cost"] += costData["buyCost"]
-            positionData["price"] += costData["buyPrice"]
+            positionData["buyValue"] += costData["value"]
             positionData["stockNum"] += stockNum
+            positionData["buyPrice"] = positionData["buyValue"]/positionData["stockNum"]
+
         elif stockNum < 0:
             #卖出股票, 记录卖出日期, 卖出股票数量, 卖出成本, 卖出价格
             sellInfo = {
                 "date":date,
                 "stockNum":costData["stockNum"],
-                "cost":costData["buyCost"],
-                "price":costData["buyPrice"],
+                "value":costData["value"],
+                "price":costData["price"],
+                "preStockNum":preStockNum,
+                "postStockNum":postStockNum,
+                "otherCost":costData["otherCost"],
             }
             positionData["stockNumList"].append(sellInfo)
             positionData["lastDate"] = date
-            positionData["cost"] -= costData["buyCost"]
-            positionData["price"] -= costData["buyPrice"]
+            positionData["sellValue"] += costData["value"]
             positionData["stockNum"] += stockNum
+            positionData["sellPrice"] = abs(positionData["sellValue"]/positionData["stockNum"])
+
         result = positionData
 
     except Exception as e:
@@ -2049,12 +2141,15 @@ def convertStockPortfolio2PositionData(startDate,totalCapital,stockPortfolio,sto
                     "symbol":symbol,
                     "startDate":startDate,
                     "cash":restCash,
-                    "stockNum":stockNum,
-                    "stockNumList":[{"date":startDate,"stockNum":stockNum,"cost":buyCost,"price":buyPrice}],
-                    "cost":buyCost,
-                    "price":buyPrice,
+                    "stockNum":0,
+                    "stockNumList":[{"date":startDate,"stockNum":0,"value":restCash,"price":0.0,"otherCost":0.0,"preStockNum":0,"postStockNum":0}],
+                    "sellValue":0.0,
+                    "price":0.0,
+                    "sellValue":0.0,
+                    "sellPrice":0.0,
                     "grossProfit":0.0,
                     "netProfit":0.0,
+                    "lastDividenDate":startDate,
                     "dividenAmount":0.0,
                 }
             else:
@@ -2065,20 +2160,24 @@ def convertStockPortfolio2PositionData(startDate,totalCapital,stockPortfolio,sto
                 initialCapital = totalCapital * initialWeight
                 buyCostData = simStockBuyCostByCap(priceData,initialCapital)
                 stockNum = buyCostData["stockNum"]
-                buyCost = buyCostData["buyCost"]
-                buyPrice = buyCostData["buyPrice"]
-                usedCash += buyCost
+                buyValue = buyCostData["value"]
+                buyPrice = buyCostData["price"]
+                otherCost = buyCostData["otherCost"]
+                usedCash += buyValue
 
                 positionData = {
                     "symbol":symbol,
                     "startDate":startDate,
                     "cash":0.0,
                     "stockNum":stockNum,
-                    "stockNumList":[{"date":startDate,"stockNum":stockNum,"cost":buyCost,"price":buyPrice}],
-                    "cost":buyCost,
-                    "price":buyPrice,
+                    "stockNumList":[{"date":startDate,"stockNum":stockNum,"value":buyValue,"price":buyPrice,"otherCost":otherCost,"preStockNum":0,"postStockNum":stockNum}],
+                    "buyValue":buyValue,
+                    "buyPrice":buyPrice,
+                    "sellValue":0.0,
+                    "sellPrice":0.0,
                     "grossProfit":0.0,
                     "netProfit":0.0,
+                    "lastDividenDate":startDate,
                     "dividenAmount":0.0,
                 }
             result[symbol] = positionData
@@ -2120,19 +2219,45 @@ def getLastStockNum(positionData):
 def calcOneStockProfit(positionData,priceList,endDate):
     result = {}
     try:
-        #首先获取第一次持仓量和成本
-        firstStockNum = positionData.get("stockNumList",[])[0].get("stockNum",0)
-        firstCost = positionData.get("stockNumList",[])[0].get("cost",0.0)
-        lastStockNum = positionData.get("stockNum",0)
+        #首先获取股票买卖的数据
+        stockNumList = positionData.get("stockNumList",[])
+        #根据stockNum, 分别计算买卖利润
+        buyValue = 0.0
+        buyStockNum = 0
+        sellValue = 0.0
+        sellStockNum = 0
+        for stockNumData in stockNumList:
+            # date = stockNumData.get("date","")
+            stockNum = stockNumData.get("stockNum",0)
+            value = stockNumData.get("value",0.0)
+            # price = stockNumData.get("price",0.0)
+            if stockNum > 0:
+                #买
+                buyValue += value
+                buyStockNum += stockNum
+            else:
+                sellValue += abs(value)
+                sellStockNum += stockNum
+        lastBuySellDate = stockNumList[-1].get("date","")
+        lastStockNum = getLastStockNum(positionData)
         lastPriceData = getMostClosedPriceData(endDate,priceList)
+        lastSellValue = 0.0
+        if lastStockNum > 0 and lastBuySellDate != endDate:
+            #计算当前持仓价值
+            lastValueData = simStockSellProfit(lastPriceData,lastStockNum)
+            lastSellValue = lastValueData.get("sellValue",0.0)
+        #计算卖出的总价值
+        sellValue += lastSellValue
+        sellStockNum += lastStockNum
         #计算利润
-        lastCostData = simStockSellProfit(lastPriceData,lastStockNum)
-        sellAmount = lastCostData.get("sellAmount",0.0)
-        grossProfit = sellAmount - firstCost #股票价差
+        grossProfit = sellValue - buyValue #股票价差
         dividenAmount = positionData.get("dividenAmount",0.0) #分红金额
         netProfit = grossProfit + dividenAmount #全部利润
-        netProfitRatio = netProfit / firstCost #净利润率
-        grossProfitRatio = grossProfit / firstCost #净利润率
+        grossProfitRatio = grossProfit / buyValue #净利润率
+        netProfitRatio = netProfit / buyValue #净利润率
+        #计算平均价格
+        avgBuyPrice = buyValue / buyStockNum
+        avgSellPrice = sellValue / sellStockNum
 
         #更新持仓数据
         positionData["endDate"] = endDate
@@ -2141,6 +2266,9 @@ def calcOneStockProfit(positionData,priceList,endDate):
         positionData["dividenAmount"] = dividenAmount
         positionData["grossProfitRatio"] = grossProfitRatio
         positionData["netProfitRatio"] = netProfitRatio
+
+        positionData["avgBuyPrice"] = avgBuyPrice
+        positionData["avgSellPrice"] = avgSellPrice
 
         result = positionData
 
@@ -2152,7 +2280,8 @@ def calcOneStockProfit(positionData,priceList,endDate):
 
 #获取买股票的比例,正的为买,负的为卖
 def getBuySellRatio(action,valueRatio,positionData,backtestSettings):
-    result = 0.0
+    buySellRatio = 0.0
+    buySellRatioDesc = ""
     try:
         #计算买股票的比例, 考虑当前持仓量
         # 价值比 <= 此值为极度低估
@@ -2206,25 +2335,31 @@ def getBuySellRatio(action,valueRatio,positionData,backtestSettings):
         if action == comGD._DEF_STOCK_ACTION_BUY:
             if valueRatio <= value_ratio_extreme_undervalue:
                 if currStockNum > 0:
-                    result = extreme_undervalue_add_ratio
+                    buySellRatio = extreme_undervalue_add_ratio
+                    buySellRatioDesc = f"极度低估{valueRatio:.2f}, 建议加仓比例:{buySellRatio:.0%}"
                 else:
-                    result = extreme_undervalue_new_ratio
-                if result > extreme_undervalue_asset_limit:
-                    result = extreme_undervalue_asset_limit
+                    buySellRatio = extreme_undervalue_new_ratio
+                    buySellRatioDesc = f"极度低估{valueRatio:.2f}, 建议开仓比例:{buySellRatio:.0%}" 
+                if buySellRatio > extreme_undervalue_asset_limit:
+                    buySellRatio = extreme_undervalue_asset_limit
             elif valueRatio <= value_ratio_obvious_undervalue:
                 if currStockNum > 0:
-                    result = obvious_undervalue_add_ratio
+                    buySellRatio = obvious_undervalue_add_ratio
+                    buySellRatioDesc = f"明显低估{valueRatio:.2f}, 建议加仓比例:{buySellRatio:.0%}"
                 else:
-                    result = obvious_undervalue_new_ratio
-                if result > obvious_undervalue_asset_limit:
-                    result = obvious_undervalue_asset_limit
+                    buySellRatio = obvious_undervalue_new_ratio
+                    buySellRatioDesc = f"明显低估{valueRatio:.2f}, 建议开仓比例:{buySellRatio:.0%}"
+                if buySellRatio > obvious_undervalue_asset_limit:
+                    buySellRatio = obvious_undervalue_asset_limit
             elif valueRatio <= value_ratio_slight_undervalue:
                 if currStockNum > 0:
-                    result = slight_undervalue_add_ratio
+                    buySellRatio = slight_undervalue_add_ratio
+                    buySellRatioDesc = f"轻度低估{valueRatio:.2f}, 建议加仓比例:{buySellRatio:.0%}"
                 else:
-                    result = slight_undervalue_new_ratio
-                if result > slight_undervalue_asset_limit:
-                    result = slight_undervalue_asset_limit
+                    buySellRatio = slight_undervalue_new_ratio
+                    buySellRatioDesc = f"轻度低估{valueRatio:.2f}, 建议开仓比例:{buySellRatio:.0%}"
+                if buySellRatio > slight_undervalue_asset_limit:
+                    buySellRatio = slight_undervalue_asset_limit    
             elif valueRatio <= value_ratio_fair_value:
                 pass
             elif valueRatio <= value_ratio_slight_overvalue:
@@ -2235,15 +2370,55 @@ def getBuySellRatio(action,valueRatio,positionData,backtestSettings):
             if valueRatio <= value_ratio_extreme_undervalue:
                 pass
             elif valueRatio <= value_ratio_obvious_undervalue:
-                result = -obvious_undervalue_sell_ratio
+                buySellRatio = -obvious_undervalue_sell_ratio
+                buySellRatioDesc = f"明显低估{valueRatio:.2f}, 建议减仓比例:{buySellRatio:.0%}"
             elif valueRatio <= value_ratio_slight_undervalue:
-                result = -slight_undervalue_sell_ratio
+                buySellRatio = -slight_undervalue_sell_ratio
+                buySellRatioDesc = f"轻度低估{valueRatio:.2f}, 建议减仓比例:{buySellRatio:.0%}"
             elif valueRatio <= value_ratio_fair_value:
-                result = -fair_value_sell_ratio
+                buySellRatio = -fair_value_sell_ratio
+                buySellRatioDesc = f"合理区间{valueRatio:.2f}, 建议减仓比例:{buySellRatio:.0%}"
             elif valueRatio <= value_ratio_slight_overvalue:
-                result = -slight_overvalue_sell_ratio
+                buySellRatio = -slight_overvalue_sell_ratio
+                buySellRatioDesc = f"轻度高估{valueRatio:.2f}, 建议减仓比例:{buySellRatio:.0%}"
             else:
-                result = -extreme_overvalue_sell_ratio
+                buySellRatio = -extreme_overvalue_sell_ratio
+                buySellRatioDesc = f"极度高估{valueRatio:.2f}, 建议减仓比例:{buySellRatio:.0%}"
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return buySellRatio, buySellRatioDesc
+
+
+def calcOneStockDividenAmount(positionData,oneDividenDetail,buySellDate):
+    result = 0.0
+    try:
+        lastDividenDate = positionData.get("lastDividenDate","")
+        stockNum = positionData.get("stockNum",0)
+        #首先过滤掉非实施数据和记录日期在持仓日期之前的数据, 以及记录日期在持仓日期之后的数据
+        newDividenDetail = []
+        for oneDividenData in oneDividenDetail:
+            divType = oneDividenData.get("div_proc")
+            if divType != "实施":
+                continue 
+            recordDate = oneDividenData.get("record_date","")
+            if recordDate <= lastDividenDate or recordDate > buySellDate:
+                continue
+            newDividenDetail.append(oneDividenData)
+        #按照record_date排序
+        newDividenDetail.sort(key=lambda x: x["record_date"])
+        #计算从 lastDividenDate 到 buySellDate 的分红金额
+        for oneDividenData in newDividenDetail:
+            recordDate = oneDividenData.get("record_date","")
+            positionData["lastDividenDate"] = recordDate
+            cashDiv = oneDividenData.get("cash_div",0.0)
+            cashWithTax = oneDividenData.get("cash_div_tax",0.0)
+            if not cashDiv:
+                #如果没有分红, 则考虑是否有税分红
+                cashDiv = cashWithTax
+            currStockNum = getLastStockNum(positionData)
+            dividenAmount = cashDiv * currStockNum
+            result += dividenAmount
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -2262,7 +2437,19 @@ def getBuySellRatio(action,valueRatio,positionData,backtestSettings):
 #处理顺序, 理论上应该按照买卖的日期顺序,处理
 #返回: 剩余资金, 持仓数据
 def calcStockProfit(cash,startDate,endDate,stockPositionData,dividendData,stockPriceData,backtestSettings,buySellData={}):
+    result = {}
     try:
+        totalCapitalData = backtestSettings.get("total_capital",{})
+        totalCapital = totalCapitalData.get("value",comGD._DEF_STOCK_INITIAL_CAPITAL)
+
+        #【风控】单只股票最大持仓比例 (占总资产)
+        maxOneStockRatioData = backtestSettings.get("max_single_stock_ratio",{})
+        maxOneStockRatio = maxOneStockRatioData.get("value",0.0)
+
+        #【风控】当现金不足以按规则加仓时, 使用此比例的现金进行加仓
+        cashInsufficientRatioData = backtestSettings.get("cash_insufficient_ratio",{})
+        cashInsufficientRatio = cashInsufficientRatioData.get("value",0.0)
+
         newPositionData = copy.deepcopy(stockPositionData)
         #cash是当前剩余资金,会随着买卖变化
         if buySellData:
@@ -2273,15 +2460,22 @@ def calcStockProfit(cash,startDate,endDate,stockPositionData,dividendData,stockP
             for oneBuySellData in buySellDateDataList:
                 symbol = oneBuySellData.get("symbol")
                 positionData = newPositionData.get(symbol,{})
+                if not positionData:
+                    continue
                 oneDividenData = dividendData.get(symbol,{})
                 oneDividenDetail = oneDividenData.get("detail",[])
                 onePriceDataList = stockPriceData.get(symbol,[])
                 action = oneBuySellData.get("action")
+
                 if action == comGD._DEF_STOCK_ACTION_BUY:
                     buySellDate = oneBuySellData.get("date")
                     priceData = getMostClosedPriceData(buySellDate,onePriceDataList)
                     valueRatio = oneBuySellData.get("valueResult",{}).get("valueRatio",0.0)
-                    buySellRatio = getBuySellRatio(action,valueRatio,positionData,backtestSettings)
+                    #计算卖出股票的数量,整数是买入
+                    buySellRatio, buySellRatioDesc = getBuySellRatio(action,valueRatio,positionData,backtestSettings)
+                    positionData["buySellRatio"] = buySellRatio
+                    positionData["buySellRatioDesc"] = buySellRatioDesc
+                    
                     #计算购买股票的数量
                     currStockNum = getLastStockNum(positionData)
 
@@ -2289,60 +2483,106 @@ def calcStockProfit(cash,startDate,endDate,stockPositionData,dividendData,stockP
                     if buyStockNum <= 0:
                         continue
 
-                    buyCostData = simStockBuyCostByStockNum(priceData,buyStockNum)
-                    buyCost = buyCostData.get("buyCost",0.0)
-
                     #计算购买股票的成本
-                    if (buyCost > cash):
+                    buyCostData = simStockBuyCostByStockNum(priceData,buyStockNum)
+                    buyValue = buyCostData.get("value",0.0)
+                    buyPrice = buyCostData.get("price",0.0)
+
+                    #判断持仓是否超过最大持仓金额比例
+                    tempPositionData = copy.deepcopy(positionData)
+                    tempPositionData = calcOneStockProfit(tempPositionData,onePriceDataList,endDate)
+                    #计算当前持仓金额 + 购买股票的成本
+                    currValue = tempPositionData["buyValue"] + tempPositionData["sellValue"] + buyValue
+                    if currValue > totalCapital * maxOneStockRatio:
                         continue
+
+                    #判断是否有现金不足, 按比例加仓
+                    if buyValue > cash:
+                        #现金不足, 按比例加仓
+                        buyStockNum = int(buyValue * cashInsufficientRatio / buyPrice // 100 * 100)
+                        if buyStockNum <= 0: #加仓数量不能为0
+                            continue
+                        buyCostData = simStockBuyCostByStockNum(priceData,buyStockNum)
+                        buyValue = buyCostData.get("value",0.0)
+                        if buyValue > cash:
+                            #现金仍然不足, 不能加仓
+                            continue
+
+                    cash -= buyValue
+
+                    #更新分红数据
+                    oneDividenDetail = dividendData.get(symbol,{}).get("detail",[])
+                    dividenAmount = calcOneStockDividenAmount(positionData,oneDividenDetail,buySellDate)
+                    positionData["dividenAmount"] += dividenAmount
+                    positionData["lastDividenDate"] = buySellDate
                     #更新持仓数据
                     positionData = addInfo2PositionData(positionData,buyCostData,buySellDate)
                     pass
                 elif action == comGD._DEF_STOCK_ACTION_SELL:
                     buySellDate = oneBuySellData.get("date")
+                    priceData = getMostClosedPriceData(buySellDate,onePriceDataList)
+                    valueRatio = oneBuySellData.get("valueResult",{}).get("valueRatio",0.0)
+                    #计算卖出股票的数量,负数是卖出
+                    buySellRatio, buySellRatioDesc = getBuySellRatio(action,valueRatio,positionData,backtestSettings)
+                    positionData["buySellRatio"] = buySellRatio
+                    positionData["buySellRatioDesc"] = buySellRatioDesc
+
+                    #计算购买股票的数量
+                    currStockNum = getLastStockNum(positionData)
+
+                    sellStockNum = int(currStockNum * buySellRatio // 100 * 100)
+                    if sellStockNum >= 0: #
+                        continue
+
+                    sellCostData = simStockBuyCostByStockNum(priceData,sellStockNum)
+                    sellValue = sellCostData.get("value",0.0)
+                    cash -= sellValue
+                    #更新分红数据
+                    oneDividenDetail = dividendData.get(symbol,{}).get("detail",[])
+                    dividenAmount = calcOneStockDividenAmount(positionData,oneDividenDetail,buySellDate)
+                    positionData["dividenAmount"] += dividenAmount
+                    positionData["lastDividenDate"] = buySellDate
+
+                    #更新持仓数据
+                    positionData = addInfo2PositionData(positionData,sellCostData,buySellDate)
                     pass
                 else:
                     #nothing do do
                     pass
+
+                #按照最初持仓和最后持仓, 计算利润
+                onePriceDataList = stockPriceData.get(symbol,[])
+                positionData = calcOneStockProfit(positionData,onePriceDataList,endDate)
+                newPositionData[symbol] = positionData
         else:
             #按照股票持仓和分红, 计算利润
             #计算分红变化,不考虑配股等情况
             for symbol,positionData in newPositionData.items():
+                buySellDate = endDate
+                #更新分红数据
                 oneDividenDetail = dividendData.get(symbol,{}).get("detail",[])
-                for oneDividenData in oneDividenDetail:
-                    divType = oneDividenData.get("div_proc")
-                    if divType != "实施":
-                        continue 
-                    #只考虑记录日期在回测日期范围内的分红
-                    recordDate = oneDividenData.get("record_date","")
-                    if recordDate < startDate or recordDate > endDate:
-                        continue
-                    cashDiv = oneDividenData.get("cash_div",0.0)
-                    cashWithTax = oneDividenData.get("cash_div_tax",0.0)
-                    if not cashDiv:
-                        #如果没有分红, 则考虑是否有税分红
-                        cashDiv = cashWithTax
-                    currStockNum = getLastStockNum(positionData)
-                    dividenAmount = cashDiv * currStockNum
-                    cash += dividenAmount #更新剩余资金
-                    #更新分红数据
-                    if "dividenAmount" not in positionData:
-                        positionData["dividenAmount"] = 0.0
-                    positionData["dividenAmount"] += dividenAmount  
+                dividenAmount = calcOneStockDividenAmount(positionData,oneDividenDetail,buySellDate)
+                positionData["dividenAmount"] += dividenAmount
+                positionData["lastDividenDate"] = buySellDate
+
                 #按照最初持仓和最后持仓, 计算利润
                 onePriceDataList = stockPriceData.get(symbol,[])
                 positionData = calcOneStockProfit(positionData,onePriceDataList,endDate)
+                newPositionData[symbol] = positionData
                 pass
-        
+
+        result["stockPositionData"] = newPositionData
+        result["cash"] = cash
+
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
-    return cash,newPositionData
+    return result
 
 
 #计算回测利润
 def calcBacktestProfit(startDate,endDate,backtestBuySellResult,backtestData):
-    result = []
+    result = {}
     try:
         #首先获取计算的设置参数
         backtestSettings = backtestData.get("backtestSettings",{})
@@ -2360,15 +2600,228 @@ def calcBacktestProfit(startDate,endDate,backtestBuySellResult,backtestData):
         dividendData = backtestData.get("dividendData",{})
 
         #计算从startDate到endDate的利润,没有中间的买卖, 只有初始资金和最后卖出,以及分红等
-        noBuyRestCash,noBuySellProfitData = calcStockProfit(restCash,startDate,endDate,stockPositionData,dividendData,stockDailyData,backtestSettings,{})
+        noBuySellProfitData = calcStockProfit(restCash,startDate,endDate,stockPositionData,dividendData,stockDailyData,backtestSettings,{})
 
         #计算从startDate到endDate的利润,通过模拟购买和卖出股票, 计算利润
-        buyRestCash,buySellProfitData = calcStockProfit(restCash,startDate,endDate,stockPositionData,dividendData,stockDailyData,backtestSettings,backtestBuySellResult)
+        buySellProfitData = calcStockProfit(restCash,startDate,endDate,stockPositionData,dividendData,stockDailyData,backtestSettings,backtestBuySellResult)
+
+        result["noBuySellProfitData"] = noBuySellProfitData
+        result["buySellProfitData"] = buySellProfitData 
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
     return result
+
+
+#输出文件生成begin
+def saveBacktestResult(backtestData,backtestBuySellResult,backtestProfit):
+    result = {}
+    try:
+        detailRecordFileName = generateDetailedTradingRecords(backtestData,backtestBuySellResult,backtestProfit)
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+#生成详细的交易记录文件
+def generateDetailedTradingRecords(backtestData,backtestBuySellResult,backtestProfit):
+    """
+    生成详细的交易记录文件
+    """
+    fileName = ""
+    detailRecordList = []
+    try:
+        currYMDHMS = misc.getTime()
+        currYMD = currYMDHMS[:8]
+        currHMS = currYMDHMS[8:]
+        outputFileName = f"{settings.STOCK_REPORT_DIR_NAME}/{settings.STOCK_TRADING_RECORD_PREFIX}{currYMD}_{currHMS}.csv"
+        #首先获取计算的设置参数
+        stockPortfolio = backtestData.get("stockPortfolio",[])
+        stockPortfolioDataSet = {}
+        for stockInfo in stockPortfolio:
+            symbol = stockInfo.get("symbol","")
+            stockPortfolioDataSet[symbol] = stockInfo
+        #获取股票价格数据
+        # stockDailyData = backtestData.get("stockDailyData",[])
+        buySellDateDataList = backtestBuySellResult.get("dateData",[]) 
+        buySellProfitData = backtestProfit.get("buySellProfitData",{})
+        stockPositionData = buySellProfitData.get("stockPositionData",{})
+
+        #获取股票技术指标数据
+        stockIndicators = backtestData.get("stockIndicators",{})
+        # stockIndicatorDataSet = {}
+        # for symbol,indicatorDataList in stockIndicators.items():
+        #     stockIndicatorDataSet[symbol] = {}
+        #     for indicatorData in indicatorDataList:
+        #         currDate = indicatorData.get("date")
+        #         if currDate not in stockIndicatorDataSet[symbol]:
+        #             stockIndicatorDataSet[symbol][currDate] = indicatorData
+
+        #获取行业rsi数据
+        industryRSIData = backtestData.get("industryRSIData",{})
+
+        #遍历每个日期的购买和卖出记录,填充细节参数
+        for oneBuySellData in buySellDateDataList:
+            detailRecord = {}
+
+            #股票代码
+            symbol = oneBuySellData.get("symbol","")
+            detailDate = oneBuySellData["date"]
+            detailRecord["date"] = detailDate
+            detailRecord["action"] = oneBuySellData.get("action","")
+            detailRecord["stockName"] = oneBuySellData.get("stockName","") + f"({symbol})"
+            
+            #交易数量和价格
+            currStockPositionData = stockPositionData.get(symbol,{})
+            currStockNumList = currStockPositionData.get("stockNumList",[])
+
+            detailRecord["lastStockNum"] = currStockPositionData.get("stockNum",0)
+
+            #初始化交易数量和价格
+            detailRecord["tradeNum"] = 0
+            detailRecord["tradePrice"] = 0
+            detailRecord["tradeValue"] = 0
+            detailRecord["otherCost"] = 0
+
+            #遍历股票持仓记录, 找到交易日期的持仓量和价格
+            for oneStockNumData in currStockNumList:
+                if oneStockNumData["date"] == detailDate:
+                    detailRecord["tradeNum"] = oneStockNumData["stockNum"]
+                    detailRecord["tradePrice"] = round(oneStockNumData["price"],2)
+                    detailRecord["tradeValue"] = round(oneStockNumData["value"],2)
+                    detailRecord["preStockNum"] = round(oneStockNumData["preStockNum"],2)
+                    detailRecord["postStockNum"] = round(oneStockNumData["postStockNum"],2)
+                    detailRecord["otherCost"] = round(oneStockNumData["otherCost"],2)
+                    break
+            
+            #获取DCF数据,行业数据
+            stockInfo = stockPortfolioDataSet.get(symbol,{})
+            dcfValue = stockInfo.get("DCF_value_per_share",0.0)
+            detailRecord["dcfValue"] = dcfValue
+            industryName = stockInfo.get("industry_name","")
+            detailRecord["industryName"] = industryName
+
+            #获取dcf价值比
+            valueResult = oneBuySellData.get("valueResult",{})
+            detailRecord["valueRatio"] = round(valueResult.get("valueRatio",0.0),2)
+            detailRecord["valueRatioDesc"] = f"价值比{detailRecord['valueRatio']:.2f}"
+
+            #获取购买和卖出的价值比描述
+            buySellValueRatioDesc = currStockPositionData.get("buySellRatioDesc","")
+            detailRecord["buySellValueRatioDesc"] = buySellValueRatioDesc  
+
+            #计算4维度指标满足成都
+            
+            action = oneBuySellData.get("action","")
+            valueAction = oneBuySellData.get("valueAction","")
+            overboughtsoldAction = oneBuySellData.get("overboughtsoldAction","")
+            momentumAction = oneBuySellData.get("momentumAction","")
+            extremePriceVolumeAction = oneBuySellData.get("extremePriceVolumeAction","")
+            if action == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                if valueAction == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                    detailRecord["valueActionFlag"] = "Y"
+                else:
+                    detailRecord["valueActionFlag"] = "N"
+                if overboughtsoldAction == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                    detailRecord["overboughtsoldActionFlag"] = "Y"
+                else:
+                    detailRecord["overboughtsoldActionFlag"] = "N"
+                if momentumAction == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                    detailRecord["momentumActionFlag"] = "Y"
+                else:
+                    detailRecord["momentumActionFlag"] = "N"
+                if extremePriceVolumeAction == comGD._DEF_STOCK_VALUE_SCREEN_BUY:
+                    detailRecord["extremePriceVolumeActionFlag"] = "Y"
+                else:
+                    detailRecord["extremePriceVolumeActionFlag"] = "N"
+                fourFactorBuy = oneBuySellData.get("fourFactorBuy",0)
+                detailRecord["actionTotal"] = f"{fourFactorBuy}/4"
+                detailRecord["actionDesc"] = f"买入信号: 价值过滤器 + {fourFactorBuy}个买入维度"
+
+            elif action == "sell":
+                if valueAction == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                    detailRecord["valueActionFlag"] = "Y"
+                else:
+                    detailRecord["valueActionFlag"] = "N"
+                if overboughtsoldAction == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                    detailRecord["overboughtsoldActionFlag"] = "Y"
+                else:   
+                    detailRecord["overboughtsoldActionFlag"] = "N"
+                if momentumAction == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                    detailRecord["momentumActionFlag"] = "Y"
+                else:
+                    detailRecord["momentumActionFlag"] = "N"
+                if extremePriceVolumeAction == comGD._DEF_STOCK_VALUE_SCREEN_SELL:
+                    detailRecord["extremePriceVolumeActionFlag"] = "Y"
+                else:
+                    detailRecord["extremePriceVolumeActionFlag"] = "N"
+                fourFactorSell = oneBuySellData.get("fourFactorSell",0)
+                detailRecord["actionTotal"] = f"{fourFactorSell}/4"
+                detailRecord["actionDesc"] = f"卖出信号: 价值过滤器 + {fourFactorSell}个卖出维度"
+
+            #添加股票价格和技术指标
+            #close price           
+            currIndicatorDataList = stockIndicators.get(symbol,{})
+            for theDateIndicatorData in currIndicatorDataList:
+                currDate = theDateIndicatorData.get("date","")
+                if currDate > detailDate:
+                    break
+            closePrice = theDateIndicatorData.get("close",0.0)
+
+            #close price
+            detailRecord["closePrice"] = round(closePrice,2)
+
+            #volume
+            detailRecord["volume"] = round(theDateIndicatorData.get("volume",0.0),2)
+
+            #rsi
+            detailRecord["rsi"] = round(theDateIndicatorData.get("rsi",0.0),2)  
+
+            #macd
+            detailRecord["macd_dif"] = round(theDateIndicatorData.get("macd",0.0),2)
+            detailRecord["macd_dea"] = round(theDateIndicatorData.get("macd_signal",0.0),2)
+            detailRecord["macd_hist"] = round(theDateIndicatorData.get("macd_hist",0.0),2)
+
+            #布林带
+            detailRecord["boll_upper"] = round(theDateIndicatorData.get("upper_band",0.0),2)
+            detailRecord["boll_middle"] = round(theDateIndicatorData.get("ma",0.0),2)
+            detailRecord["volume_ratio"] = round(theDateIndicatorData.get("volume_ratio",0.0),2)
+
+            #行业rsi数据
+            industryCode = stockInfo.get("industry_code_sw","")
+            currIndustryRSIData = industryRSIData.get(industryCode,{})
+            detailRecord["rsiExtremeOverought"] = round(currIndustryRSIData.get("extreme_overbought",0.0),2)
+            detailRecord["rsiExtremeOversold"] = round(currIndustryRSIData.get("extreme_oversold",0.0),2)
+            detailRecord["rsiOverbought"] = round(currIndustryRSIData.get("overbought",0.0),2)
+            detailRecord["rsiOversold"] = round(currIndustryRSIData.get("oversold",0.0),2)
+
+            #最后添加到列表中
+            detailRecordList.append(detailRecord)
+
+        #将列表转换为DataFrame
+        df = pd.DataFrame(detailRecordList)
+        df.rename(columns={"date":"日期","action":"交易类型","stockName":"股票名称","industryName":"所属行业","lastStockNum":"最后持有股票数量",
+        "tradeNum":"交易股票数量","tradePrice":"交易价格", "preStockNum":"交易前股票数量","postStockNum":"交易后股票数量",
+        "dcfValue":"DCF价值","valueRatio":"估值比%","buySellValueRatioDesc":"估值描述","valueRatioDesc":"价值比描述",
+        "tradeValue":"交易金额", "otherCost":"交易成本","closePrice":"收盘价","rsi":"RSI指标", "macd_dif":"MACD DIF",
+        "macd_dea":"MACD DEA","macd_hist":"MACD HIST", "BOLL_UPPER":"布林上轨","BOLL_MIDDLE":"布林中轨","BOLL_LOWER":"布林下轨",
+        "volume":"成交量","volume_ratio":"量能倍数","valueActionFlag":"价值过滤器","overboughtsoldActionFlag":"超买超卖过滤器",
+        "momentumActionFlag":"动量过滤器","extremePriceVolumeActionFlag":"价格成交量过滤器","actionTotal":"满足维度数","industryName":"行业",
+        "rsiOverbought":"行业RSI超买阈值","rsiOversold":"行业RSI超卖阈值","rsiExtremeOverought":"行业RSI极端超买阈值",
+        "rsiExtremeOversold":"行业RSI极端超卖阈值"},inplace=True)
+        #保存到CSV文件
+        df.to_csv(outputFileName, index=False, encoding='utf-8-sig')
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return outputFileName,detailRecordList
+
+
+#输出文件生成end
 
 
 def test():

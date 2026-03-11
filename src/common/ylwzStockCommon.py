@@ -9,7 +9,7 @@
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
 
-_VERSION="20260224"
+_VERSION="20260305"
 
 
 import os
@@ -22,7 +22,7 @@ if sys.getdefaultencoding() != 'utf-8':
     #reload(sys)
     #sys.setdefaultencoding('utf-8')
 
-import pathlib
+import traceback
 import requests
 
 import pandas as pd
@@ -727,10 +727,115 @@ class StockServer:
             result = self.query(cmd,querySet)
         except Exception as e:
             errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
-            self._errMsg = errMsg
-        
-
+            self._errMsg = errMsg       
         return result
+    
+    #应用部分 begin
+    def readUserStockList(self,userID=""):
+        result = []
+        try:
+            cmd = "userstocklistqry"
+            querySet = {"userID":userID,"limitNum":10000}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #获取股票交易日数据
+    def readStockTradeDateList(self,startYMD,currYMD):
+        result = []
+        try:
+            cmd = "tradedayqry"
+            beginDate = startYMD[0:4] + "-" + startYMD[4:6] + "-" + startYMD[6:8]
+            endDate = currYMD[0:4] + "-" + currYMD[4:6] + "-" + currYMD[6:8]
+            querySet = {"beginDate":beginDate,"endDate":endDate}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #将股票交易日数据转换为唯一List
+    def convertTradeDate2Set(self,stockTradeDateList,YMD=False):
+        result = []
+        try:
+            tradeDateSet = set()
+            if stockTradeDateList:
+                for item in stockTradeDateList:
+                    tradeDay = item.get("trade_day","")
+                    if tradeDay:
+                        if YMD:
+                            tradeDay = tradeDay.replace("-","")
+                        tradeDateSet.add(tradeDay)
+            result = list(tradeDateSet)
+            result.sort()
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #添加股票数据
+    def addStockData(self,symbol,dataSet,period="day",adjust=""):
+        result = 0
+        try:
+            #首先查询
+            existFlag = False
+            cmd = "stockhistoryqry"
+            querySet = {}
+            querySet["stock_code"] = symbol
+            querySet["date"] = dataSet.get("date","")
+            querySet["period"] = period
+            querySet["adjust"] = adjust
+            querySet["limitNum"] = 1
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    if data["data"]:
+                        existFlag = True
+
+            if not existFlag:
+                cmd = "stockhistoryadd"
+                querySet = dataSet
+                querySet["stock_code"] = symbol
+                querySet["period"] = period
+                querySet["adjust"] = adjust
+                rtnData = self.query(cmd,querySet)
+                if rtnData and "data" in rtnData:
+                    data = rtnData["data"]
+                    if "recID" in data:
+                        result = int(data["recID"])
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #获取股票历史数据
+    def queryStockData(self,symbol,startDate,endDate,period="day",adjust="",limitNum=10000):
+        result = []
+        try:
+            if startDate < endDate:
+                cmd = "stockhistoryqry"
+                querySet = {"symbol":symbol,"start_date":startDate,"end_date":endDate,"period":period,"adjust":adjust,"limitNum":limitNum}
+                rtnData = self.query(cmd,querySet)
+                if rtnData and "data" in rtnData:
+                    data = rtnData["data"]
+                    if "data" in data:
+                        result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+    #应用部分 end
 
 
 def readSessionIDFromEnv():

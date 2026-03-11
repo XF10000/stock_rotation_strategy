@@ -188,8 +188,8 @@ _DEF_BUFFER_STEP_NAME = "STEP" #数据存取的位置区域
 _DEF_BUFFER_KEY_TYPE_NAME = "KEYTYPE" #关键词存储区域
 
 _DEF_BUFFER_DATA_KEEP_TIME = 900 #查询缓冲区保存时间, 默认是60*15 15分钟, 900秒
-_DEF_BUFFER_DATA_BEGIN_NUM = 0 # 默认一次提供500个数据
-_DEF_BUFFER_DATA_END_NUM = 499 #默认一次提供500个数据
+_DEF_BUFFER_DATA_BEGIN_NUM = 0 # 默认一次提供5000个数据
+_DEF_BUFFER_DATA_END_NUM = 9999 #默认一次提供10000个数据
 
 
 #支付相关
@@ -325,7 +325,7 @@ _DEF_STOCK_DIVIDEND_DATA_DAYS = 90 #默认股票分红数据文件更新间隔90
 _DEF_STOCK_INDUSTRY_UPDATE_DAYS = 7 #默认股票行业更新间隔7天
 
 _DEF_STOCK_BACKTEST_DAYS = (365*2) #默认回测2年数据
-_DEF_STOCK_BACKTEST_WEEK = 125 #默认回测125周数据
+_DEF_STOCK_BACKTEST_WEEK = 105 #默认回测105周数据, 大约两年
 _DEF_STOCK_BACKTEST_WINDOWS = 14 #默认回测至少保留14个数据
 
 #默认初始资金
@@ -374,6 +374,7 @@ _DEF_LOG_STOCK_WEB_API_NAME = "stockwebapilog"
 _DEF_LOG_STOCK_TEST_NAME = "stocktestlog"
 
 _DEF_LOG_STOCK_FETCH_DATA_NAME = "stockfetchdatalog"
+_DEF_LOG_STOCK_USER_UPDATE_DATA_NAME = "stockuserupdatelog"
 _DEF_LOG_STOCK_UPLOAD_DATA_NAME = "stockuploaddatalog"
 _DEF_LOG_STOCK_REGULAR_UPDATE_NAME = "stockregularupdatelog"
 

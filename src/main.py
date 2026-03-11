@@ -32,7 +32,7 @@ from common import miscCommon as misc
 # from common import redisCommon as comDB
 # from common import mysqlCommon as comMysql
 
-from common import funcCommon as comFC
+# from common import funcCommon as comFC
 from common import stockCommon as comStock
 
 # from common import divergence as comDiv
@@ -98,7 +98,7 @@ def prepareBacktestData(configData):
         #获取股票配置文件中的股票列表
         stockPortfolio = configData.get("stockPortfolio",[])
 
-        #保存股票技术指标, 并计算技术指标, 
+        #保存股票技术指标, 并计算技术指标, 目前也是按照周数据计算,以后考虑扩展, 就是读取数据和计算分离
         stockIndicators = {}
         count = 0 #股票计数器
         for stockInfo in stockPortfolio:
@@ -116,7 +116,7 @@ def prepareBacktestData(configData):
         #读取行业数据
         industryRSIData = comStock.readSWRSIThresholdData()
 
-        #计算背离数据
+        #计算背离数据,这个也要用默认数据, 方便以后扩展按周/日/小时, 目前是周数据
         divergenceData = {}
         for stockInfo in stockPortfolio:
             symbol = stockInfo.get("symbol", "")
@@ -138,6 +138,10 @@ def prepareBacktestData(configData):
                         tradingWeekDays.append(date)
             #只从第一个股票中获取日期数据
             break
+        #排序日期数据
+        tradingWeekDays.sort()
+        #默认交易日期数据
+        tradingDays = tradingWeekDays
 
         #读取最近的 daily 数据,从第一个交易日开始
         stockDailyData = {}
@@ -158,6 +162,9 @@ def prepareBacktestData(configData):
             stockInfo,stockDataList = comStock.readStockData(symbol,period,startYMD=passedYMD)
             if stockDataList:
                 stockWeeklyData[symbol] = stockDataList
+
+        #默认trading 数据
+        stockTradingData = stockWeeklyData
 
         result["stockIndicators"] = stockIndicators
         result["industryMapping"] = mapping
@@ -196,11 +203,15 @@ def mainProcessor(method,inputPortfolioFileName=""):
                 endDate = tradeWeekDays[-1]
                 _LOG.info(f"I: 回测开始日期:{startDate}, 回测结束日期:{endDate},开始计算买卖结果...")
                 backtestBuySellResult = comStock.calcBacktestBuySellResult(method,backtestData)
-                _LOG.info(f"  - 回测买卖结果数量:{len(backtestBuySellResult)}")
+                _LOG.info(f"  - 回测买卖结果数量:{len(backtestBuySellResult['dateData'])}")
                 #计算回测利润
                 _LOG.info(f"I: 计算回测利润...")
                 backtestProfit = comStock.calcBacktestProfit(startDate,endDate,backtestBuySellResult,backtestData)
                 _LOG.info(f"I: 计算回测利润结束")
+                #保存回测利润数据
+                _LOG.info(f"I: 保存回测结果开始")
+                comStock.saveBacktestResult(backtestData,backtestBuySellResult,backtestProfit)
+                _LOG.info(f"I: 保存回测结果结束")
             pass
         
         _LOG.info(f"I: 中线轮动策略系统...结束 ")

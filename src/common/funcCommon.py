@@ -7,7 +7,7 @@
 #Date: 2019-08-02
 #Description:   这个应用的通用函数
 
-_VERSION="20260219"
+_VERSION="20260305"
 
 
 import os
@@ -340,7 +340,7 @@ CONST_ERROR_wordList = {
             "CS":"短信短时间发送次数太多, 请稍后再发",     
         }
     },
-    "hotel":{
+    "stock_msg":{
         "EN":{
             "OK" :'success',
             "ERR_UPDATE" :'exception. check the updated value.',

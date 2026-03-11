@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260225"
+_VERSION="20260310"
 
 
 import os
@@ -248,6 +248,7 @@ ROLE_CMD_LIST =\
     "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
     "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
+    "technicalindicatorsadd","technicalindicatorsdel","technicalindicatorsmodify","technicalindicatorsqry",
     "stockdividendadd","stockdividenddel","stockdividendmodify","stockdividendqry",
     "industryhistoryadd","industryhistorydel","industryhistorymodify","industryhistoryqry",
     "balancesheetadd","balancesheetdel","balancesheetmodify","balancesheetqry",
@@ -271,6 +272,7 @@ ROLE_CMD_LIST =\
     "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
     "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
+    "technicalindicatorsadd","technicalindicatorsdel","technicalindicatorsmodify","technicalindicatorsqry",
     "stockdividendadd","stockdividenddel","stockdividendmodify","stockdividendqry",
     "industryhistoryadd","industryhistorydel","industryhistorymodify","industryhistoryqry",
     "balancesheetadd","balancesheetdel","balancesheetmodify","balancesheetqry",
@@ -292,6 +294,7 @@ ROLE_CMD_LIST =\
     "stockinfoqry",
     "industryinfoqry",
     "stockhistoryqry",
+    "technicalindicatorsqry",
     "stockdividendqry",
     "industryhistoryqry",
     "balancesheetqry",
@@ -310,6 +313,7 @@ ROLE_CMD_LIST =\
     "stockinfoqry",
     "industryinfoqry",
     "stockhistoryqry",
+    "technicalindicatorsqry",
     "stockdividendqry",
     "industryhistoryqry",
     "balancesheetqry",
@@ -372,6 +376,13 @@ STOCK_CONFIG_DIR_NAME = {
     "server_01":f"{_DATA_DIR}/config",
     "server_02":f"{_DATA_DIR}/config",
     "home":f"{_DATA_DIR}/config",
+}[_SYS]
+
+STOCK_REPORT_DIR_NAME = {
+    "local":f"{_HOME_DIR}/report",
+    "server_01":f"{_HOME_DIR}/report",
+    "server_02":f"{_HOME_DIR}/report",
+    "home":f"{_HOME_DIR}/report",
 }[_SYS]
 
 STOCK_DATA_CACHE_DIR_NAME = {
@@ -544,12 +555,25 @@ STOCK_STRATEGY_PARAMS = {
 STOCK_BACKTEST_CONFIG = {
     'start_date': '2024-01-01',    # 回测开始日期
     'end_date': None,              # 回测结束日期（None为当前日期）
-    'initial_capital': 1000000,    # 初始资金：100万
+    'initial_capital': 10000000,    # 初始资金：1000万
     'commission_rate': 0.0003,     # 手续费率：万3
     'stamp_tax_rate': 0.001,       # 印花税率：千1（仅卖出）
     'slippage_rate': 0.001,        # 滑点率：千1
     'min_trade_amount': 1000       # 最小交易金额
 }
+
+STOCK_HISTORY_DAY_UPDATE_END_DATE = "2026-02-03" # 股票历史数据更新结束日期,这个日期之后, 都是每天更新
+STOCK_TECHNICAL_INDICATORS_START_DATE = "2024-01-01" # 股票技术指标开始日期, 从这个日期开始, 才会计算技术指标
+
+#output file prefix
+STOCK_TRADING_RECORD_PREFIX = "detailed_trading_records_" # 股票交易记录文件名前缀,csv
+STOCK_TRADING_RECORD_SUFFIX = ".csv" # 股票交易记录文件名后缀,csv
+
+STOCK_SIGNAL_TRACKING_REPORT_PREFIX = "signal_tracking_report_" # 股票信号跟踪报告文件名前缀,csv
+STOCK_SIGNAL_TRACKING_REPORT_SUFFIX = ".csv" # 股票信号跟踪报告文件名后缀,csv
+
+INTEGRATED_BACKTEST_REPORT_PREFIX = "integrated_backtest_report_" # 集成回测报告文件名前缀,html
+INTEGRATED_BACKTEST_REPORT_SUFFIX = ".html" # 集成回测报告文件名后缀,html
 
 #stock data config end
 
