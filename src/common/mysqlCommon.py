@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260305"
+_VERSION="20260314"
 
 #add src directory
 import os
@@ -263,6 +263,7 @@ def createUserBasic():
     "modifyID VARCHAR(32) COMMENT '修改用户ID',",
     "modifyYMDHMS VARCHAR(16) COMMENT '修改年月日',",
     "passwdYMDHMS VARCHAR(16) COMMENT '密码修改年月日',",
+    "extSessionID VARCHAR(48) COMMENT '扩展用户sessionID',",
     "extStartYMDHMS VARCHAR(16) COMMENT '扩展开始年月日',",
     "extLeaveYMDHMS VARCHAR(16) COMMENT '扩展停止年月日',",
     "extJobPosition VARCHAR(100) COMMENT '扩展职位',",
@@ -556,6 +557,9 @@ def insertUserBasic(loginID, dataSet):
         saveSet["passwdYMDHMS"] = dataSet.get("passwdYMDHMS", "") 
 
         # extend items begin, per project
+        
+        saveSet["extSessionID"] = dataSet.get("extSessionID", "") 
+
         saveSet["extStartYMDHMS"] = dataSet.get("extStartYMDHMS", "") 
 
         saveSet["extLeaveYMDHMS"] = dataSet.get("extLeaveYMDHMS", "") 
@@ -721,6 +725,10 @@ def updateUserBasic(loginID, dataSet):
     
         # extend items begin, per project
 
+        extSessionID = dataSet.get("extSessionID") 
+        if extSessionID:
+            saveSet["extSessionID"] = extSessionID
+
         extStartYMDHMS = dataSet.get("extStartYMDHMS") 
         if extStartYMDHMS:
             saveSet["extStartYMDHMS"] = extStartYMDHMS
@@ -851,6 +859,7 @@ def getUserInfoMysql(loginID):
             # aSet["passwdYMDHMS"] = currDataSet.get("passwdYMDHMS","")
 
             # extend items begin, per project
+            aSet["extSessionID"] = currDataSet.get("extSessionID","")
             aSet["extStartYMDHMS"] = currDataSet.get("extStartYMDHMS","")
             aSet["extLeaveYMDHMS"] = currDataSet.get("extLeaveYMDHMS","")
             aSet["extJobPosition"] = currDataSet.get("extJobPosition","")
@@ -2944,6 +2953,8 @@ def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",sta
                     sqlStr += " WHERE date < %s"
                 valuesList.append(end_date)
 
+        sqlStr =  sqlStr + " ORDER BY date" 
+
         if limitNum > 0:
             sqlStr += " LIMIT {0}".format(limitNum)
 
@@ -2994,7 +3005,7 @@ def create_technical_indicators(tableName):
     aList = ["CREATE TABLE IF NOT EXISTS %s("
     "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号',",
     "stock_code VARCHAR(10) NOT NULL COMMENT '股票代码',",
-    "`date` DATE NOT NULL COMMENT '交易日期',",
+    "`date` VARCHAR(10) NOT NULL COMMENT '交易日期',",
     "`close` FLOAT COMMENT '收盘',",
     "ma_5 FLOAT COMMENT '5日均线',",
     "ma_10 FLOAT COMMENT '10日均线',",
@@ -3029,7 +3040,7 @@ def create_technical_indicators(tableName):
     "wr_14 FLOAT COMMENT '14日威廉指标(百分比)',",
     "volume BIGINT COMMENT '成交量(股)',",
     "turnover_rate FLOAT COMMENT '换手率(百分比)',",
-    "obv BIGINT COMMENT '能量潮指标',",
+    "obv FLOAT COMMENT '能量潮指标',",
     "hashval VARCHAR(32) NULL COMMENT 'hash值',",
     "label1 VARCHAR(32) NULL,",
     "label2 VARCHAR(32) NULL,",
@@ -3301,7 +3312,7 @@ def insert_technical_indicators(tableName,dataSet):
         saveSet["turnover_rate"] = turnover_rate
 
         try:
-            obv = int(dataSet.get("obv")) 
+            obv = float(dataSet.get("obv")) 
         except:
             obv = 0 
         saveSet["obv"] = obv
@@ -3657,7 +3668,7 @@ def update_technical_indicators(tableName,id,dataSet):
         obv = dataSet.get("obv") 
         if obv:
             try:
-                obv = int(dataSet.get("obv")) 
+                obv = float(dataSet.get("obv")) 
                 saveSet["obv"] = obv
             except:
                 pass
@@ -3713,7 +3724,7 @@ def update_technical_indicators(tableName,id,dataSet):
 
 
 #technical_indicators 查询记录
-def query_technical_indicators(tableName,id = "0", stock_code="",date="",beginDate="",endDate="",
+def query_technical_indicators(tableName,id = "0", stock_code="",date="",start_date="",end_date="",
                                 delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
@@ -3743,18 +3754,20 @@ def query_technical_indicators(tableName,id = "0", stock_code="",date="",beginDa
                 else:
                     sqlStr += " WHERE date = %s"
                 valuesList.append(date)
-            if beginDate:
+            if start_date:
                 if valuesList:
                     sqlStr += " AND date >= %s "
                 else:
                     sqlStr += " WHERE date >= %s"
-                valuesList.append(beginDate)
-            if endDate:
+                valuesList.append(start_date)
+            if end_date:    
                 if valuesList:
                     sqlStr += " AND date < %s"
                 else:
                     sqlStr += " WHERE date < %s"
-                valuesList.append(endDate)
+                valuesList.append(end_date)
+        
+        sqlStr =  sqlStr + " ORDER BY date" 
 
         if limitNum > 0:
             sqlStr += " LIMIT {0}".format(limitNum)
@@ -10064,6 +10077,8 @@ def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", user
 
     return result
 
+
+#user_stock_list 查询记录
 
 #获取唯一的所有用户持仓股票代码
 def get_unique_user_stock_list():

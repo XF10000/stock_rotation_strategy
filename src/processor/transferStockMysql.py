@@ -7,7 +7,7 @@
 #Date: 2022-08-29
 #Description:   服务器侧数据存储Mysql部分
 
-_VERSION = "20260131"
+_VERSION = "20260315"
 
 _DEBUG=True
 
@@ -406,6 +406,7 @@ def writeUser2UserBasic(dataSet,operatorLoginID):
         passwdYMDHMS = dataSet.get("passwdYMDHMS", "")
 
         #extend items begin
+        extSessionID = dataSet.get("extSessionID") 
         extStartYMDHMS = dataSet.get("extStartYMDHMS") 
         extLeaveYMDHMS = dataSet.get("extLeaveYMDHMS") 
         extJobPosition = dataSet.get("extJobPosition") 
@@ -487,9 +488,12 @@ def writeUser2UserBasic(dataSet,operatorLoginID):
                 saveSet["passwdYMDHMS"] = passwdYMDHMS
 
             #extend items begin
+            if extSessionID != currDataSet.get("extSessionID") and extSessionID:
+                saveSet["extSessionID"] = extSessionID
+
             if extStartYMDHMS != currDataSet.get("extStartYMDHMS") and extStartYMDHMS:
                 saveSet["extStartYMDHMS"] = extStartYMDHMS
-
+            
             if extLeaveYMDHMS != currDataSet.get("extLeaveYMDHMS") and extLeaveYMDHMS:
                 saveSet["extLeaveYMDHMS"] = extLeaveYMDHMS
 
@@ -568,6 +572,7 @@ def writeUser2UserBasic(dataSet,operatorLoginID):
             saveSet["passwdYMDHMS"] = passwdYMDHMS
     
             #extend items begin
+            saveSet["extSessionID"] = extSessionID
             saveSet["extStartYMDHMS"] = extStartYMDHMS
             saveSet["extLeaveYMDHMS"] = extLeaveYMDHMS
             saveSet["extJobPosition"] = extJobPosition

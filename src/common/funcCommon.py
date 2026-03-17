@@ -7,7 +7,7 @@
 #Date: 2019-08-02
 #Description:   这个应用的通用函数
 
-_VERSION="20260305"
+_VERSION="20260315"
 
 
 import os
@@ -1672,32 +1672,6 @@ def extractDictKeys(data):
     return result
 
 
-#获取标准的城市名称,没有空格, 全部小写
-def getStandardCityName(cityName):
-    result = cityName
-    try:
-        tempList = cityName.split()
-        tempName = "_".join(tempList)
-        tempName = tempName.lower()
-        result = tempName
-    except:
-        pass
-    return result
-
-
-#获取标准的首字母大写名称,用空格分隔
-def getTitleName(name):
-    result = name
-    try:
-        tempList = name.split()
-        tempName = " ".join(tempList)
-        tempName = tempName.title()
-        result = tempName
-    except:
-        pass
-    return result
-
-
 #把欧洲格式的小数点","转换为标准的浮点数
 def euroFloat(val):
     result = 0.0
@@ -1709,19 +1683,13 @@ def euroFloat(val):
     return result
 
 
-def genHotelUniqueID(cityName,address,countryCode2=""):
+#生成外部会话ID, 格式: YLWZ_<UUID>
+def genExtSessionID():
     result = ""
     try:
-        cityName = getStandardCityName(cityName)
-        address = getTitleName(address)
-        tempStr = cityName + address
-        tempStr = tempStr.encode()
-        hashVal = hashlib.md5(tempStr).hexdigest()
-        if countryCode2:
-            result = countryCode2 + "_" + hashVal
-        else:
-            result = "CITY_" + hashVal
-    except Exception as e:
+        currUUID = str(uuid.uuid4()).replace("-","") 
+        result = "YLWZ_" + currUUID
+    except:
         pass
     return result
 

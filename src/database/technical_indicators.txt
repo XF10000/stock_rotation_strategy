@@ -1,6 +1,6 @@
 id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
 stock_code VARCHAR(10) NOT NULL COMMENT '股票代码'
-date DATE NOT NULL COMMENT '交易日期',
+date VARCHAR(10) NOT NULL COMMENT '交易日期',
 close FLOAT COMMENT '收盘'
 -- 趋势型指标
 -- 移动平均线
@@ -48,7 +48,7 @@ wr_14 FLOAT COMMENT '14日威廉指标(百分比)',
 -- 成交量型指标
 volume BIGINT COMMENT '成交量(股)',
 turnover_rate FLOAT COMMENT '换手率(百分比)',
-obv BIGINT COMMENT '能量潮指标',
+obv FLOAT COMMENT '能量潮指标',
 -- 其他
 hashval VARCHAR(32) NULL COMMENT 'hash值'
 label1 VARCHAR(32) NULL

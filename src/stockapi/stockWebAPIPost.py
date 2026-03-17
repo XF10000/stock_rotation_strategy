@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260310"
+_VERSION="20260315"
 
 
 import os
@@ -1500,6 +1500,7 @@ def funcUserSearchMysql(CMD, dataSet, sessionIDSet):
                         # aSet["passwdYMDHMS"] = currDataSet.get("passwdYMDHMS","")
 
                         # extend items begin, per project
+                        aSet["extSessionID"] = currDataSet.get("extSessionID","")
                         aSet["extStartYMDHMS"] = currDataSet.get("extStartYMDHMS","")
                         aSet["extLeaveYMDHMS"] = currDataSet.get("extLeaveYMDHMS","")
                         aSet["extJobPosition"] = currDataSet.get("extJobPosition","")
@@ -1758,6 +1759,7 @@ def funcGetUserInfoMysql(CMD, dataSet, sessionIDSet):
                     # aSet["passwdYMDHMS"] = currDataSet.get("passwdYMDHMS","")
 
                     # extend items begin, per project
+                    aSet["extSessionID"] = currDataSet.get("extSessionID","")
                     aSet["extStartYMDHMS"] = currDataSet.get("extStartYMDHMS","")
                     aSet["extLeaveYMDHMS"] = currDataSet.get("extLeaveYMDHMS","")
                     aSet["extJobPosition"] = currDataSet.get("extJobPosition","")
@@ -4449,6 +4451,8 @@ def funcTechnicalIndicatorsAdd(CMD,dataSet,sessionIDSet):
             if errCode == "B0": #
                 #data validation check
                 dataValidFlag = True
+                period = dataSet.get("period", "day")
+                adjust = dataSet.get("adjust", "")
                 if dataValidFlag:
                     saveSet = {}
                     saveSet["stock_code"] = dataSet.get("stock_code", "") 
@@ -4498,7 +4502,7 @@ def funcTechnicalIndicatorsAdd(CMD,dataSet,sessionIDSet):
                     saveSet["regID"] = loginID
                     saveSet["regYMDHMS"] = misc.getTime()
 
-                    tableName = comMysql.tablename_convertor_technical_indicators()
+                    tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
                     recID = comMysql.insert_technical_indicators(tableName,saveSet)
                     rtnData["recID"] = str(recID)
 
@@ -4560,10 +4564,12 @@ def funcTechnicalIndicatorsDel(CMD,dataSet,sessionIDSet):
         if tempUserID != "":
             loginID = tempUserID
             #权限检查
+            period = dataSet.get("period", "day")
+            adjust = dataSet.get("adjust", "")
 
             if errCode == "B0": #
                 id = dataSet.get("id", "")
-                tableName = comMysql.tablename_convertor_technical_indicators()
+                tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
                 currDataList = comMysql.query_technical_indicators(tableName,id)
                 if len(currDataList) == 1:
                     saveSet = {}
@@ -4626,7 +4632,9 @@ def funcTechnicalIndicatorsModify(CMD,dataSet,sessionIDSet):
             loginID = tempUserID
 
             #权限检查/功能检测
-
+            period = dataSet.get("period", "day")
+            adjust = dataSet.get("adjust", "")
+            
             if errCode == "B0": #
                 #data validation check
                 dataValidFlag = True
@@ -4681,7 +4689,7 @@ def funcTechnicalIndicatorsModify(CMD,dataSet,sessionIDSet):
                     #当前记录获取
                     recID = dataSet.get("id", "")
 
-                    tableName = comMysql.tablename_convertor_technical_indicators()
+                    tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
                     currDataList = comMysql.query_technical_indicators(tableName,recID)
 
                     if len(currDataList) == 1:
@@ -4830,7 +4838,7 @@ def funcTechnicalIndicatorsModify(CMD,dataSet,sessionIDSet):
                                 saveSet["modifyYMDHMS"] = misc.getTime()
 
                                 #保存数据
-                                tableName = comMysql.tablename_convertor_technical_indicators()
+                                tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
                                 rtn = comMysql.update_technical_indicators(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
@@ -4925,7 +4933,7 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
 
                 mode = dataSet.get("mode", "full")
 
-                #limitNum = dataSet.get("limitNum",0)
+                limitNum = dataSet.get("limitNum",0)
 
                 #权限检查/功能检测
                 if comFC.chkIsManager(roleName) == False:
@@ -4956,8 +4964,7 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
                     if mode:
                         indexKeyDataSet["mode"] = mode
 
-                    #if limitNum:
-                        #indexKeyDataSet["limitNum"] = limitNum
+                    indexKeyDataSet["limitNum"] = limitNum
 
                     sessionID = sessionIDSet.get("sessionID", "")
                     indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
@@ -4981,7 +4988,7 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
                                 currDataList = comMysql.query_technical_indicators(tableName,id,mode = mode)
                             else:
                                 tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
-                                currDataList = comMysql.query_technical_indicators(tableName,stock_code=stock_code,date=date,
+                                currDataList = comMysql.query_technical_indicators(tableName,stock_code=stock_code,date=queryDate,
                                                 start_date=startDate,end_date=endDate,limitNum=limitNum)
 
                         dataList = []
@@ -10072,6 +10079,71 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
     return result
 
 
+#获取所有用户股票唯一名称
+def funcGetUniqueUserStockList(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+
+                rightCheckFlag = False
+                if comFC.chkIsManager(roleName):
+                    rightCheckFlag = True
+
+                limitNum = 0
+                #权限检查/功能检测
+
+                if rightCheckFlag:
+
+                    dataList = comMysql.get_unique_user_stock_list()
+
+                    rtnData["data"] = dataList
+                    
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
 #数据检查日志增加代码
 def funcDataCheckLogAdd(CMD,dataSet,sessionIDSet):
     result = {}
@@ -11144,6 +11216,7 @@ urlPathMap = {
     "userstocklistdel":funcUserStockListDel,
     "userstocklistmodify":funcUserStockListModify,
     "userstocklistqry":funcUserStockListQry,
+    "getuniqueuserstocklist":funcGetUniqueUserStockList,
 
     "datachecklogadd":funcDataCheckLogAdd,
     "datachecklogdel":funcDataCheckLogDel,

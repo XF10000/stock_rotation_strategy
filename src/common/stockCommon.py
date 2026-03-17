@@ -452,7 +452,7 @@ def getHistoryStockData(symbol,startYMD,endYMD,period="",adjust=""):
 
 #获取所有股票的基本信息(包括,行业数据, 股票基本信息等,后续还需要增加其他数据)
 #从网络获取股票基本信息
-def getStockBasicInfo():
+def getStockBasicInfo(symbol=""):
     result = {}
     try:
         #首先获取申银万国股票的基本信息(申银万国)
@@ -468,6 +468,8 @@ def getStockBasicInfo():
                 pass
                 #pass
             result[symbol] = stockInfo
+        if symbol:
+            result = result[symbol]
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")

@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260310"
+_VERSION="20260315"
 
 
 import os
@@ -255,7 +255,7 @@ ROLE_CMD_LIST =\
     "incomestatementsadd","incomestatementsdel","incomestatementsmodify","incomestatementsqry",
     "cashflowadd","cashflowdel","cashflowmodify","cashflowqry",
     "indicatoradd","indicatordel","indicatormodify","indicatorqry",
-    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry","getuniqueuserstocklist",
     "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
     "tradedayadd","tradedaydel","tradedaymodify","tradedayqry",
     #stock related end
@@ -279,7 +279,7 @@ ROLE_CMD_LIST =\
     "incomestatementsadd","incomestatementsdel","incomestatementsmodify","incomestatementsqry",
     "cashflowadd","cashflowdel","cashflowmodify","cashflowqry",
     "indicatoradd","indicatordel","indicatormodify","indicatorqry",
-    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry","getuniqueuserstocklist",
     "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
     "tradedayadd","tradedaydel","tradedaymodify","tradedayqry",
     #stock related end
@@ -421,6 +421,10 @@ STOCK_DIVIDEND_DATA_FILE = "stock_dividend.json" #股票分红数据文件,存�
 
 STOCK_YLWZ_SESSION_ID_FILE = "ylwz_session_id.json" #YLWZ数据接口会话ID文件,存储在 STOCK_CONFIG_DIR_NAME 下
 STOCK_TUSHARE_TOKEN_FILE = "tushare_token.json" #tushare token文件,存储在 STOCK_CONFIG_DIR_NAME 下
+
+STOCK_FX_CALC_CONFIG_FILE = "fx_calc_config.json" #Frank Xie 计算配置文件,存储在 STOCK_CONFIG_DIR_NAME 下
+
+STOCK_YLWZ_CALC_CONFIG_FILE = "ylwz_calc_config.json" #YLWZ数据接口计算配置文件,存储在 STOCK_CONFIG_DIR_NAME 下
 
 """
 申万二级行业RSI阈值计算配置文件

@@ -6,10 +6,14 @@
 #E-mail:  steven.lian@gmail.com/xie_frank@163.com  
 #Date: 2026-01-16
 #Description:   ylwz 股票相关的接口
-#所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
+#所有股票内容, symbol = 纯数字代码(=stock_code), 其他英文内容均采用小写,并用"_"连接
+# ylwz 接口文件, 全部是RESTful接口,包括部分数据合并和计算方法
+# 1. 股票数据接口
+# 2. 行业数据接口
+# 3. 其他接口
 
 
-_VERSION="20260305"
+_VERSION="20260315"
 
 
 import os
@@ -25,7 +29,7 @@ if sys.getdefaultencoding() != 'utf-8':
 import traceback
 import requests
 
-import pandas as pd
+# import pandas as pd
 
 from common import globalDefinition as comGD
 from common import miscCommon as misc
@@ -142,6 +146,47 @@ YLWZ_STOCK_API_URL_DATA = {
         "urlPath":"stockapi/stockinfoqry",  
         "params":{}
     },
+    #stock technical indicators data
+    "technicalindicatorsadd":
+    {
+        "method":"post",
+        "description":"添加股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsadd",  
+        "params":{}
+    },
+    "technicalindicatorsdel":
+    {
+        "method":"post",
+        "description":"删除股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsdel",  
+        "params":{}
+    },
+    "technicalindicatorsmodify":
+    {
+        "method":"post",
+        "description":"修改股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsmodify",  
+        "params":{}
+    },
+    "technicalindicatorsqry":
+    {
+        "method":"post",
+        "description":"查询股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsqry",  
+        "params":{}
+    },
     #stock history data
     "stockhistoryadd":
     {
@@ -222,6 +267,47 @@ YLWZ_STOCK_API_URL_DATA = {
         "port":80,
         "headers":{"content-type": "application/json"},
         "urlPath":"stockapi/industryhistoryqry",  
+        "params":{}
+    },
+    # stock technical indicators data
+    "technicalindicatorsadd":
+    {
+        "method":"post",
+        "description":"添加股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsadd",  
+        "params":{}
+    },
+    "technicalindicatorsdel":
+    {
+        "method":"post",
+        "description":"删除股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsdel",  
+        "params":{}
+    },
+    "technicalindicatorsmodify":
+    {
+        "method":"post",
+        "description":"修改股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsmodify",  
+        "params":{}
+    },
+    "technicalindicatorsqry":
+    {
+        "method":"post",
+        "description":"查询股票技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalindicatorsqry",  
         "params":{}
     },
     #stock dividend data
@@ -351,7 +437,7 @@ YLWZ_STOCK_API_URL_DATA = {
     "indicatoradd":
     {
         "method":"post",
-        "description":"添加股票指标中位数数据",
+        "description":"添加股票指标数据",
         "host":"",
         "port":80,
         "headers":{"content-type": "application/json"},
@@ -361,7 +447,7 @@ YLWZ_STOCK_API_URL_DATA = {
     "indicatordel":
     {
         "method":"post",
-        "description":"删除股票指标中位数数据",
+        "description":"删除股票指标数据",
         "host":"",
         "port":80,
         "headers":{"content-type": "application/json"},
@@ -371,7 +457,7 @@ YLWZ_STOCK_API_URL_DATA = {
     "indicatormodify":
     {
         "method":"post",
-        "description":"修改股票指标中位数数据",
+        "description":"修改股票指标数据",
         "host":"",
         "port":80,
         "headers":{"content-type": "application/json"},
@@ -381,7 +467,7 @@ YLWZ_STOCK_API_URL_DATA = {
     "indicatorqry":
     {
         "method":"post",
-        "description":"查询股票指标中位数数据",
+        "description":"查询股票指标数据",
         "host":"",
         "port":80,
         "headers":{"content-type": "application/json"},
@@ -470,6 +556,16 @@ YLWZ_STOCK_API_URL_DATA = {
         "urlPath":"stockapi/userstocklistqry",   
         "params":{}
     },
+    "getuniqueuserstocklist":
+    {
+        "method":"post",
+        "description":"查询所有用户股票唯一名称",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/getuniqueuserstocklist",   
+        "params":{}
+    },
     #data check log
     "datachecklogadd":
     {
@@ -552,6 +648,7 @@ YLWZ_STOCK_API_URL_DATA = {
         "urlPath":"stockapi/tradedayqry",   
         "params":{}
     },
+    
 }
 
 QUERY_CMD_LIST = [
@@ -746,6 +843,38 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
+    def readTechnicalIndicators(self,symbol="",period="",adjust=""):
+        result = []
+        try:
+            cmd = "technicalindicatorsqry"
+            querySet = {"symbol":symbol,"period":period,"adjust":adjust}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+
+    #获取所有用户股票唯一名称
+    def getUniqueUserStockList(self):
+        result = []
+        try:
+            cmd = "getuniqueuserstocklist"
+            querySet = {}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
     #获取股票交易日数据
     def readStockTradeDateList(self,startYMD,currYMD):
         result = []
@@ -819,7 +948,7 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
-    #获取股票历史数据
+    #获取股票历史数据, date 格式 YYYYMMDD
     def queryStockData(self,symbol,startDate,endDate,period="day",adjust="",limitNum=10000):
         result = []
         try:
@@ -835,6 +964,117 @@ class StockServer:
             errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
             self._errMsg = errMsg       
         return result
+
+
+    #查询股票基本信息
+    def queryStockInfo(self,symbol="",limitNum=0):
+        result = []
+        try:
+            cmd = "stockinfoqry"
+            querySet = {"symbol":symbol,"limitNum":limitNum}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+
+    #从股票基本信息中读取行业级别信息
+    def readIndustryBasicFromStockInfo(self):
+        result = {}
+        try:
+            stockInfoList = self.queryStockInfo()
+            for stockInfo in stockInfoList:
+                industryCode = stockInfo.get("industry_code","")
+                if industryCode not in result:
+                    result[industryCode] = {}
+                    result[industryCode]["industry_code"] = stockInfo.get("industry_code","")
+                    result[industryCode]["industry_name"] = stockInfo.get("industry_name","")
+                    result[industryCode]["industry_name_sw"] = stockInfo.get("industry_name_sw","")
+                    result[industryCode]["industry_name_em"] = stockInfo.get("industry_name_em","")
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #修改股票数据
+    def modifyStockInfo(self,symbol,dataSet):
+        result = 0
+        try:
+            cmd = "stockinfomodify"
+            querySet = dataSet
+            querySet["stock_code"] = symbol
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "rtn" in data:
+                    result = int(data["rtn"])
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #添加技术指标
+    def addTechnicalIndicator(self,symbol,dataSet,period="day",adjust=""):
+        result = 0
+        try:
+            #首先查询
+            existFlag = False
+            cmd = "technicalindicatorsqry"
+            querySet = {}
+            querySet["stock_code"] = symbol
+            querySet["date"] = dataSet.get("date","")
+            querySet["period"] = period
+            querySet["adjust"] = adjust
+            querySet["limitNum"] = 1
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    if data["data"]:
+                        existFlag = True
+
+            if not existFlag:
+                cmd = "technicalindicatorsadd"
+                querySet = dataSet
+                querySet["stock_code"] = symbol
+                querySet["period"] = period
+                querySet["adjust"] = adjust
+                rtnData = self.query(cmd,querySet)
+                if rtnData and "data" in rtnData:
+                    data = rtnData["data"]
+                    if "recID" in data:
+                        result = int(data["recID"])
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+
+    #查询行业数据
+    def readIndustryInfo(self,industryCode=""):
+        result = {}
+        try:
+            cmd = "industryinfoqry"
+            querySet = {}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    dataList = data["data"]
+                    for item in dataList:
+                        industryCode = item.get("industry_code","")
+                        if industryCode not in result:
+                            result[industryCode] = item
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
     #应用部分 end
 
 
