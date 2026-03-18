@@ -7,7 +7,7 @@
 #Date: 2015-12-05
 #Description:   通用杂项函数,例如时间,字符串处理等
 
-_VERSION = "20260125"
+_VERSION = "20260317"
 
 #common function:
 import time, datetime
@@ -122,6 +122,12 @@ def YMDHMS2time(YMDHMS):
     timeArray = time.strptime(YMDHMS,'%Y%m%d%H%M%S')
     result = int(time.mktime(timeArray))
     return result
+
+def YMD2HuamanDate(YMD):
+    return YMD[0:4]+'-'+YMD[4:6]+'-'+YMD[6:8]
+
+def huamanDate2YMD(dateYMD):
+    return dateYMD[0:4]+dateYMD[5:7]+dateYMD[8:10]
 
 def addTime(t,interval):
     t = time.strptime(t,'%Y%m%d%H%M%S')

@@ -613,9 +613,10 @@ def convertDaily2Weekly(stockData):
         if not isinstance(stockData.index, pd.DatetimeIndex):
             stockData["date"] = pd.to_datetime(stockData["date"])
             stockData.set_index("date", inplace=True)
-            stockData = stockData.resample('W-FRI').agg({'open': 'last', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'})           
-            result = stockData.reset_index()
-            result = result.dropna()
+            stockData = stockData.resample('W-FRI').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'}) 
+            stockData.dropna(inplace=True) #删除缺失值
+            stockData.reset_index(inplace=True)
+            result = stockData
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"

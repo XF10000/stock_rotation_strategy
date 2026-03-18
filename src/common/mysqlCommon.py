@@ -10683,6 +10683,27 @@ def query_trade_day_record(tableName,id = "0", beginDate="",endDate="",tradeDay=
 #trade_day_record end 
 
 
+# 查询表数据中date的最大值和最小值(第一个值和最后一个值)
+def query_first_last_data(tableName,column = "date"):
+    result = {}
+    valuesList = [column,column]
+    sqlStr = "SELECT min(%s) as first_data, max(%s) as last_data FROM " + tableName 
+
+    try:
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            result["first_date"] = dataList[0]["first_date"]
+            result["last_date"] = dataList[0]["last_date"]
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+ 
+
 #application end
 
 

@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260315"
+_VERSION="20260317"
 
 
 import os
@@ -3928,10 +3928,21 @@ def funcStockHistoryAdd(CMD,dataSet,sessionIDSet):
                     stock_code = symbol
                 else:
                     stock_code = dataSet.get("stock_code","")
-                if stock_code:
+
+                highPrice = dataSet.get("high", "")
+                try:
+                    highPrice = float(highPrice)
+                except:
+                    highPrice = 0.0
+
+                tradeDay = dataSet.get("date", "")
+
+                #股票代码,交易日期,收盘价不能为空,且收盘价必须大于0.0
+                if stock_code and tradeDay and highPrice > 0.0:
                     dataValidFlag = True
                 else:
-                    dataValidFlag = False                
+                    dataValidFlag = False 
+
                 if dataValidFlag:
                     saveSet = {}
                     saveSet["stock_code"] = stock_code
@@ -11093,6 +11104,83 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
     return result
 
 
+#特定表和特定值的, 最大最小值查询
+def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+                #获取查询输入参数
+                tableName = dataSet.get("tableName", "")
+                if not tableName:
+                    tableName = "stock_history_data_day"
+                columnName = dataSet.get("columnName", "")
+                if not columnName:
+                    columnName = "date"
+
+                if tableName in ["industry_history_data_day","industry_history_data_day_hfq","industry_history_data_day_qfq",
+                    "industry_history_data_week","industry_history_data_week_hfq","industry_history_data_week_qfq",
+                    "industry_history_data_month","industry_history_data_month_hfq","industry_history_data_month_qfq",
+                    "stock_history_data_day","stock_history_data_day_hfq","stock_history_data_day_qfq",
+                    "stock_history_data_week","stock_history_data_week_hfq","stock_history_data_week_qfq",
+                    "stock_history_data_month","stock_history_data_month_hfq","stock_history_data_month_qfq",
+                    "technical_indicators_day","technical_indicators_day_hfq","technical_indicators_day_qfq",
+                    "technical_indicators_week","technical_indicators_week_hfq","technical_indicators_week_qfq",
+                    "technical_indicators_month","technical_indicators_month_hfq","technical_indicators_month_qfq",] and \
+                    columnName in ["date","trade_date"]:
+                    dataValidFlag = True
+                else:                   
+                    dataValidFlag = False
+
+                if dataValidFlag:
+                    currDataSet = comMysql.query_first_last_data(tableName,columnName)
+                    rtnData["data"] = currDataSet
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
 #application functions end
 
 
@@ -11227,6 +11315,8 @@ urlPathMap = {
     "tradedaydel":funcTradeDayDel,
     "tradedaymodify":funcTradeDayModify,
     "tradedayqry":funcTradeDayQry,
+
+    "maxmindataqry":funcMaxMinDataQry,
 
     #stock related end
 

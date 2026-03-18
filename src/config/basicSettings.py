@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260315"
+_VERSION="20260317"
 
 
 import os
@@ -258,6 +258,7 @@ ROLE_CMD_LIST =\
     "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry","getuniqueuserstocklist",
     "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
     "tradedayadd","tradedaydel","tradedaymodify","tradedayqry",
+    "maxmindataqry",
     #stock related end
     ], 
 "manager":    [
@@ -282,6 +283,7 @@ ROLE_CMD_LIST =\
     "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry","getuniqueuserstocklist",
     "datachecklogadd","datachecklogdel","datachecklogmodify","datachecklogqry",
     "tradedayadd","tradedaydel","tradedaymodify","tradedayqry",
+    "maxmindataqry",
     #stock related end
     ], 
 "operator":[
@@ -567,7 +569,7 @@ STOCK_BACKTEST_CONFIG = {
 }
 
 STOCK_HISTORY_DAY_UPDATE_END_DATE = "2026-02-03" # 股票历史数据更新结束日期,这个日期之后, 都是每天更新
-STOCK_TECHNICAL_INDICATORS_START_DATE = "2024-01-01" # 股票技术指标开始日期, 从这个日期开始, 才会计算技术指标
+STOCK_TECHNICAL_INDICATORS_START_DATE = "2021-01-01" # 股票技术指标开始日期, 从这个日期开始, 才会计算技术指标
 
 #output file prefix
 STOCK_TRADING_RECORD_PREFIX = "detailed_trading_records_" # 股票交易记录文件名前缀,csv

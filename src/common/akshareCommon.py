@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260224"
+_VERSION = "20260317"
 
 import os
 import sys
@@ -330,7 +330,13 @@ def swGetStockInfoData():
 # period = "day", "week", "month" #日k线、周k线、月k线
 def swGetIndexHistory(index_symbol,period="week",start_date="20200101"):
     result = []
-    try:   
+    try:
+        if period == "weekly":
+            period = "week"
+        if period == "monthly":
+            period = "month"
+        if period == "daily":
+            period = "day"
         indexHistory = ak.index_hist_sw(symbol=index_symbol,period=period)
         indexHistory.rename(columns={'日期': 'date', '代码': 'symbol','开盘':'open','收盘':'close','最高':'high','最低':'low',
         '成交量':'volume','成交额':'amount'}, inplace=True)
@@ -440,6 +446,12 @@ adjust = "qfq","hfq","" #前复权、后复权、不复权
 def gmGetHistroryData(symbol,startDate,endDate,period="daily",adjust=""):
     result = []
     try:
+        if period == "week":
+            period = "weekly"
+        if period == "month":
+            period = "monthly"
+        if period == "day":
+            period = "daily"
         stockDataList = ak.stock_zh_a_hist(symbol=symbol, period=period, start_date=startDate, end_date=endDate, adjust=adjust)
         stockDataList.rename(columns={'日期': 'date', '股票代码': 'symbol','开盘':'open','收盘':'close','最高':'high','最低':'low',
         '成交量':'volume','成交额':'amount','振幅':'range','涨跌幅':'pct_change','涨跌额':'change','换手率':'turnover_rate'}, inplace=True)
@@ -490,20 +502,23 @@ def txGetHistroryData(symbol,startDate,endDate,period="daily",adjust=""):
     return result
 
 
-#新浪历史数据
+#新浪历史数据,只支持日k线
 def sinoGetHistroryData(symbol,startDate,endDate,period="daily",adjust=""):
     result = []
     try:
+        if period == "daily":
+            period = "day"
         #首先转换symbol为腾讯股票代码
         sinoSymbol = symbol2symboleWithMarket(symbol)       
         stockDataList = ak.stock_zh_a_daily(symbol=sinoSymbol, start_date=startDate, end_date=endDate, adjust=adjust)
  
         #日数据到周数据转换
-        if period == "weekly":
+        if period in ["weekly","week"]:
             if not isinstance(stockDataList.index, pd.DatetimeIndex):
                 stockDataList["date"] = pd.to_datetime(stockDataList["date"])
                 stockDataList.set_index("date", inplace=True)
-                stockDataList = stockDataList.resample('W-FRI').agg({'open': 'last', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'})
+                stockDataList = stockDataList.resample('W-FRI').agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum', 'amount': 'sum'})
+                stockDataList.dropna(inplace=True) #删除缺失值
                 stockDataList["symbol"] = symbol 
                 stockDataList.reset_index(inplace=True)
                 #指定顺序

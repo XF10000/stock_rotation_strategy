@@ -648,6 +648,17 @@ YLWZ_STOCK_API_URL_DATA = {
         "urlPath":"stockapi/tradedayqry",   
         "params":{}
     },
+    #查询某个表的某列的最大最小值
+    "maxmindataqry":
+    {
+        "method":"post",
+        "description":"查询某个表的某列的最大最小值",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/maxmindataqry",   
+        "params":{}
+    },
     
 }
 
@@ -952,7 +963,7 @@ class StockServer:
     def queryStockData(self,symbol,startDate,endDate,period="day",adjust="",limitNum=10000):
         result = []
         try:
-            if startDate < endDate:
+            if (startDate < endDate) or (startDate=="") or (endDate==""):
                 cmd = "stockhistoryqry"
                 querySet = {"symbol":symbol,"start_date":startDate,"end_date":endDate,"period":period,"adjust":adjust,"limitNum":limitNum}
                 rtnData = self.query(cmd,querySet)
