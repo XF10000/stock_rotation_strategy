@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch stock data from web and upload to database
 
-_VERSION="20260318"
+_VERSION="20260331"
 
 _DEBUG=True
 
@@ -38,6 +38,7 @@ from common import stockCommon as comStock #股票数据
 from common import ylwzStockCommon as comYlwz #易联微众股票数据
 
 from common import stockTechnicalIndicators as comTI #股票技术指标
+from common import stockTechnicalSignal as comTS #股票指标信号
 
 #setting files
 from config import basicSettings as settings
@@ -262,7 +263,7 @@ def updateStockBasicInfo():
                 misInfoSymbolList.append(symbol)
         #如果有缺失的股票基本信息,则自动增加和更新
         if misInfoSymbolList:
-            stockBasicInfoSet = comStock.getStockBasicInfo(symbol)
+            stockBasicInfoSet = comStock.getStockBasicInfo()
             for symbol in misInfoSymbolList:
                 stockBasicInfo = stockBasicInfoSet.get(symbol,{})
                 if stockBasicInfo:
@@ -315,7 +316,7 @@ def uploadSingleStockData(symbol,dataList,period="day",adjust=""):
                 result += 1
                 _LOG.info(f"I: 上传股票数据完成... 股票代码:{symbol}")
             else:
-                _LOG.error(f"E: 上传股票数据失败... 股票代码:{symbol}")
+                _LOG.warning(f"W: 上传股票数据失败... 股票代码:{symbol}")
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -341,7 +342,10 @@ def checkSingleStockExist(symbol,stock_name):
                 _LOG.info(f"I: 检查股票是否不存在... 股票代码:{symbol}, 股票名称:{stock_name}")
                 #如果不存在,则自动增加
                 cmd = "stockinfoadd"
-                addSet = {"symbol":symbol,"stock_name":stock_name}
+                if stock_name:
+                    addSet = {"symbol":symbol,"stock_name":stock_name}
+                else:
+                    addSet = {"symbol":symbol}
                 rtnData = ylwzStockServer.query(cmd,addSet)
                 if rtnData:
                     #检查是否增加成功
@@ -356,13 +360,13 @@ def checkSingleStockExist(symbol,stock_name):
 
 
 #更新单只股票数据
-def updateSingleStockCloseData(symbol,stockData,rightYMD):
+def updateSingleStockCloseData(symbol,stockData,rightDate):
     result = 0
     try:
-        _LOG.info(f"I: 更新单只股票数据开始... 股票代码:{symbol}")
-        # rightYMD  = getRightStockDate()
+        _LOG.info(f"I: 更新单只股票历史数据开始... 股票代码:{symbol}, 日期:{rightDate}")
+        # rightDate  = getRightStockDate()
         # #如果时间不是收盘时间,则不更新
-        # if rightYMD:
+        # if rightDate:
         if True:
             #格式转换
             saveSet = {}
@@ -383,7 +387,8 @@ def updateSingleStockCloseData(symbol,stockData,rightYMD):
             saveSet["symbol"] = symbol
             saveSet["period"] = "day"
             saveSet["adjust"] = ""
-            saveSet["date"] = rightYMD
+            if "date" not in saveSet: # 如果没有date, 则默认是当前日期, sino 数据
+                saveSet["date"] = rightDate
 
             uploadSuccess = False
             cmd = "stockhistoryadd"
@@ -396,7 +401,7 @@ def updateSingleStockCloseData(symbol,stockData,rightYMD):
 
             if uploadSuccess:
                 result += 1
-                _LOG.info(f"I: 更新单只股票数据完成... 股票代码:{symbol}")
+                _LOG.info(f"I: 更新单只股票历史数据完成... 股票代码:{symbol}")
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -420,45 +425,52 @@ def checkStockDataValid(stockDataList):
 
 
 #更新股票收盘数据
-def updateStockCloseData(rightYMD):
+def updateStockCloseData(rightDate):
     result = 0
     try:
         _LOG.info(f"I: 更新股票收盘数据开始...,请等待,大约2分钟 ")
+        rightYMD = misc.humanDate2YMD(rightDate)
         #增加数据检查日志
         logSet = {}
         logSet["check_processor"] = "update_stock_close_data"
         logSet["check_type"] = "close_price"
-        logRecID = addDataCheckLog(ylwzStockServer,logSet)
+        logRecID = addDataCheckLog(logSet)
 
-        tryTimes = 3
-        # sleepTime = random.randint(10*60,20*60)
-        while tryTimes > 0:
-            sleepTime = random.randint(10*60,20*60)
-            #读取当日股票信息
-            stockDataList = comStock.comAK.sinoGetStockList()
-            if stockDataList:
-                break
-            else:
-                tryTimes -= 1
-                _LOG.error(f"E: 获取股票列表失败, 等待{sleepTime}秒后重试...")
-                misc.time.sleep(sleepTime)
+        #首先尝试从tushare里面读取数据
+        stockDataList = comStock.comTS.getStockDailyData(rightYMD)
+        if not stockDataList:
+            #如果从tushare里面读取数据失败, 则从从sina里面读取数据
+            tryTimes = 3
+            # sleepTime = random.randint(10*60,20*60)
+            while tryTimes > 0:
+                sleepTime = random.randint(10*60,20*60)
+                #读取当日股票信息
+                stockDataList = comStock.comAK.sinoGetStockList()
+                if stockDataList:
+                    if len(stockDataList) > comGD._DEF_STOCK_MIN_DAILY_STOCK_NUM:
+                        break
+                else:
+                    tryTimes -= 1
+                    _LOG.warning(f"E: 获取股票列表失败, 等待{sleepTime}秒后重试...")
+                    misc.time.sleep(sleepTime)
         
         stockDataList = checkStockDataValid(stockDataList)
         if stockDataList:       
+            _LOG.info(f"I: 今天{rightYMD}的股票数据数量:{len(stockDataList)}")
             for stockData in stockDataList:
-                sinoSymbol = stockData["symbol"]
-                symbol = comStock.comAK.symbolWithMarket2symbole(sinoSymbol)
-                stock_name = stockData["stock_name"]
+                symbol = stockData["symbol"]
+                stock_name = stockData.get("stock_name","")
                 #首先查询系统是否存在该股票, 如果不存在,自动增加
-                checkSingleStockExist(ylwzStockServer,symbol,stock_name)
+                if stock_name:
+                    checkSingleStockExist(symbol,stock_name)
                 #其次把股票收盘数据上传到系统
-                rtn = updateSingleStockCloseData(ylwzStockServer,symbol,stockData,rightYMD)
+                rtn = updateSingleStockCloseData(symbol,stockData,rightDate)
                 result += 1
 
             if logRecID:
                 logSet = {}
                 logSet["proc_num"] = result
-                modifyDataCheckLog(ylwzStockServer,logRecID,logSet)
+                modifyDataCheckLog(logRecID,logSet)
 
             _LOG.info(f"I: 更新股票收盘数据完成, 股票数量:{result}")
         else:
@@ -766,7 +778,7 @@ def updateTradeDayInfo(tradeDay):
         uploadSuccess = False
         saveSet={"trade_day":tradeDay }
         cmd = "tradedayqry"
-        querySet = {"trade_day":tradeDay}
+        querySet = {"tradeDay":tradeDay}
         rtnData = ylwzStockServer.query(cmd,querySet)
         if rtnData:
             data = rtnData.get("data", {})
@@ -785,7 +797,7 @@ def updateTradeDayInfo(tradeDay):
                     _LOG.info(f"I: 上传股票交易日数据完成... 交易日:{tradeDay},recID:{recID}")
                     result = 1
                 else:
-                    _LOG.error(f"E: 上传股票交易日数据失败... 交易日:{tradeDay}")
+                    _LOG.warning(f"E: 上传股票交易日数据失败... 交易日:{tradeDay}")
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -793,7 +805,7 @@ def updateTradeDayInfo(tradeDay):
 
 
 #这里是更新在交易日的数据
-def tradeDayDataUpdater(rightYMD):
+def tradeDayDataUpdater(rightDate):
     result = 0
     try:
         if not ifTradeDay(): #非交易日, 不更新股票数据,第一次总是出错
@@ -806,13 +818,13 @@ def tradeDayDataUpdater(rightYMD):
             return result
 
         _LOG.info(f"I: 交易日, 准备更新股票数据")
-        rtn = updateTradeDayInfo(ylwzStockServer,rightYMD)
+        rtn = updateTradeDayInfo(rightDate)
 
         #收盘时间,才更新数据的业务 
-        _LOG.info(f"I: 收盘时间, 需要更新股票数据的业务 ...{rightYMD}... ")
+        _LOG.info(f"I: 收盘时间, 需要更新股票数据的业务 ...{rightDate}... ")
 
         #获取当日收盘数据
-        rtn = updateStockCloseData(ylwzStockServer,rightYMD)
+        rtn = updateStockCloseData(rightDate)
         pass
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -824,13 +836,15 @@ def filterTechnicalIndicators(indicators,oldIndicators):
     """过滤技术指标, 只保留需要上传的指标"""
     result = []
     try:
-        stockCodeDateSet = set()
+        #过滤出需要上传的技术指标
+        stockCodeDateSet = {}
         for item in oldIndicators:
             date = item.get("date", "")
             stock_code = item.get("stock_code", "")
             if not date or not stock_code:
                 continue
-            stockCodeDateSet.add(f"{stock_code}_{date}")
+            stockCodeDateSet[f"{stock_code}_{date}"] = item
+        #开始过滤指标
         for indicator in indicators:
             date = indicator.get("date", "")
             stock_code = indicator.get("stock_code", "")
@@ -838,6 +852,15 @@ def filterTechnicalIndicators(indicators,oldIndicators):
                 continue
             if f"{stock_code}_{date}" not in stockCodeDateSet:
                 result.append(indicator)
+            else:
+                #补充缺失指标数据,临时代码 need to remove or modify
+                #如果指标存在, 则判断是否需要更新, 只有macd_line_long,macd_signal,macd_histogram 有变化, 才需要更新
+                if False:
+                # if True:
+                    oldItem = stockCodeDateSet[f"{stock_code}_{date}"]
+                    if oldItem.get("macd_line_long",0) != indicator.get("macd_line_long",0) or oldItem.get("ma_60",0) != indicator.get("ma_60",0):
+                        result.append(indicator)
+                pass
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -845,10 +868,10 @@ def filterTechnicalIndicators(indicators,oldIndicators):
 
 
 #更新某个股票的技术指标
-def updateOneTechnicalIndicators(symbol,period,adjust,rightYMD):
+def updateOneTechnicalIndicators(symbol,period,adjust,rightDate):
     result = 0
     try:
-        _LOG.info(f"I: 更新股票技术指标... 股票:{symbol},周期:{period},调整:{adjust},日期:{rightYMD}")
+        _LOG.info(f" - 更新股票: {symbol} 的技术指标...周期:{period},调整:{adjust},日期:{rightDate}")
         #查询股票的当前技术指标
         currIndicators = ylwzStockServer.readTechnicalIndicators(symbol,period,adjust)
         if currIndicators:
@@ -861,16 +884,16 @@ def updateOneTechnicalIndicators(symbol,period,adjust,rightYMD):
             #第一次上传技术指标
             #获取股票历史数据
             startDate = settings.STOCK_TECHNICAL_INDICATORS_START_DATE
-            endDate = rightYMD
+            endDate = rightDate
             stockHistoryDataList = ylwzStockServer.queryStockData(symbol,startDate,endDate,period=period,adjust=adjust)
             if not stockHistoryDataList or len(stockHistoryDataList) == 0:
-                _LOG.error(f"E: 获取股票历史数据失败... 股票:{symbol},周期:{period},调整:{adjust}")
+                _LOG.warning(f"W: 获取股票历史数据失败... 股票:{symbol},周期:{period},调整:{adjust}")
                 return result
             #计算技术指标
             ti = comTI.StockTI()
             indicators = ti.calculateTechnicalIndicators(stockHistoryDataList)
             if not indicators or len(indicators) == 0:
-                _LOG.error(f"E: 计算股票技术指标失败... 股票:{symbol},周期:{period},调整:{adjust}")
+                _LOG.warning(f"W: 计算股票技术指标失败... 股票:{symbol},周期:{period},调整:{adjust}")
                 return result
             #上传技术指标
             newIndicators = filterTechnicalIndicators(indicators,currIndicators)
@@ -881,7 +904,7 @@ def updateOneTechnicalIndicators(symbol,period,adjust,rightYMD):
                     result += 1
                     _LOG.info(f"I: 上传股票技术指标成功... 股票:{symbol},周期:{period},调整:{adjust},recID:{recID}")
 
-        _LOG.info(f"I: 更新股票技术指标... 股票:{symbol},周期:{period},调整:{adjust},日期:{rightYMD},新增指标数:{result}")
+        _LOG.info(f"I: 更新股票技术指标... 股票:{symbol},周期:{period},调整:{adjust},日期:{rightDate},新增指标数:{result}")
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -916,6 +939,7 @@ def updateTechnicalIndicators(currYMD):
     return result
 
 
+#更新股票日数据,补齐历史数据
 def updateDayStockFullData(symbol,updateStartDate,updateEndDate,tradeDateList):
     result = False
     try:
@@ -932,6 +956,9 @@ def updateDayStockFullData(symbol,updateStartDate,updateEndDate,tradeDateList):
             _LOG.info(f"I: 查询股票历史数据  - 股票代码:{symbol}, 调整方式:{adjust}, 开始日期:{updateStartDate}, 结束日期:{updateEndDate}")
             #day 数据更新判断方式
             stockHistoryDataList = ylwzStockServer.queryStockData(symbol, updateStartDate, updateEndDate,period=period,adjust=adjust)
+            if not stockHistoryDataList:
+                _LOG.warning(f"W: 获取股票历史数据失败... 股票:{symbol},周期:{period},调整:{adjust}")
+                continue 
             startDate = stockHistoryDataList[0].get("date")
             endDate = stockHistoryDataList[-1].get("date")
             newTradeDataList = getTradeDateList(startDate, endDate,tradeDateList)
@@ -996,8 +1023,8 @@ def updateWeekStockFullData(symbol):
                 if weekFirstYMD >= weekLastYMD:
                     continue
                 #获取日数据
-                weekFirstDate = misc.YMD2HuamanDate(weekFirstYMD)
-                weekLastDate = misc.YMD2HuamanDate(weekLastYMD)
+                weekFirstDate = misc.YMD2HumanDate(weekFirstYMD)
+                weekLastDate = misc.humanDate2YMD(weekLastYMD)
                 currDayData = ylwzStockServer.queryStockData(symbol, weekFirstDate, weekLastDate,period="day",adjust=adjust)
                 df = pd.DataFrame(currDayData)
                 df = comStock.convertDaily2Weekly(df)
@@ -1073,38 +1100,17 @@ def checkReadStockFullData(symbol,stockConfig, tradeDateList):
     return result
 
 
-#过滤唯一的股票配置
-def filterUniqueStockConfig(stockConfigList):
-    result = []
-    try:
-        symbolSet = set()
-        for stockConfig in stockConfigList:
-            symbol = stockConfig.get("stock_code","")
-            if symbol == comGD._DEF_STOCK_PORTFOLIO_CASH_NAME:
-                continue
-            if symbol not in symbolSet:
-                symbolSet.add(symbol)
-                result.append(stockConfig)
-    except Exception as e:
-        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
-        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
-    return result
-
-
 #根据用户股票列表, 更股票历史数据
 def updateStockHistoryData(currYMD):
     result = 0
     try:
         _LOG.info(f"I: 读取股票配置数据开始... ")
 
-        stockConfigList = ylwzStockServer.readUserStockList()
+        allUserStockList = ylwzStockServer.getUniqueUserStockList()
 
-        #过滤唯一的股票代码
-        stockConfigList = filterUniqueStockConfig(stockConfigList)
-
-        _LOG.info(f"I: 读取股票配置数据完成, 股票数量:{len(stockConfigList)}")
+        _LOG.info(f"I: 读取股票配置数据完成, 股票数量:{len(allUserStockList)}")
         
-        if stockConfigList:
+        if allUserStockList:
             #计算股票信息开始和结束日期
             startYMD = misc.getPassday(comGD._DEF_STOCK_KEEP_HISTORY_DATA_DAYS)
 
@@ -1116,10 +1122,14 @@ def updateStockHistoryData(currYMD):
             stockTradeDateList = ylwzStockServer.readStockTradeDateList(startYMD, currYMD)
             tradeDateList = ylwzStockServer.convertTradeDate2Set(stockTradeDateList)
         
-            for stockConfig in stockConfigList:
-                symbol = stockConfig.get("stock_code","")
+            for symbol in allUserStockList:
                 if symbol == comGD._DEF_STOCK_PORTFOLIO_CASH_NAME:
                     continue
+                #获取股票配置数据
+                stockConfigList = ylwzStockServer.readUserStockList(symbol)
+                if not stockConfigList:
+                    continue
+                stockConfig = stockConfigList[0]
                 rtn = checkReadStockFullData(symbol,stockConfig,tradeDateList)
                 if rtn:
                     _LOG.info(f"  - 股票代码:{symbol}, 股票名称:{stockConfig['stock_name']}, 检查结果:存在")
@@ -1129,6 +1139,90 @@ def updateStockHistoryData(currYMD):
 
             _LOG.info(f"I: 开始检查股票信息是否存在... 结束 ")
         pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+#计算某个股票的技术指标信号
+def calcOneTechnicalSignal(symbol,period,adjust):
+    result = {}
+    try:
+        _LOG.info(f" - 计算股票: {symbol} 的技术信号(雷达指标),周期:{period},调整:{adjust}")
+        currHistoryIndicators = ylwzStockServer.readHistoryTechnicalIndicators(symbol,period,adjust)
+        if currHistoryIndicators:
+            ts = comTS.StockTS()
+            result = ts.calcTechnicalSignals(symbol,currHistoryIndicators)
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+#上传股票技术指标信号
+def uploadOneStockTechnicalSignal(symbol,techSignal,period,adjust):
+    result = 0
+    try:
+        _LOG.info(f" - 上传股票: {symbol} 的技术信号(雷达指标),周期:{period},调整:{adjust}")
+        dataType = "signal"
+        for signalType, signal in techSignal.items():
+            currIndicator = comTS.getIndicatorName(signalType)
+            if not currIndicator:
+                continue
+            maxminData = ylwzStockServer.getMaxMinData(dataType,period=period,adjust=adjust,indicator=currIndicator)
+            # min_date = maxminData.get("min_data","")
+            lastDate = maxminData.get("max_data","")
+            if _DEBUG:
+                _LOG.info(f"  - 股票代码:{symbol}, 技术指标:{signalType}, 最后一次更新指标:{currIndicator}, 最后一次更新日期:{lastDate}")
+           
+            finalSignals = signal.get("finalSignals",{})
+            for YMD, item in finalSignals.items():
+                date = misc.YMD2HumanDate(YMD)
+                if date <= lastDate:
+                    continue
+                saveSet = {}
+                saveSet["date"] = date
+                saveSet["period"] = period
+                saveSet["adjust"] = adjust
+                saveSet["action"] = item.get("suggestion","")
+                saveSet["subtype"] = item.get("subtype","")
+                saveSet["indicator"] = item.get("indicator","")
+                saveSet["description"] = item.get("description","")
+                saveSet["market_trend"] = item.get("marketTrend","")
+                saveSet["calc_result"] = item.get("detail",{})
+                recID = ylwzStockServer.addTechnicalSignal(symbol,saveSet)
+                if recID:
+                    result += 1
+                    _LOG.info(f"  - 上传股票: {symbol} 的技术信号(雷达指标),{YMD} 成功,recID:{recID}")
+                pass
+        _LOG.info(f" - 上传股票: {symbol} 的技术信号(雷达指标),周期:{period},调整:{adjust},成功数量:{result}")        
+        pass
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+#更新技术指标信号
+def calcTechnicalSignals():
+    result = 0
+    try:
+        #获取所有用户股票列表
+        allUserStockList = ylwzStockServer.getUniqueUserStockList()
+        for symbol in allUserStockList:
+            if symbol == comGD._DEF_STOCK_PORTFOLIO_CASH_NAME:
+                #不更新现金(特殊类型)
+                continue
+            for period in ["day","week"]: #不计算月数据,只计算日数据和周数据
+                # for adjust in ["","hfq","qfq"]:
+                for adjust in [""]:
+                    techSignal = calcOneTechnicalSignal(symbol,period,adjust)
+                    #更新股票配置
+                    rtn = uploadOneStockTechnicalSignal(symbol,techSignal,period,adjust)
+                    pass
+            
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -1173,20 +1267,24 @@ def normalDataUpdate(currYMD):
 def regularDataUpdater():
     result = {}
     try:
-        rightYMD  = getRightStockDate()
+        rightDate  = getRightStockDate()
 
         #如果时间不是收盘时间,则不更新
-        if rightYMD:
+        if rightDate:
             #更新交易日数据
-            _LOG.info(f"I: 更新交易日数据 ...{rightYMD}... ")
-            rtn = tradeDayDataUpdater(rightYMD)
-            _LOG.info(f"I: 更新交易日数据 ...{rightYMD}...结束 ")
+            _LOG.info(f"I: 更新交易日数据 ...{rightDate}... ")
+            rtn = tradeDayDataUpdater(rightDate)
+            _LOG.info(f"I: 更新交易日数据 ...{rightDate}...结束 ")
 
         _LOG.info(f"I: 其他数据的计算和更新 ... ")
         currYMD = misc.getTime()[0:8]
-        rtn = normalDataUpdate(currYMD)        
+        rtn = normalDataUpdate(currYMD)   
         _LOG.info(f"I: 其他数据的计算和更新 ...结束 ")
-        
+
+        _LOG.info(f"I: 计算技术指标信号 ... ")
+        rtn = calcTechnicalSignals()
+        _LOG.info(f"I: 计算技术指标信号 ...结束 ")
+
         pass
         
     except Exception as e:

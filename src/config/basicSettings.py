@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260317"
+_VERSION="20260331"
 
 
 import os
@@ -245,10 +245,14 @@ ROLE_CMD_LIST =\
     #获取当前用户的默认主页数据
     "gethomepagedata",
     #stock related begin
+    "genusersessionid",
     "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
     "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
     "technicalindicatorsadd","technicalindicatorsdel","technicalindicatorsmodify","technicalindicatorsqry",
+    "historytechnicalindicatorqry",
+    "technicalsignaladd","technicalsignaldel","technicalsignalmodify","technicalsignalqry",
+    "usertechnicalsignalqry",
     "stockdividendadd","stockdividenddel","stockdividendmodify","stockdividendqry",
     "industryhistoryadd","industryhistorydel","industryhistorymodify","industryhistoryqry",
     "balancesheetadd","balancesheetdel","balancesheetmodify","balancesheetqry",
@@ -270,10 +274,14 @@ ROLE_CMD_LIST =\
     #获取当前用户的默认主页数据
     "gethomepagedata",
     #stock related begin
+    "genusersessionid",
     "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
     "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
     "technicalindicatorsadd","technicalindicatorsdel","technicalindicatorsmodify","technicalindicatorsqry",
+    "historytechnicalindicatorqry",
+    "technicalsignaladd","technicalsignaldel","technicalsignalmodify","technicalsignalqry",
+    "usertechnicalsignalqry",
     "stockdividendadd","stockdividenddel","stockdividendmodify","stockdividendqry",
     "industryhistoryadd","industryhistorydel","industryhistorymodify","industryhistoryqry",
     "balancesheetadd","balancesheetdel","balancesheetmodify","balancesheetqry",
@@ -293,10 +301,14 @@ ROLE_CMD_LIST =\
     #获取当前用户的默认主页
     "gethomepagedata",
     #stock related begin
+    "genusersessionid",
     "stockinfoqry",
+    "technicalsignalqry",
+    "usertechnicalsignalqry",
     "industryinfoqry",
     "stockhistoryqry",
     "technicalindicatorsqry",
+    "historytechnicalindicatorqry",
     "stockdividendqry",
     "industryhistoryqry",
     "balancesheetqry",
@@ -312,10 +324,15 @@ ROLE_CMD_LIST =\
     "usersavedata", "usergetdata",
     #获取当前用户的默认主页
     "gethomepagedata",
+    #stock related begin
+    "genusersessionid",
     "stockinfoqry",
+    "technicalsignalqry",
+    "usertechnicalsignalqry",
     "industryinfoqry",
     "stockhistoryqry",
     "technicalindicatorsqry",
+    "historytechnicalindicatorqry",
     "stockdividendqry",
     "industryhistoryqry",
     "balancesheetqry",
@@ -323,6 +340,7 @@ ROLE_CMD_LIST =\
     "cashflowqry",
     "indicatorqry",
     "userstocklistqry",
+    #stock related end
     ], 
 }
 

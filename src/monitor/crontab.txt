@@ -1,0 +1,2 @@
+# M H D m d cmd
+*/5 * * * * sh /data/onemother/src/monitor/restore_monitor.sh > /data/onemother/log/monitorlog  2>&1

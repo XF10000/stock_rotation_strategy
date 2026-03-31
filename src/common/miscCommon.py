@@ -123,10 +123,10 @@ def YMDHMS2time(YMDHMS):
     result = int(time.mktime(timeArray))
     return result
 
-def YMD2HuamanDate(YMD):
+def YMD2HumanDate(YMD):
     return YMD[0:4]+'-'+YMD[4:6]+'-'+YMD[6:8]
 
-def huamanDate2YMD(dateYMD):
+def humanDate2YMD(dateYMD):
     return dateYMD[0:4]+dateYMD[5:7]+dateYMD[8:10]
 
 def addTime(t,interval):
@@ -145,6 +145,7 @@ def formatTime(a) :
     return result
 
 
+#获取前n天的日期
 def getPassday(nums,YMD=""):
     if YMD:
         t = datetime.datetime.strptime(YMD, "%Y%m%d").date()
@@ -154,7 +155,6 @@ def getPassday(nums,YMD=""):
     t = str(t)
     day = t[0:4]+t[5:7]+t[8:10]
     return day
-
 
 #获取上一天
 def getYesterday():
@@ -181,6 +181,24 @@ def getLastMonth():
   t = str(t)
   day = t[0:4]+t[5:7]+t[8:10]
   return day
+
+def getLastYear():
+  t = datetime.date.today()
+  t = t + datetime.timedelta(-365)
+  t = str(t)
+  day = t[0:4]+t[5:7]+t[8:10]
+  return day
+
+
+#获取前后几天的日期
+def getDaysBeforeAfter(nums,YMD=""):
+    result = []
+    if not YMD:
+        YMD = getTime()[0:8]
+    for i in range(-nums, nums+1):
+        day = getPassday(-i,YMD)
+        result.append(day)
+    return result
 
 
 class weekDay:

@@ -1,0 +1,24 @@
+id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号'
+stock_code VARCHAR(10) NOT NULL COMMENT '股票代码'
+date VARCHAR(10) NOT NULL COMMENT '交易日期',
+action VARCHAR(5) NOT NULL COMMENT '交易信号',
+adjust VARCHAR(3) COMMENT '数据调整方式',
+period VARCHAR(6) COMMENT '数据周期',
+indicator VARCHAR(4) COMMENT '信号来源',
+subtype VARCHAR(20) COMMENT '信号子类型',
+description VARCHAR(500) COMMENT '描述',
+description2 VARCHAR(500) COMMENT '描述2',
+market_trend VARCHAR(10) COMMENT '市场趋势',
+market_status VARCHAR(10) COMMENT '震荡单边',
+calc_result VARCHAR(6000) NULL COMMENT '计算结果json值'
+readFlag VARCHAR(1) COMMENT '是否阅读标记'
+label1 VARCHAR(32) NULL
+label2 VARCHAR(32) NULL
+label3 VARCHAR(32) NULL
+memo VARCHAR(200) NULL
+regID VARCHAR(32) NOT NULL COMMENT '注册ID'
+regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日'
+modifyID VARCHAR(32) COMMENT '修改ID'
+modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日'
+dispFlag VARCHAR(1) COMMENT '是否显示标记'
+delFlag VARCHAR(1) COMMENT '是否删除标记'

@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260314"
+_VERSION="20260331"
 
 #add src directory
 import os
@@ -264,6 +264,7 @@ def createUserBasic():
     "modifyYMDHMS VARCHAR(16) COMMENT '修改年月日',",
     "passwdYMDHMS VARCHAR(16) COMMENT '密码修改年月日',",
     "extSessionID VARCHAR(48) COMMENT '扩展用户sessionID',",
+    "extCapital float COMMENT '扩展用户资金',",
     "extStartYMDHMS VARCHAR(16) COMMENT '扩展开始年月日',",
     "extLeaveYMDHMS VARCHAR(16) COMMENT '扩展停止年月日',",
     "extJobPosition VARCHAR(100) COMMENT '扩展职位',",
@@ -560,6 +561,14 @@ def insertUserBasic(loginID, dataSet):
         
         saveSet["extSessionID"] = dataSet.get("extSessionID", "") 
 
+        try:
+            extCapital = float(dataSet.get("extCapital")) 
+        except:
+            extCapital = 0.0 
+        saveSet["extCapital"] = extCapital
+
+        saveSet["extStartYMDHMS"] = dataSet.get("extStartYMDHMS", "") 
+
         saveSet["extStartYMDHMS"] = dataSet.get("extStartYMDHMS", "") 
 
         saveSet["extLeaveYMDHMS"] = dataSet.get("extLeaveYMDHMS", "") 
@@ -728,6 +737,12 @@ def updateUserBasic(loginID, dataSet):
         extSessionID = dataSet.get("extSessionID") 
         if extSessionID:
             saveSet["extSessionID"] = extSessionID
+            
+        try:
+            extCapital = float(dataSet.get("extCapital")) 
+        except:
+            extCapital = 0.0 
+        saveSet["extCapital"] = extCapital
 
         extStartYMDHMS = dataSet.get("extStartYMDHMS") 
         if extStartYMDHMS:
@@ -860,6 +875,13 @@ def getUserInfoMysql(loginID):
 
             # extend items begin, per project
             aSet["extSessionID"] = currDataSet.get("extSessionID","")
+            
+            try:
+                extCapital = float(currDataSet.get("extCapital")) 
+            except:
+                extCapital = 0.0 
+            aSet["extCapital"] = extCapital
+            
             aSet["extStartYMDHMS"] = currDataSet.get("extStartYMDHMS","")
             aSet["extLeaveYMDHMS"] = currDataSet.get("extLeaveYMDHMS","")
             aSet["extJobPosition"] = currDataSet.get("extJobPosition","")
@@ -1289,21 +1311,17 @@ def update_hwinfo_report_record(tableName,recID,dataSet):
         if mac:
             saveSet["mac"] = mac
 
-        cpuCount = dataSet.get("cpuCount") 
-        if cpuCount:
-            try:
-                cpuCount = int(dataSet.get("cpuCount")) 
-                saveSet["cpuCount"] = cpuCount
-            except:
-                pass
+        try:
+            cpuCount = int(dataSet.get("cpuCount")) 
+            saveSet["cpuCount"] = cpuCount
+        except:
+            pass
 
-        cpuLoad = dataSet.get("cpuLoad") 
-        if cpuLoad:
-            try:
-                cpuLoad = int(dataSet.get("cpuLoad")) 
-                saveSet["cpuLoad"] = cpuLoad
-            except:
-                pass
+        try:
+            cpuLoad = int(dataSet.get("cpuLoad")) 
+            saveSet["cpuLoad"] = cpuLoad
+        except:
+            pass
 
         RAMTotal = dataSet.get("RAMTotal") 
         if RAMTotal:
@@ -1317,13 +1335,11 @@ def update_hwinfo_report_record(tableName,recID,dataSet):
         if RAMFree:
             saveSet["RAMFree"] = RAMFree
 
-        RAMPercent = dataSet.get("RAMPercent") 
-        if RAMPercent:
-            try:
-                RAMPercent = int(dataSet.get("RAMPercent")) 
-                saveSet["RAMPercent"] = RAMPercent
-            except:
-                pass
+        try:
+            RAMPercent = int(dataSet.get("RAMPercent")) 
+            saveSet["RAMPercent"] = RAMPercent
+        except:
+            pass
 
         disk = dataSet.get("disk") 
         if disk:
@@ -1337,13 +1353,11 @@ def update_hwinfo_report_record(tableName,recID,dataSet):
         if diskUsed:
             saveSet["diskUsed"] = diskUsed
 
-        diskPercent = dataSet.get("diskPercent") 
-        if diskPercent:
-            try:
-                diskPercent = int(dataSet.get("diskPercent")) 
-                saveSet["diskPercent"] = diskPercent
-            except:
-                pass
+        try:
+            diskPercent = int(dataSet.get("diskPercent")) 
+            saveSet["diskPercent"] = diskPercent
+        except:
+            pass
 
         processorInfo = dataSet.get("processorInfo") 
         if processorInfo:
@@ -1668,50 +1682,35 @@ def update_industry_info(tableName,id,dataSet):
         if industry_level_em:
             saveSet["industry_level_em"] = industry_level_em
 
-        num_of_constituents = dataSet.get("num_of_constituents") 
-        if num_of_constituents:
+        try:
+            num_of_constituents = float(dataSet.get("num_of_constituents")) 
+            saveSet["num_of_constituents"] = num_of_constituents
+        except:
+            pass
 
-            try:
-                num_of_constituents = float(dataSet.get("num_of_constituents")) 
-                saveSet["num_of_constituents"] = num_of_constituents
-            except:
-                pass
+        try:
+            static_PE_ratio = float(dataSet.get("static_PE_ratio")) 
+            saveSet["static_PE_ratio"] = static_PE_ratio
+        except:
+            pass
 
-        static_PE_ratio = dataSet.get("static_PE_ratio") 
-        if static_PE_ratio:
+        try:
+            TTM_PE_ratio = float(dataSet.get("TTM_PE_ratio")) 
+            saveSet["TTM_PE_ratio"] = TTM_PE_ratio
+        except:
+            pass
 
-            try:
-                static_PE_ratio = float(dataSet.get("static_PE_ratio")) 
-                saveSet["static_PE_ratio"] = static_PE_ratio
-            except:
-                pass
+        try:
+            PB_ratio = float(dataSet.get("PB_ratio")) 
+            saveSet["PB_ratio"] = PB_ratio
+        except:
+            pass
 
-        TTM_PE_ratio = dataSet.get("TTM_PE_ratio") 
-        if TTM_PE_ratio:
-
-            try:
-                TTM_PE_ratio = float(dataSet.get("TTM_PE_ratio")) 
-                saveSet["TTM_PE_ratio"] = TTM_PE_ratio
-            except:
-                pass
-
-        PB_ratio = dataSet.get("PB_ratio") 
-        if PB_ratio:
-
-            try:
-                PB_ratio = float(dataSet.get("PB_ratio")) 
-                saveSet["PB_ratio"] = PB_ratio
-            except:
-                pass
-
-        static_divident_yield = dataSet.get("static_divident_yield") 
-        if static_divident_yield:
-
-            try:
-                static_divident_yield = float(dataSet.get("static_divident_yield")) 
-                saveSet["static_divident_yield"] = static_divident_yield
-            except:
-                pass
+        try:
+            static_divident_yield = float(dataSet.get("static_divident_yield")) 
+            saveSet["static_divident_yield"] = static_divident_yield
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -2019,95 +2018,65 @@ def update_industry_history_data(tableName,id,dataSet):
         if date:
             saveSet["date"] = date
 
-        open = dataSet.get("open") 
-        if open:
+        try:
+            open = float(dataSet.get("open")) 
+            saveSet["open"] = open
+        except:
+            pass
 
-            try:
-                open = float(dataSet.get("open")) 
-                saveSet["open"] = open
-            except:
-                pass
+        try:
+            close = float(dataSet.get("close")) 
+            saveSet["close"] = close
+        except:
+            pass
 
-        close = dataSet.get("close") 
-        if close:
+        try:
+            high = float(dataSet.get("high")) 
+            saveSet["high"] = high
+        except:
+            pass
 
-            try:
-                close = float(dataSet.get("close")) 
-                saveSet["close"] = close
-            except:
-                pass
+        try:
+            low = float(dataSet.get("low")) 
+            saveSet["low"] = low
+        except:
+            pass
 
-        high = dataSet.get("high") 
-        if high:
+        try:
+            volume = float(dataSet.get("volume")) 
+            saveSet["volume"] = volume
+        except:
+            pass
 
-            try:
-                high = float(dataSet.get("high")) 
-                saveSet["high"] = high
-            except:
-                pass
+        try:
+            amount = float(dataSet.get("amount")) 
+            saveSet["amount"] = amount
+        except:
+            pass
 
-        low = dataSet.get("low") 
-        if low:
+        try:
+            amplitude = float(dataSet.get("amplitude")) 
+            saveSet["amplitude"] = amplitude
+        except:
+            pass
 
-            try:
-                low = float(dataSet.get("low")) 
-                saveSet["low"] = low
-            except:
-                pass
+        try:
+            pct_change = float(dataSet.get("pct_change")) 
+            saveSet["pct_change"] = pct_change
+        except:
+            pass
 
-        volume = dataSet.get("volume") 
-        if volume:
+        try:
+            price_change = float(dataSet.get("price_change")) 
+            saveSet["price_change"] = price_change
+        except:
+            pass
 
-            try:
-                volume = float(dataSet.get("volume")) 
-                saveSet["volume"] = volume
-            except:
-                pass
-
-        amount = dataSet.get("amount") 
-        if amount:
-
-            try:
-                amount = float(dataSet.get("amount")) 
-                saveSet["amount"] = amount
-            except:
-                pass
-
-        amplitude = dataSet.get("amplitude") 
-        if amplitude:
-
-            try:
-                amplitude = float(dataSet.get("amplitude")) 
-                saveSet["amplitude"] = amplitude
-            except:
-                pass
-
-        pct_change = dataSet.get("pct_change") 
-        if pct_change:
-
-            try:
-                pct_change = float(dataSet.get("pct_change")) 
-                saveSet["pct_change"] = pct_change
-            except:
-                pass
-
-        price_change = dataSet.get("price_change") 
-        if price_change:
-
-            try:
-                price_change = float(dataSet.get("price_change")) 
-                saveSet["price_change"] = price_change
-            except:
-                pass
-
-        turnover_rate = dataSet.get("turnover_rate") 
-        if turnover_rate:
-
-            try:
-                turnover_rate = float(dataSet.get("turnover_rate")) 
-                saveSet["turnover_rate"] = turnover_rate
-            except:
-                pass
+        try:
+            turnover_rate = float(dataSet.get("turnover_rate")) 
+            saveSet["turnover_rate"] = turnover_rate
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -2382,45 +2351,35 @@ def update_stock_info(tableName,id,dataSet):
         if stock_name:
             saveSet["stock_name"] = stock_name
 
-        total_shares_outstanding = dataSet.get("total_shares_outstanding") 
-        if total_shares_outstanding:
-            try:
-                total_shares_outstanding = float(dataSet.get("total_shares_outstanding")) 
-                saveSet["total_shares_outstanding"] = total_shares_outstanding
-            except:
-                pass
+        try:
+            total_shares_outstanding = float(dataSet.get("total_shares_outstanding")) 
+            saveSet["total_shares_outstanding"] = total_shares_outstanding
+        except:
+            pass
 
-        public_float = dataSet.get("public_float") 
-        if public_float:
-            try:
-                public_float = float(dataSet.get("public_float")) 
-                saveSet["public_float"] = public_float
-            except:
-                pass
+        try:
+            public_float = float(dataSet.get("public_float")) 
+            saveSet["public_float"] = public_float
+        except:
+            pass
 
-        market_cap = dataSet.get("market_cap") 
-        if market_cap:
-            try:
-                market_cap = float(dataSet.get("market_cap")) 
-                saveSet["market_cap"] = market_cap
-            except:
-                pass
+        try:
+            market_cap = float(dataSet.get("market_cap")) 
+            saveSet["market_cap"] = market_cap
+        except:
+            pass
 
-        free_market_cap = dataSet.get("free_market_cap") 
-        if free_market_cap:
-            try:
-                free_market_cap = float(dataSet.get("free_market_cap")) 
-                saveSet["free_market_cap"] = free_market_cap
-            except:
-                pass
+        try:
+            free_market_cap = float(dataSet.get("free_market_cap")) 
+            saveSet["free_market_cap"] = free_market_cap
+        except:
+            pass
 
-        dcf_value_pre_share = dataSet.get("dcf_value_pre_share") 
-        if dcf_value_pre_share:
-            try:
-                dcf_value_pre_share = float(dataSet.get("dcf_value_pre_share")) 
-                saveSet["dcf_value_pre_share"] = dcf_value_pre_share
-            except:
-                pass
+        try:
+            dcf_value_pre_share = float(dataSet.get("dcf_value_pre_share")) 
+            saveSet["dcf_value_pre_share"] = dcf_value_pre_share
+        except:
+            pass
 
         industry_code = dataSet.get("industry_code") 
         if industry_code:
@@ -2490,7 +2449,7 @@ def update_stock_info(tableName,id,dataSet):
 
 #stock_info 查询记录
 def query_stock_info(tableName,id = "0",stock_code = "",stock_name = "",industry_code = "",industry_name = "",
-                 delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+                 searchKey="",delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
     valuesList = []
@@ -2524,17 +2483,26 @@ def query_stock_info(tableName,id = "0",stock_code = "",stock_name = "",industry
 
             if stock_name:
                 if valuesList:
-                    sqlStr =  sqlStr + " AND stock_name LIKE %s" 
-                else:
-                    sqlStr =  sqlStr + " WHERE stock_name LIKE %s" 
+                    sqlStr =  sqlStr + " AND stock_name = %s" 
+                else:   
+                    sqlStr =  sqlStr + " WHERE stock_name = %s" 
                 valuesList.append(stock_name)
 
             if industry_name:
                 if valuesList:
-                    sqlStr =  sqlStr + " AND stock_name LIKE %s" 
+                    sqlStr =  sqlStr + " AND industry_name = %s" 
                 else:
-                    sqlStr =  sqlStr + " WHERE stock_name LIKE %s" 
+                    sqlStr =  sqlStr + " WHERE industry_name = %s" 
                 valuesList.append(industry_name)    
+            
+            if searchKey:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND (stock_code LIKE %s OR stock_name LIKE %s ) " 
+                else:
+                    sqlStr =  sqlStr + " WHERE (stock_code LIKE %s OR stock_name LIKE %s ) " 
+                aKey = "%" + searchKey + "%"
+                valuesList.append(aKey)
+                valuesList.append(aKey)
 
         if limitNum > 0:
             sqlStr += " LIMIT {0}".format(limitNum)
@@ -2766,95 +2734,65 @@ def update_stock_history_data(tableName,id,dataSet):
         if date:
             saveSet["date"] = date
 
-        open = dataSet.get("open") 
-        if open:
+        try:
+            open = float(dataSet.get("open")) 
+            saveSet["open"] = open
+        except:
+            pass
 
-            try:
-                open = float(dataSet.get("open")) 
-                saveSet["open"] = open
-            except:
-                pass
+        try:
+            close = float(dataSet.get("close")) 
+            saveSet["close"] = close
+        except:
+            pass
 
-        close = dataSet.get("close") 
-        if close:
+        try:
+            high = float(dataSet.get("high")) 
+            saveSet["high"] = high
+        except:
+            pass
 
-            try:
-                close = float(dataSet.get("close")) 
-                saveSet["close"] = close
-            except:
-                pass
+        try:
+            low = float(dataSet.get("low")) 
+            saveSet["low"] = low
+        except:
+            pass
 
-        high = dataSet.get("high") 
-        if high:
+        try:
+            volume = float(dataSet.get("volume")) 
+            saveSet["volume"] = volume
+        except:
+            pass
 
-            try:
-                high = float(dataSet.get("high")) 
-                saveSet["high"] = high
-            except:
-                pass
+        try:
+            amount = float(dataSet.get("amount")) 
+            saveSet["amount"] = amount
+        except:
+            pass
 
-        low = dataSet.get("low") 
-        if low:
+        try:
+            amplitude = float(dataSet.get("amplitude")) 
+            saveSet["amplitude"] = amplitude
+        except:
+            pass
 
-            try:
-                low = float(dataSet.get("low")) 
-                saveSet["low"] = low
-            except:
-                pass
+        try:
+            pct_change = float(dataSet.get("pct_change")) 
+            saveSet["pct_change"] = pct_change
+        except:
+            pass
 
-        volume = dataSet.get("volume") 
-        if volume:
+        try:
+            price_change = float(dataSet.get("price_change")) 
+            saveSet["price_change"] = price_change
+        except:
+            pass
 
-            try:
-                volume = float(dataSet.get("volume")) 
-                saveSet["volume"] = volume
-            except:
-                pass
-
-        amount = dataSet.get("amount") 
-        if amount:
-
-            try:
-                amount = float(dataSet.get("amount")) 
-                saveSet["amount"] = amount
-            except:
-                pass
-
-        amplitude = dataSet.get("amplitude") 
-        if amplitude:
-
-            try:
-                amplitude = float(dataSet.get("amplitude")) 
-                saveSet["amplitude"] = amplitude
-            except:
-                pass
-
-        pct_change = dataSet.get("pct_change") 
-        if pct_change:
-
-            try:
-                pct_change = float(dataSet.get("pct_change")) 
-                saveSet["pct_change"] = pct_change
-            except:
-                pass
-
-        price_change = dataSet.get("price_change") 
-        if price_change:
-
-            try:
-                price_change = float(dataSet.get("price_change")) 
-                saveSet["price_change"] = price_change
-            except:
-                pass
-
-        turnover_rate = dataSet.get("turnover_rate") 
-        if turnover_rate:
-
-            try:
-                turnover_rate = float(dataSet.get("turnover_rate")) 
-                saveSet["turnover_rate"] = turnover_rate
-            except:
-                pass
+        try:
+            turnover_rate = float(dataSet.get("turnover_rate")) 
+            saveSet["turnover_rate"] = turnover_rate
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -3014,6 +2952,9 @@ def create_technical_indicators(tableName):
     "macd_line FLOAT COMMENT 'MACD快线(DIF)',",
     "macd_signal FLOAT COMMENT 'MACD慢线(DEA)',",
     "macd_histogram FLOAT COMMENT 'MACD柱状图',",
+    "macd_line_long FLOAT COMMENT 'MACD快线(DIF)长线',",
+    "macd_signal_long FLOAT COMMENT 'MACD慢线(DEA)长线',",
+    "macd_histogram_long FLOAT COMMENT 'MACD柱状图长线',",
     "boll_upper FLOAT COMMENT '布林上轨',",
     "boll_mid FLOAT COMMENT '布林中轨',",
     "boll_lower FLOAT COMMENT '布林下轨',",
@@ -3154,6 +3095,24 @@ def insert_technical_indicators(tableName,dataSet):
         except:
             macd_histogram = 0 
         saveSet["macd_histogram"] = macd_histogram
+
+        try:
+            macd_line_long = float(dataSet.get("macd_line_long")) 
+        except:
+            macd_line_long = 0 
+        saveSet["macd_line_long"] = macd_line_long
+
+        try:
+            macd_signal_long = float(dataSet.get("macd_signal_long")) 
+        except:
+            macd_signal_long = 0 
+        saveSet["macd_signal_long"] = macd_signal_long
+
+        try:
+            macd_histogram_long = float(dataSet.get("macd_histogram_long")) 
+        except:
+            macd_histogram_long = 0 
+        saveSet["macd_histogram_long"] = macd_histogram_long
 
         try:
             boll_upper = float(dataSet.get("boll_upper")) 
@@ -3360,318 +3319,233 @@ def update_technical_indicators(tableName,id,dataSet):
         if date:
             saveSet["date"] = date
 
-        close = dataSet.get("close") 
-        if close:
-
-            try:
-                close = float(dataSet.get("close")) 
-                saveSet["close"] = close
-            except:
-                pass
-
-        ma_5 = dataSet.get("ma_5") 
-        if ma_5:
-
-            try:
-                ma_5 = float(dataSet.get("ma_5")) 
-                saveSet["ma_5"] = ma_5
-            except:
-                pass
-
-        ma_10 = dataSet.get("ma_10") 
-        if ma_10:
-
-            try:
-                ma_10 = float(dataSet.get("ma_10")) 
-                saveSet["ma_10"] = ma_10
-            except:
-                pass
-
-        ma_20 = dataSet.get("ma_20") 
-        if ma_20:
-
-            try:
-                ma_20 = float(dataSet.get("ma_20")) 
-                saveSet["ma_20"] = ma_20
-            except:
-                pass
-
-        ma_60 = dataSet.get("ma_60") 
-        if ma_60:
-
-            try:
-                ma_60 = float(dataSet.get("ma_60")) 
-                saveSet["ma_60"] = ma_60
-            except:
-                pass
-
-        macd_line = dataSet.get("macd_line") 
-        if macd_line:
-
-            try:
-                macd_line = float(dataSet.get("macd_line")) 
-                saveSet["macd_line"] = macd_line
-            except:
-                pass
-
-        macd_signal = dataSet.get("macd_signal") 
-        if macd_signal:
-
-            try:
-                macd_signal = float(dataSet.get("macd_signal")) 
-                saveSet["macd_signal"] = macd_signal
-            except:
-                pass
-
-        macd_histogram = dataSet.get("macd_histogram") 
-        if macd_histogram:
-
-            try:
-                macd_histogram = float(dataSet.get("macd_histogram")) 
-                saveSet["macd_histogram"] = macd_histogram
-            except:
-                pass
-
-        boll_upper = dataSet.get("boll_upper") 
-        if boll_upper:
-
-            try:
-                boll_upper = float(dataSet.get("boll_upper")) 
-                saveSet["boll_upper"] = boll_upper
-            except:
-                pass
-
-        boll_mid = dataSet.get("boll_mid") 
-        if boll_mid:
-
-            try:
-                boll_mid = float(dataSet.get("boll_mid")) 
-                saveSet["boll_mid"] = boll_mid
-            except:
-                pass
-
-        boll_lower = dataSet.get("boll_lower") 
-        if boll_lower:
-
-            try:
-                boll_lower = float(dataSet.get("boll_lower")) 
-                saveSet["boll_lower"] = boll_lower
-            except:
-                pass
-
-        ene_upper = dataSet.get("ene_upper") 
-        if ene_upper:
-
-            try:
-                ene_upper = float(dataSet.get("ene_upper")) 
-                saveSet["ene_upper"] = ene_upper
-            except:
-                pass
-
-        ene_mid = dataSet.get("ene_mid") 
-        if ene_mid:
-
-            try:
-                ene_mid = float(dataSet.get("ene_mid")) 
-                saveSet["ene_mid"] = ene_mid
-            except:
-                pass
-
-        ene_lower = dataSet.get("ene_lower") 
-        if ene_lower:
-
-            try:
-                ene_lower = float(dataSet.get("ene_lower")) 
-                saveSet["ene_lower"] = ene_lower
-            except:
-                pass
-
-        dmi_pdi = dataSet.get("dmi_pdi") 
-        if dmi_pdi:
-
-            try:
-                dmi_pdi = float(dataSet.get("dmi_pdi")) 
-                saveSet["dmi_pdi"] = dmi_pdi
-            except:
-                pass
-
-        dmi_mdi = dataSet.get("dmi_mdi") 
-        if dmi_mdi:
-
-            try:
-                dmi_mdi = float(dataSet.get("dmi_mdi")) 
-                saveSet["dmi_mdi"] = dmi_mdi
-            except:
-                pass
-
-        dmi_adx = dataSet.get("dmi_adx") 
-        if dmi_adx:
-
-            try:
-                dmi_adx = float(dataSet.get("dmi_adx")) 
-                saveSet["dmi_adx"] = dmi_adx
-            except:
-                pass
-
-        dma_line = dataSet.get("dma_line") 
-        if dma_line:
-
-            try:
-                dma_line = float(dataSet.get("dma_line")) 
-                saveSet["dma_line"] = dma_line
-            except:
-                pass
-
-        ama_line = dataSet.get("ama_line") 
-        if ama_line:
-
-            try:
-                ama_line = float(dataSet.get("ama_line")) 
-                saveSet["ama_line"] = ama_line
-            except:
-                pass
-
-        sar = dataSet.get("sar") 
-        if sar:
-
-            try:
-                sar = float(dataSet.get("sar")) 
-                saveSet["sar"] = sar
-            except:
-                pass
-
-        kdj_k = dataSet.get("kdj_k") 
-        if kdj_k:
-
-            try:
-                kdj_k = float(dataSet.get("kdj_k")) 
-                saveSet["kdj_k"] = kdj_k
-            except:
-                pass
-
-        kdj_d = dataSet.get("kdj_d") 
-        if kdj_d:
-
-            try:
-                kdj_d = float(dataSet.get("kdj_d")) 
-                saveSet["kdj_d"] = kdj_d
-            except:
-                pass
-
-        kdj_j = dataSet.get("kdj_j") 
-        if kdj_j:
-
-            try:
-                kdj_j = float(dataSet.get("kdj_j")) 
-                saveSet["kdj_j"] = kdj_j
-            except:
-                pass
-
-        rsi_6 = dataSet.get("rsi_6") 
-        if rsi_6:
-
-            try:
-                rsi_6 = float(dataSet.get("rsi_6")) 
-                saveSet["rsi_6"] = rsi_6
-            except:
-                pass
-
-        rsi_12 = dataSet.get("rsi_12") 
-        if rsi_12:
-
-            try:
-                rsi_12 = float(dataSet.get("rsi_12")) 
-                saveSet["rsi_12"] = rsi_12
-            except:
-                pass
-
-        rsi_24 = dataSet.get("rsi_24") 
-        if rsi_24:
-
-            try:
-                rsi_24 = float(dataSet.get("rsi_24")) 
-                saveSet["rsi_24"] = rsi_24
-            except:
-                pass
-
-        cci = dataSet.get("cci") 
-        if cci:
-
-            try:
-                cci = float(dataSet.get("cci")) 
-                saveSet["cci"] = cci
-            except:
-                pass
-
-        bias_5 = dataSet.get("bias_5") 
-        if bias_5:
-
-            try:
-                bias_5 = float(dataSet.get("bias_5")) 
-                saveSet["bias_5"] = bias_5
-            except:
-                pass
-
-        bias_10 = dataSet.get("bias_10") 
-        if bias_10:
-
-            try:
-                bias_10 = float(dataSet.get("bias_10")) 
-                saveSet["bias_10"] = bias_10
-            except:
-                pass
-
-        bias_20 = dataSet.get("bias_20") 
-        if bias_20:
-
-            try:
-                bias_20 = float(dataSet.get("bias_20")) 
-                saveSet["bias_20"] = bias_20
-            except:
-                pass
-
-        wr_6 = dataSet.get("wr_6") 
-        if wr_6:
-
-            try:
-                wr_6 = float(dataSet.get("wr_6")) 
-                saveSet["wr_6"] = wr_6
-            except:
-                pass
-
-        wr_14 = dataSet.get("wr_14") 
-        if wr_14:
-
-            try:
-                wr_14 = float(dataSet.get("wr_14")) 
-                saveSet["wr_14"] = wr_14
-            except:
-                pass
-
-        volume = dataSet.get("volume") 
-        if volume:
-            try:
-                volume = int(dataSet.get("volume")) 
-                saveSet["volume"] = volume
-            except:
-                pass
-
-        turnover_rate = dataSet.get("turnover_rate") 
-        if turnover_rate:
-
-            try:
-                turnover_rate = float(dataSet.get("turnover_rate")) 
-                saveSet["turnover_rate"] = turnover_rate
-            except:
-                pass
-
-        obv = dataSet.get("obv") 
-        if obv:
-            try:
-                obv = float(dataSet.get("obv")) 
-                saveSet["obv"] = obv
-            except:
-                pass
+        try:
+            close = float(dataSet.get("close")) 
+            saveSet["close"] = close
+        except:
+            pass
+
+        try:
+            ma_5 = float(dataSet.get("ma_5")) 
+            saveSet["ma_5"] = ma_5
+        except:
+            pass
+
+        try:
+            ma_10 = float(dataSet.get("ma_10")) 
+            saveSet["ma_10"] = ma_10
+        except:
+            pass
+
+        try:
+            ma_20 = float(dataSet.get("ma_20")) 
+            saveSet["ma_20"] = ma_20
+        except:
+            pass
+
+        try:
+            ma_60 = float(dataSet.get("ma_60")) 
+            saveSet["ma_60"] = ma_60
+        except:
+            pass
+
+        try:
+            macd_line = float(dataSet.get("macd_line")) 
+            saveSet["macd_line"] = macd_line
+        except:
+            pass
+
+        try:
+            macd_signal = float(dataSet.get("macd_signal")) 
+            saveSet["macd_signal"] = macd_signal
+        except:
+            pass
+
+        try:
+            macd_histogram = float(dataSet.get("macd_histogram")) 
+            saveSet["macd_histogram"] = macd_histogram
+        except:
+            pass
+
+        try:
+            macd_line_long = float(dataSet.get("macd_line_long")) 
+            saveSet["macd_line_long"] = macd_line_long
+        except:
+            pass
+
+        try:
+            macd_signal_long = float(dataSet.get("macd_signal_long")) 
+            saveSet["macd_signal_long"] = macd_signal_long
+        except:
+            pass
+
+        try:
+            macd_histogram_long = float(dataSet.get("macd_histogram_long")) 
+            saveSet["macd_histogram_long"] = macd_histogram_long
+        except:
+            pass
+
+        try:
+            boll_upper = float(dataSet.get("boll_upper")) 
+            saveSet["boll_upper"] = boll_upper
+        except:
+            pass
+
+        try:
+            boll_mid = float(dataSet.get("boll_mid")) 
+            saveSet["boll_mid"] = boll_mid
+        except:
+            pass
+
+        try:
+            boll_lower = float(dataSet.get("boll_lower")) 
+            saveSet["boll_lower"] = boll_lower
+        except:
+            pass
+
+        try:
+            ene_upper = float(dataSet.get("ene_upper")) 
+            saveSet["ene_upper"] = ene_upper
+        except:
+            pass
+
+        try:
+            ene_mid = float(dataSet.get("ene_mid")) 
+            saveSet["ene_mid"] = ene_mid
+        except:
+            pass
+
+        try:
+            ene_lower = float(dataSet.get("ene_lower")) 
+            saveSet["ene_lower"] = ene_lower
+        except:
+            pass
+
+        try:
+            dmi_pdi = float(dataSet.get("dmi_pdi")) 
+            saveSet["dmi_pdi"] = dmi_pdi
+        except:
+            pass
+
+        try:
+            dmi_mdi = float(dataSet.get("dmi_mdi")) 
+            saveSet["dmi_mdi"] = dmi_mdi
+        except:
+            pass
+
+        try:
+            dmi_adx = float(dataSet.get("dmi_adx")) 
+            saveSet["dmi_adx"] = dmi_adx
+        except:
+            pass
+
+        try:
+            dma_line = float(dataSet.get("dma_line")) 
+            saveSet["dma_line"] = dma_line
+        except:
+            pass
+
+        try:
+            ama_line = float(dataSet.get("ama_line")) 
+            saveSet["ama_line"] = ama_line
+        except:
+            pass
+
+        try:
+            sar = float(dataSet.get("sar")) 
+            saveSet["sar"] = sar
+        except:
+            pass
+
+        try:
+            kdj_k = float(dataSet.get("kdj_k")) 
+            saveSet["kdj_k"] = kdj_k
+        except:
+            pass
+
+        try:
+            kdj_d = float(dataSet.get("kdj_d")) 
+            saveSet["kdj_d"] = kdj_d
+        except:
+            pass
+
+        try:
+            kdj_j = float(dataSet.get("kdj_j")) 
+            saveSet["kdj_j"] = kdj_j
+        except:
+            pass
+
+        try:
+            rsi_6 = float(dataSet.get("rsi_6")) 
+            saveSet["rsi_6"] = rsi_6
+        except:
+            pass
+
+        try:
+            rsi_12 = float(dataSet.get("rsi_12")) 
+            saveSet["rsi_12"] = rsi_12
+        except:
+            pass
+
+        try:
+            rsi_24 = float(dataSet.get("rsi_24")) 
+            saveSet["rsi_24"] = rsi_24
+        except:
+            pass
+
+        try:
+            cci = float(dataSet.get("cci")) 
+            saveSet["cci"] = cci
+        except:
+            pass
+
+        try:
+            bias_5 = float(dataSet.get("bias_5")) 
+            saveSet["bias_5"] = bias_5
+        except:
+            pass
+
+        try:
+            bias_10 = float(dataSet.get("bias_10")) 
+            saveSet["bias_10"] = bias_10
+        except:
+            pass
+
+        try:
+            bias_20 = float(dataSet.get("bias_20")) 
+            saveSet["bias_20"] = bias_20
+        except:
+            pass
+
+        try:
+            wr_6 = float(dataSet.get("wr_6")) 
+            saveSet["wr_6"] = wr_6
+        except:
+            pass
+
+        try:
+            wr_14 = float(dataSet.get("wr_14")) 
+            saveSet["wr_14"] = wr_14
+        except:
+            pass
+
+        try:
+            volume = int(dataSet.get("volume")) 
+            saveSet["volume"] = volume
+        except:
+            pass
+
+        try:
+            turnover_rate = float(dataSet.get("turnover_rate")) 
+            saveSet["turnover_rate"] = turnover_rate
+        except:
+            pass
+
+        try:
+            obv = float(dataSet.get("obv")) 
+            saveSet["obv"] = obv
+        except:
+            pass
 
         hashval = dataSet.get("hashval") 
         if hashval:
@@ -3785,6 +3659,51 @@ def query_technical_indicators(tableName,id = "0", stock_code="",date="",start_d
             # _LOG.error(f"{errMsg}")
 
     return result
+
+
+# technical_indicators 和 history 数据合并查询
+def query_history_technical_indicator(stock_code="",date="",start_date="",end_date="",period="day",adjust="",limitNum=0):
+    result = []
+    columns = ""
+    valuesList = []
+    historyTableName = tablename_convertor_stock_history_data(period,adjust)
+    indicatorTableName = tablename_convertor_technical_indicators(period,adjust)
+    sqlStr = f"SELECT T2.*, T1.open as open, T1.high as high, T1.low as low,T1.amount as amount, \
+        T1.amplitude as amplitude FROM {historyTableName} as T1,\
+        {indicatorTableName} as T2 WHERE T1.stock_code = T2.stock_code AND T1.date = T2.date"
+
+    try:
+        if stock_code:
+            sqlStr += " AND T1.stock_code = %s"
+            valuesList.append(stock_code)
+        if date:
+            sqlStr += " AND T1.date = %s"
+            valuesList.append(date)
+        if start_date:
+            sqlStr += " AND T1.date >= %s"
+            valuesList.append(start_date)
+        if end_date:    
+            sqlStr += " AND T1.date < %s"
+            valuesList.append(end_date)
+        sqlStr += " ORDER BY T1.date"
+
+        if limitNum > 0:
+            sqlStr += " LIMIT {0}".format(limitNum)
+
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            dataList = dataFormatConvert(dataList)
+            result = list(dataList)
+        pass
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
 
 
 #technical_indicators end 
@@ -3957,50 +3876,35 @@ def update_stock_dividend_data(tableName,id,dataSet):
         if ipo_date:
             saveSet["ipo_date"] = ipo_date
 
-        cumulative_dividend = dataSet.get("cumulative_dividend") 
-        if cumulative_dividend:
+        try:
+            cumulative_dividend = float(dataSet.get("cumulative_dividend")) 
+            saveSet["cumulative_dividend"] = cumulative_dividend
+        except:
+            pass
 
-            try:
-                cumulative_dividend = float(dataSet.get("cumulative_dividend")) 
-                saveSet["cumulative_dividend"] = cumulative_dividend
-            except:
-                pass
+        try:
+            annual_dividend = float(dataSet.get("annual_dividend")) 
+            saveSet["annual_dividend"] = annual_dividend
+        except:
+            pass
 
-        annual_dividend = dataSet.get("annual_dividend") 
-        if annual_dividend:
+        try:
+            dividend_count = float(dataSet.get("dividend_count")) 
+            saveSet["dividend_count"] = dividend_count
+        except:
+            pass
 
-            try:
-                annual_dividend = float(dataSet.get("annual_dividend")) 
-                saveSet["annual_dividend"] = annual_dividend
-            except:
-                pass
+        try:
+            total_financing = float(dataSet.get("total_financing")) 
+            saveSet["total_financing"] = total_financing
+        except:
+            pass
 
-        dividend_count = dataSet.get("dividend_count") 
-        if dividend_count:
-
-            try:
-                dividend_count = float(dataSet.get("dividend_count")) 
-                saveSet["dividend_count"] = dividend_count
-            except:
-                pass
-
-        total_financing = dataSet.get("total_financing") 
-        if total_financing:
-
-            try:
-                total_financing = float(dataSet.get("total_financing")) 
-                saveSet["total_financing"] = total_financing
-            except:
-                pass
-
-        financing_count = dataSet.get("financing_count") 
-        if financing_count:
-
-            try:
-                financing_count = float(dataSet.get("financing_count")) 
-                saveSet["financing_count"] = financing_count
-            except:
-                pass
+        try:
+            financing_count = float(dataSet.get("financing_count")) 
+            saveSet["financing_count"] = financing_count
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -5200,1256 +5104,840 @@ def update_balance_sheets(tableName,id,dataSet):
         if report_date:
             saveSet["report_date"] = report_date
 
-        monetary_capital = dataSet.get("monetary_capital") 
-        if monetary_capital:
-
-            try:
-                monetary_capital = float(dataSet.get("monetary_capital")) 
-                saveSet["monetary_capital"] = monetary_capital
-            except:
-                pass
-
-        settlement_provisions = dataSet.get("settlement_provisions") 
-        if settlement_provisions:
-
-            try:
-                settlement_provisions = float(dataSet.get("settlement_provisions")) 
-                saveSet["settlement_provisions"] = settlement_provisions
-            except:
-                pass
-
-        loans_to_other_banks = dataSet.get("loans_to_other_banks") 
-        if loans_to_other_banks:
-
-            try:
-                loans_to_other_banks = float(dataSet.get("loans_to_other_banks")) 
-                saveSet["loans_to_other_banks"] = loans_to_other_banks
-            except:
-                pass
-
-        trading_financial_assets = dataSet.get("trading_financial_assets") 
-        if trading_financial_assets:
-
-            try:
-                trading_financial_assets = float(dataSet.get("trading_financial_assets")) 
-                saveSet["trading_financial_assets"] = trading_financial_assets
-            except:
-                pass
-
-        financial_assets_purchased_for_resale = dataSet.get("financial_assets_purchased_for_resale") 
-        if financial_assets_purchased_for_resale:
-
-            try:
-                financial_assets_purchased_for_resale = float(dataSet.get("financial_assets_purchased_for_resale")) 
-                saveSet["financial_assets_purchased_for_resale"] = financial_assets_purchased_for_resale
-            except:
-                pass
-
-        derivative_financial_assets = dataSet.get("derivative_financial_assets") 
-        if derivative_financial_assets:
-
-            try:
-                derivative_financial_assets = float(dataSet.get("derivative_financial_assets")) 
-                saveSet["derivative_financial_assets"] = derivative_financial_assets
-            except:
-                pass
-
-        notes_and_accounts_receivable = dataSet.get("notes_and_accounts_receivable") 
-        if notes_and_accounts_receivable:
-
-            try:
-                notes_and_accounts_receivable = float(dataSet.get("notes_and_accounts_receivable")) 
-                saveSet["notes_and_accounts_receivable"] = notes_and_accounts_receivable
-            except:
-                pass
-
-        notes_receivable = dataSet.get("notes_receivable") 
-        if notes_receivable:
-
-            try:
-                notes_receivable = float(dataSet.get("notes_receivable")) 
-                saveSet["notes_receivable"] = notes_receivable
-            except:
-                pass
-
-        accounts_receivable = dataSet.get("accounts_receivable") 
-        if accounts_receivable:
-
-            try:
-                accounts_receivable = float(dataSet.get("accounts_receivable")) 
-                saveSet["accounts_receivable"] = accounts_receivable
-            except:
-                pass
-
-        receivables_financing = dataSet.get("receivables_financing") 
-        if receivables_financing:
-
-            try:
-                receivables_financing = float(dataSet.get("receivables_financing")) 
-                saveSet["receivables_financing"] = receivables_financing
-            except:
-                pass
-
-        prepayments = dataSet.get("prepayments") 
-        if prepayments:
-
-            try:
-                prepayments = float(dataSet.get("prepayments")) 
-                saveSet["prepayments"] = prepayments
-            except:
-                pass
-
-        dividends_receivable = dataSet.get("dividends_receivable") 
-        if dividends_receivable:
-
-            try:
-                dividends_receivable = float(dataSet.get("dividends_receivable")) 
-                saveSet["dividends_receivable"] = dividends_receivable
-            except:
-                pass
-
-        interest_receivable = dataSet.get("interest_receivable") 
-        if interest_receivable:
-
-            try:
-                interest_receivable = float(dataSet.get("interest_receivable")) 
-                saveSet["interest_receivable"] = interest_receivable
-            except:
-                pass
-
-        insurance_premiums_receivable = dataSet.get("insurance_premiums_receivable") 
-        if insurance_premiums_receivable:
-
-            try:
-                insurance_premiums_receivable = float(dataSet.get("insurance_premiums_receivable")) 
-                saveSet["insurance_premiums_receivable"] = insurance_premiums_receivable
-            except:
-                pass
-
-        reinsurance_receivables = dataSet.get("reinsurance_receivables") 
-        if reinsurance_receivables:
-
-            try:
-                reinsurance_receivables = float(dataSet.get("reinsurance_receivables")) 
-                saveSet["reinsurance_receivables"] = reinsurance_receivables
-            except:
-                pass
-
-        reinsurance_contract_reserves_receivable = dataSet.get("reinsurance_contract_reserves_receivable") 
-        if reinsurance_contract_reserves_receivable:
-
-            try:
-                reinsurance_contract_reserves_receivable = float(dataSet.get("reinsurance_contract_reserves_receivable")) 
-                saveSet["reinsurance_contract_reserves_receivable"] = reinsurance_contract_reserves_receivable
-            except:
-                pass
-
-        export_tax_rebates_receivable = dataSet.get("export_tax_rebates_receivable") 
-        if export_tax_rebates_receivable:
-
-            try:
-                export_tax_rebates_receivable = float(dataSet.get("export_tax_rebates_receivable")) 
-                saveSet["export_tax_rebates_receivable"] = export_tax_rebates_receivable
-            except:
-                pass
-
-        subsidies_receivable = dataSet.get("subsidies_receivable") 
-        if subsidies_receivable:
-
-            try:
-                subsidies_receivable = float(dataSet.get("subsidies_receivable")) 
-                saveSet["subsidies_receivable"] = subsidies_receivable
-            except:
-                pass
-
-        deposits_receivable = dataSet.get("deposits_receivable") 
-        if deposits_receivable:
-
-            try:
-                deposits_receivable = float(dataSet.get("deposits_receivable")) 
-                saveSet["deposits_receivable"] = deposits_receivable
-            except:
-                pass
-
-        internal_receivables = dataSet.get("internal_receivables") 
-        if internal_receivables:
-
-            try:
-                internal_receivables = float(dataSet.get("internal_receivables")) 
-                saveSet["internal_receivables"] = internal_receivables
-            except:
-                pass
-
-        other_receivables = dataSet.get("other_receivables") 
-        if other_receivables:
-
-            try:
-                other_receivables = float(dataSet.get("other_receivables")) 
-                saveSet["other_receivables"] = other_receivables
-            except:
-                pass
-
-        other_receivables_total = dataSet.get("other_receivables_total") 
-        if other_receivables_total:
-
-            try:
-                other_receivables_total = float(dataSet.get("other_receivables_total")) 
-                saveSet["other_receivables_total"] = other_receivables_total
-            except:
-                pass
-
-        inventories = dataSet.get("inventories") 
-        if inventories:
-
-            try:
-                inventories = float(dataSet.get("inventories")) 
-                saveSet["inventories"] = inventories
-            except:
-                pass
-
-        assets_held_for_sale = dataSet.get("assets_held_for_sale") 
-        if assets_held_for_sale:
-
-            try:
-                assets_held_for_sale = float(dataSet.get("assets_held_for_sale")) 
-                saveSet["assets_held_for_sale"] = assets_held_for_sale
-            except:
-                pass
-
-        prepaid_expenses = dataSet.get("prepaid_expenses") 
-        if prepaid_expenses:
-
-            try:
-                prepaid_expenses = float(dataSet.get("prepaid_expenses")) 
-                saveSet["prepaid_expenses"] = prepaid_expenses
-            except:
-                pass
-
-        current_assets_pending_disposal = dataSet.get("current_assets_pending_disposal") 
-        if current_assets_pending_disposal:
-
-            try:
-                current_assets_pending_disposal = float(dataSet.get("current_assets_pending_disposal")) 
-                saveSet["current_assets_pending_disposal"] = current_assets_pending_disposal
-            except:
-                pass
-
-        non_current_assets_due_within_one_year = dataSet.get("non_current_assets_due_within_one_year") 
-        if non_current_assets_due_within_one_year:
-
-            try:
-                non_current_assets_due_within_one_year = float(dataSet.get("non_current_assets_due_within_one_year")) 
-                saveSet["non_current_assets_due_within_one_year"] = non_current_assets_due_within_one_year
-            except:
-                pass
-
-        other_current_assets = dataSet.get("other_current_assets") 
-        if other_current_assets:
-
-            try:
-                other_current_assets = float(dataSet.get("other_current_assets")) 
-                saveSet["other_current_assets"] = other_current_assets
-            except:
-                pass
-
-        total_current_assets = dataSet.get("total_current_assets") 
-        if total_current_assets:
-
-            try:
-                total_current_assets = float(dataSet.get("total_current_assets")) 
-                saveSet["total_current_assets"] = total_current_assets
-            except:
-                pass
-
-        non_current_assets = dataSet.get("non_current_assets") 
-        if non_current_assets:
-
-            try:
-                non_current_assets = float(dataSet.get("non_current_assets")) 
-                saveSet["non_current_assets"] = non_current_assets
-            except:
-                pass
-
-        loans_and_advances = dataSet.get("loans_and_advances") 
-        if loans_and_advances:
-
-            try:
-                loans_and_advances = float(dataSet.get("loans_and_advances")) 
-                saveSet["loans_and_advances"] = loans_and_advances
-            except:
-                pass
-
-        debt_investments = dataSet.get("debt_investments") 
-        if debt_investments:
-
-            try:
-                debt_investments = float(dataSet.get("debt_investments")) 
-                saveSet["debt_investments"] = debt_investments
-            except:
-                pass
-
-        other_debt_investments = dataSet.get("other_debt_investments") 
-        if other_debt_investments:
-
-            try:
-                other_debt_investments = float(dataSet.get("other_debt_investments")) 
-                saveSet["other_debt_investments"] = other_debt_investments
-            except:
-                pass
-
-        financial_assets_at_fvoci = dataSet.get("financial_assets_at_fvoci") 
-        if financial_assets_at_fvoci:
-
-            try:
-                financial_assets_at_fvoci = float(dataSet.get("financial_assets_at_fvoci")) 
-                saveSet["financial_assets_at_fvoci"] = financial_assets_at_fvoci
-            except:
-                pass
-
-        financial_assets_at_amortized_cost = dataSet.get("financial_assets_at_amortized_cost") 
-        if financial_assets_at_amortized_cost:
-
-            try:
-                financial_assets_at_amortized_cost = float(dataSet.get("financial_assets_at_amortized_cost")) 
-                saveSet["financial_assets_at_amortized_cost"] = financial_assets_at_amortized_cost
-            except:
-                pass
-
-        available_for_sale_financial_assets = dataSet.get("available_for_sale_financial_assets") 
-        if available_for_sale_financial_assets:
-
-            try:
-                available_for_sale_financial_assets = float(dataSet.get("available_for_sale_financial_assets")) 
-                saveSet["available_for_sale_financial_assets"] = available_for_sale_financial_assets
-            except:
-                pass
-
-        long_term_equity_investments = dataSet.get("long_term_equity_investments") 
-        if long_term_equity_investments:
-
-            try:
-                long_term_equity_investments = float(dataSet.get("long_term_equity_investments")) 
-                saveSet["long_term_equity_investments"] = long_term_equity_investments
-            except:
-                pass
-
-        investment_property = dataSet.get("investment_property") 
-        if investment_property:
-
-            try:
-                investment_property = float(dataSet.get("investment_property")) 
-                saveSet["investment_property"] = investment_property
-            except:
-                pass
-
-        long_term_receivables = dataSet.get("long_term_receivables") 
-        if long_term_receivables:
-
-            try:
-                long_term_receivables = float(dataSet.get("long_term_receivables")) 
-                saveSet["long_term_receivables"] = long_term_receivables
-            except:
-                pass
-
-        other_equity_instrument_investments = dataSet.get("other_equity_instrument_investments") 
-        if other_equity_instrument_investments:
-
-            try:
-                other_equity_instrument_investments = float(dataSet.get("other_equity_instrument_investments")) 
-                saveSet["other_equity_instrument_investments"] = other_equity_instrument_investments
-            except:
-                pass
-
-        other_non_current_financial_assets = dataSet.get("other_non_current_financial_assets") 
-        if other_non_current_financial_assets:
-
-            try:
-                other_non_current_financial_assets = float(dataSet.get("other_non_current_financial_assets")) 
-                saveSet["other_non_current_financial_assets"] = other_non_current_financial_assets
-            except:
-                pass
-
-        other_long_term_investments = dataSet.get("other_long_term_investments") 
-        if other_long_term_investments:
-
-            try:
-                other_long_term_investments = float(dataSet.get("other_long_term_investments")) 
-                saveSet["other_long_term_investments"] = other_long_term_investments
-            except:
-                pass
-
-        fixed_assets_original_value = dataSet.get("fixed_assets_original_value") 
-        if fixed_assets_original_value:
-
-            try:
-                fixed_assets_original_value = float(dataSet.get("fixed_assets_original_value")) 
-                saveSet["fixed_assets_original_value"] = fixed_assets_original_value
-            except:
-                pass
-
-        accumulated_depreciation = dataSet.get("accumulated_depreciation") 
-        if accumulated_depreciation:
-
-            try:
-                accumulated_depreciation = float(dataSet.get("accumulated_depreciation")) 
-                saveSet["accumulated_depreciation"] = accumulated_depreciation
-            except:
-                pass
-
-        fixed_assets_net_value = dataSet.get("fixed_assets_net_value") 
-        if fixed_assets_net_value:
-
-            try:
-                fixed_assets_net_value = float(dataSet.get("fixed_assets_net_value")) 
-                saveSet["fixed_assets_net_value"] = fixed_assets_net_value
-            except:
-                pass
-
-        fixed_assets_impairment_provision = dataSet.get("fixed_assets_impairment_provision") 
-        if fixed_assets_impairment_provision:
-
-            try:
-                fixed_assets_impairment_provision = float(dataSet.get("fixed_assets_impairment_provision")) 
-                saveSet["fixed_assets_impairment_provision"] = fixed_assets_impairment_provision
-            except:
-                pass
-
-        construction_in_progress_total = dataSet.get("construction_in_progress_total") 
-        if construction_in_progress_total:
-
-            try:
-                construction_in_progress_total = float(dataSet.get("construction_in_progress_total")) 
-                saveSet["construction_in_progress_total"] = construction_in_progress_total
-            except:
-                pass
-
-        construction_in_progress = dataSet.get("construction_in_progress") 
-        if construction_in_progress:
-
-            try:
-                construction_in_progress = float(dataSet.get("construction_in_progress")) 
-                saveSet["construction_in_progress"] = construction_in_progress
-            except:
-                pass
-
-        construction_materials = dataSet.get("construction_materials") 
-        if construction_materials:
-
-            try:
-                construction_materials = float(dataSet.get("construction_materials")) 
-                saveSet["construction_materials"] = construction_materials
-            except:
-                pass
-
-        fixed_assets_net = dataSet.get("fixed_assets_net") 
-        if fixed_assets_net:
-
-            try:
-                fixed_assets_net = float(dataSet.get("fixed_assets_net")) 
-                saveSet["fixed_assets_net"] = fixed_assets_net
-            except:
-                pass
-
-        fixed_assets_disposal = dataSet.get("fixed_assets_disposal") 
-        if fixed_assets_disposal:
-
-            try:
-                fixed_assets_disposal = float(dataSet.get("fixed_assets_disposal")) 
-                saveSet["fixed_assets_disposal"] = fixed_assets_disposal
-            except:
-                pass
-
-        fixed_assets_and_disposal_total = dataSet.get("fixed_assets_and_disposal_total") 
-        if fixed_assets_and_disposal_total:
-
-            try:
-                fixed_assets_and_disposal_total = float(dataSet.get("fixed_assets_and_disposal_total")) 
-                saveSet["fixed_assets_and_disposal_total"] = fixed_assets_and_disposal_total
-            except:
-                pass
-
-        productive_biological_assets = dataSet.get("productive_biological_assets") 
-        if productive_biological_assets:
-
-            try:
-                productive_biological_assets = float(dataSet.get("productive_biological_assets")) 
-                saveSet["productive_biological_assets"] = productive_biological_assets
-            except:
-                pass
-
-        consumptive_biological_assets = dataSet.get("consumptive_biological_assets") 
-        if consumptive_biological_assets:
-
-            try:
-                consumptive_biological_assets = float(dataSet.get("consumptive_biological_assets")) 
-                saveSet["consumptive_biological_assets"] = consumptive_biological_assets
-            except:
-                pass
-
-        oil_and_gas_assets = dataSet.get("oil_and_gas_assets") 
-        if oil_and_gas_assets:
-
-            try:
-                oil_and_gas_assets = float(dataSet.get("oil_and_gas_assets")) 
-                saveSet["oil_and_gas_assets"] = oil_and_gas_assets
-            except:
-                pass
-
-        contract_assets = dataSet.get("contract_assets") 
-        if contract_assets:
-
-            try:
-                contract_assets = float(dataSet.get("contract_assets")) 
-                saveSet["contract_assets"] = contract_assets
-            except:
-                pass
-
-        right_of_use_assets = dataSet.get("right_of_use_assets") 
-        if right_of_use_assets:
-
-            try:
-                right_of_use_assets = float(dataSet.get("right_of_use_assets")) 
-                saveSet["right_of_use_assets"] = right_of_use_assets
-            except:
-                pass
-
-        intangible_assets = dataSet.get("intangible_assets") 
-        if intangible_assets:
-
-            try:
-                intangible_assets = float(dataSet.get("intangible_assets")) 
-                saveSet["intangible_assets"] = intangible_assets
-            except:
-                pass
-
-        development_expenditure = dataSet.get("development_expenditure") 
-        if development_expenditure:
-
-            try:
-                development_expenditure = float(dataSet.get("development_expenditure")) 
-                saveSet["development_expenditure"] = development_expenditure
-            except:
-                pass
-
-        goodwill = dataSet.get("goodwill") 
-        if goodwill:
-
-            try:
-                goodwill = float(dataSet.get("goodwill")) 
-                saveSet["goodwill"] = goodwill
-            except:
-                pass
-
-        long_term_deferred_expenses = dataSet.get("long_term_deferred_expenses") 
-        if long_term_deferred_expenses:
-
-            try:
-                long_term_deferred_expenses = float(dataSet.get("long_term_deferred_expenses")) 
-                saveSet["long_term_deferred_expenses"] = long_term_deferred_expenses
-            except:
-                pass
-
-        split_share_structure_circulation_rights = dataSet.get("split_share_structure_circulation_rights") 
-        if split_share_structure_circulation_rights:
-
-            try:
-                split_share_structure_circulation_rights = float(dataSet.get("split_share_structure_circulation_rights")) 
-                saveSet["split_share_structure_circulation_rights"] = split_share_structure_circulation_rights
-            except:
-                pass
-
-        deferred_tax_assets = dataSet.get("deferred_tax_assets") 
-        if deferred_tax_assets:
-
-            try:
-                deferred_tax_assets = float(dataSet.get("deferred_tax_assets")) 
-                saveSet["deferred_tax_assets"] = deferred_tax_assets
-            except:
-                pass
-
-        other_non_current_assets = dataSet.get("other_non_current_assets") 
-        if other_non_current_assets:
-
-            try:
-                other_non_current_assets = float(dataSet.get("other_non_current_assets")) 
-                saveSet["other_non_current_assets"] = other_non_current_assets
-            except:
-                pass
-
-        total_non_current_assets = dataSet.get("total_non_current_assets") 
-        if total_non_current_assets:
-
-            try:
-                total_non_current_assets = float(dataSet.get("total_non_current_assets")) 
-                saveSet["total_non_current_assets"] = total_non_current_assets
-            except:
-                pass
-
-        total_assets = dataSet.get("total_assets") 
-        if total_assets:
-
-            try:
-                total_assets = float(dataSet.get("total_assets")) 
-                saveSet["total_assets"] = total_assets
-            except:
-                pass
-
-        current_liabilities = dataSet.get("current_liabilities") 
-        if current_liabilities:
-
-            try:
-                current_liabilities = float(dataSet.get("current_liabilities")) 
-                saveSet["current_liabilities"] = current_liabilities
-            except:
-                pass
-
-        short_term_borrowings = dataSet.get("short_term_borrowings") 
-        if short_term_borrowings:
-
-            try:
-                short_term_borrowings = float(dataSet.get("short_term_borrowings")) 
-                saveSet["short_term_borrowings"] = short_term_borrowings
-            except:
-                pass
-
-        borrowings_from_central_bank = dataSet.get("borrowings_from_central_bank") 
-        if borrowings_from_central_bank:
-
-            try:
-                borrowings_from_central_bank = float(dataSet.get("borrowings_from_central_bank")) 
-                saveSet["borrowings_from_central_bank"] = borrowings_from_central_bank
-            except:
-                pass
-
-        deposits_from_customers_and_banks = dataSet.get("deposits_from_customers_and_banks") 
-        if deposits_from_customers_and_banks:
-
-            try:
-                deposits_from_customers_and_banks = float(dataSet.get("deposits_from_customers_and_banks")) 
-                saveSet["deposits_from_customers_and_banks"] = deposits_from_customers_and_banks
-            except:
-                pass
-
-        borrowings_from_other_banks = dataSet.get("borrowings_from_other_banks") 
-        if borrowings_from_other_banks:
-
-            try:
-                borrowings_from_other_banks = float(dataSet.get("borrowings_from_other_banks")) 
-                saveSet["borrowings_from_other_banks"] = borrowings_from_other_banks
-            except:
-                pass
-
-        trading_financial_liabilities = dataSet.get("trading_financial_liabilities") 
-        if trading_financial_liabilities:
-
-            try:
-                trading_financial_liabilities = float(dataSet.get("trading_financial_liabilities")) 
-                saveSet["trading_financial_liabilities"] = trading_financial_liabilities
-            except:
-                pass
-
-        derivative_financial_liabilities = dataSet.get("derivative_financial_liabilities") 
-        if derivative_financial_liabilities:
-
-            try:
-                derivative_financial_liabilities = float(dataSet.get("derivative_financial_liabilities")) 
-                saveSet["derivative_financial_liabilities"] = derivative_financial_liabilities
-            except:
-                pass
-
-        notes_and_accounts_payable = dataSet.get("notes_and_accounts_payable") 
-        if notes_and_accounts_payable:
-
-            try:
-                notes_and_accounts_payable = float(dataSet.get("notes_and_accounts_payable")) 
-                saveSet["notes_and_accounts_payable"] = notes_and_accounts_payable
-            except:
-                pass
-
-        notes_payable = dataSet.get("notes_payable") 
-        if notes_payable:
-
-            try:
-                notes_payable = float(dataSet.get("notes_payable")) 
-                saveSet["notes_payable"] = notes_payable
-            except:
-                pass
-
-        accounts_payable = dataSet.get("accounts_payable") 
-        if accounts_payable:
-
-            try:
-                accounts_payable = float(dataSet.get("accounts_payable")) 
-                saveSet["accounts_payable"] = accounts_payable
-            except:
-                pass
-
-        advances_from_customers = dataSet.get("advances_from_customers") 
-        if advances_from_customers:
-
-            try:
-                advances_from_customers = float(dataSet.get("advances_from_customers")) 
-                saveSet["advances_from_customers"] = advances_from_customers
-            except:
-                pass
-
-        contract_liabilities = dataSet.get("contract_liabilities") 
-        if contract_liabilities:
-
-            try:
-                contract_liabilities = float(dataSet.get("contract_liabilities")) 
-                saveSet["contract_liabilities"] = contract_liabilities
-            except:
-                pass
-
-        financial_assets_sold_for_repurchase = dataSet.get("financial_assets_sold_for_repurchase") 
-        if financial_assets_sold_for_repurchase:
-
-            try:
-                financial_assets_sold_for_repurchase = float(dataSet.get("financial_assets_sold_for_repurchase")) 
-                saveSet["financial_assets_sold_for_repurchase"] = financial_assets_sold_for_repurchase
-            except:
-                pass
-
-        fees_and_commissions_payable = dataSet.get("fees_and_commissions_payable") 
-        if fees_and_commissions_payable:
-
-            try:
-                fees_and_commissions_payable = float(dataSet.get("fees_and_commissions_payable")) 
-                saveSet["fees_and_commissions_payable"] = fees_and_commissions_payable
-            except:
-                pass
-
-        employee_benefits_payable = dataSet.get("employee_benefits_payable") 
-        if employee_benefits_payable:
-
-            try:
-                employee_benefits_payable = float(dataSet.get("employee_benefits_payable")) 
-                saveSet["employee_benefits_payable"] = employee_benefits_payable
-            except:
-                pass
-
-        taxes_payable = dataSet.get("taxes_payable") 
-        if taxes_payable:
-
-            try:
-                taxes_payable = float(dataSet.get("taxes_payable")) 
-                saveSet["taxes_payable"] = taxes_payable
-            except:
-                pass
-
-        interest_payable = dataSet.get("interest_payable") 
-        if interest_payable:
-
-            try:
-                interest_payable = float(dataSet.get("interest_payable")) 
-                saveSet["interest_payable"] = interest_payable
-            except:
-                pass
-
-        dividends_payable = dataSet.get("dividends_payable") 
-        if dividends_payable:
-
-            try:
-                dividends_payable = float(dataSet.get("dividends_payable")) 
-                saveSet["dividends_payable"] = dividends_payable
-            except:
-                pass
-
-        deposits_payable = dataSet.get("deposits_payable") 
-        if deposits_payable:
-
-            try:
-                deposits_payable = float(dataSet.get("deposits_payable")) 
-                saveSet["deposits_payable"] = deposits_payable
-            except:
-                pass
-
-        internal_payables = dataSet.get("internal_payables") 
-        if internal_payables:
-
-            try:
-                internal_payables = float(dataSet.get("internal_payables")) 
-                saveSet["internal_payables"] = internal_payables
-            except:
-                pass
-
-        other_payables = dataSet.get("other_payables") 
-        if other_payables:
-
-            try:
-                other_payables = float(dataSet.get("other_payables")) 
-                saveSet["other_payables"] = other_payables
-            except:
-                pass
-
-        other_payables_total = dataSet.get("other_payables_total") 
-        if other_payables_total:
-
-            try:
-                other_payables_total = float(dataSet.get("other_payables_total")) 
-                saveSet["other_payables_total"] = other_payables_total
-            except:
-                pass
-
-        other_taxes_payable = dataSet.get("other_taxes_payable") 
-        if other_taxes_payable:
-
-            try:
-                other_taxes_payable = float(dataSet.get("other_taxes_payable")) 
-                saveSet["other_taxes_payable"] = other_taxes_payable
-            except:
-                pass
-
-        guarantee_liability_reserves = dataSet.get("guarantee_liability_reserves") 
-        if guarantee_liability_reserves:
-
-            try:
-                guarantee_liability_reserves = float(dataSet.get("guarantee_liability_reserves")) 
-                saveSet["guarantee_liability_reserves"] = guarantee_liability_reserves
-            except:
-                pass
-
-        reinsurance_payables = dataSet.get("reinsurance_payables") 
-        if reinsurance_payables:
-
-            try:
-                reinsurance_payables = float(dataSet.get("reinsurance_payables")) 
-                saveSet["reinsurance_payables"] = reinsurance_payables
-            except:
-                pass
-
-        insurance_contract_reserves = dataSet.get("insurance_contract_reserves") 
-        if insurance_contract_reserves:
-
-            try:
-                insurance_contract_reserves = float(dataSet.get("insurance_contract_reserves")) 
-                saveSet["insurance_contract_reserves"] = insurance_contract_reserves
-            except:
-                pass
-
-        securities_trading_agency_payables = dataSet.get("securities_trading_agency_payables") 
-        if securities_trading_agency_payables:
-
-            try:
-                securities_trading_agency_payables = float(dataSet.get("securities_trading_agency_payables")) 
-                saveSet["securities_trading_agency_payables"] = securities_trading_agency_payables
-            except:
-                pass
-
-        securities_underwriting_agency_payables = dataSet.get("securities_underwriting_agency_payables") 
-        if securities_underwriting_agency_payables:
-
-            try:
-                securities_underwriting_agency_payables = float(dataSet.get("securities_underwriting_agency_payables")) 
-                saveSet["securities_underwriting_agency_payables"] = securities_underwriting_agency_payables
-            except:
-                pass
-
-        international_settlement = dataSet.get("international_settlement") 
-        if international_settlement:
-
-            try:
-                international_settlement = float(dataSet.get("international_settlement")) 
-                saveSet["international_settlement"] = international_settlement
-            except:
-                pass
-
-        domestic_settlement = dataSet.get("domestic_settlement") 
-        if domestic_settlement:
-
-            try:
-                domestic_settlement = float(dataSet.get("domestic_settlement")) 
-                saveSet["domestic_settlement"] = domestic_settlement
-            except:
-                pass
-
-        accrued_expenses = dataSet.get("accrued_expenses") 
-        if accrued_expenses:
-
-            try:
-                accrued_expenses = float(dataSet.get("accrued_expenses")) 
-                saveSet["accrued_expenses"] = accrued_expenses
-            except:
-                pass
-
-        estimated_current_liabilities = dataSet.get("estimated_current_liabilities") 
-        if estimated_current_liabilities:
-
-            try:
-                estimated_current_liabilities = float(dataSet.get("estimated_current_liabilities")) 
-                saveSet["estimated_current_liabilities"] = estimated_current_liabilities
-            except:
-                pass
-
-        short_term_bonds_payable = dataSet.get("short_term_bonds_payable") 
-        if short_term_bonds_payable:
-
-            try:
-                short_term_bonds_payable = float(dataSet.get("short_term_bonds_payable")) 
-                saveSet["short_term_bonds_payable"] = short_term_bonds_payable
-            except:
-                pass
-
-        liabilities_held_for_sale = dataSet.get("liabilities_held_for_sale") 
-        if liabilities_held_for_sale:
-
-            try:
-                liabilities_held_for_sale = float(dataSet.get("liabilities_held_for_sale")) 
-                saveSet["liabilities_held_for_sale"] = liabilities_held_for_sale
-            except:
-                pass
-
-        deferred_revenue_due_within_one_year = dataSet.get("deferred_revenue_due_within_one_year") 
-        if deferred_revenue_due_within_one_year:
-
-            try:
-                deferred_revenue_due_within_one_year = float(dataSet.get("deferred_revenue_due_within_one_year")) 
-                saveSet["deferred_revenue_due_within_one_year"] = deferred_revenue_due_within_one_year
-            except:
-                pass
-
-        non_current_liabilities_due_within_one_year = dataSet.get("non_current_liabilities_due_within_one_year") 
-        if non_current_liabilities_due_within_one_year:
-
-            try:
-                non_current_liabilities_due_within_one_year = float(dataSet.get("non_current_liabilities_due_within_one_year")) 
-                saveSet["non_current_liabilities_due_within_one_year"] = non_current_liabilities_due_within_one_year
-            except:
-                pass
-
-        other_current_liabilities = dataSet.get("other_current_liabilities") 
-        if other_current_liabilities:
-
-            try:
-                other_current_liabilities = float(dataSet.get("other_current_liabilities")) 
-                saveSet["other_current_liabilities"] = other_current_liabilities
-            except:
-                pass
-
-        total_current_liabilities = dataSet.get("total_current_liabilities") 
-        if total_current_liabilities:
-
-            try:
-                total_current_liabilities = float(dataSet.get("total_current_liabilities")) 
-                saveSet["total_current_liabilities"] = total_current_liabilities
-            except:
-                pass
-
-        non_current_liabilities = dataSet.get("non_current_liabilities") 
-        if non_current_liabilities:
-
-            try:
-                non_current_liabilities = float(dataSet.get("non_current_liabilities")) 
-                saveSet["non_current_liabilities"] = non_current_liabilities
-            except:
-                pass
-
-        long_term_borrowings = dataSet.get("long_term_borrowings") 
-        if long_term_borrowings:
-
-            try:
-                long_term_borrowings = float(dataSet.get("long_term_borrowings")) 
-                saveSet["long_term_borrowings"] = long_term_borrowings
-            except:
-                pass
-
-        bonds_payable = dataSet.get("bonds_payable") 
-        if bonds_payable:
-
-            try:
-                bonds_payable = float(dataSet.get("bonds_payable")) 
-                saveSet["bonds_payable"] = bonds_payable
-            except:
-                pass
-
-        bonds_payable_preferred_stock = dataSet.get("bonds_payable_preferred_stock") 
-        if bonds_payable_preferred_stock:
-
-            try:
-                bonds_payable_preferred_stock = float(dataSet.get("bonds_payable_preferred_stock")) 
-                saveSet["bonds_payable_preferred_stock"] = bonds_payable_preferred_stock
-            except:
-                pass
-
-        bonds_payable_perpetual_bonds = dataSet.get("bonds_payable_perpetual_bonds") 
-        if bonds_payable_perpetual_bonds:
-
-            try:
-                bonds_payable_perpetual_bonds = float(dataSet.get("bonds_payable_perpetual_bonds")) 
-                saveSet["bonds_payable_perpetual_bonds"] = bonds_payable_perpetual_bonds
-            except:
-                pass
-
-        lease_liabilities = dataSet.get("lease_liabilities") 
-        if lease_liabilities:
-
-            try:
-                lease_liabilities = float(dataSet.get("lease_liabilities")) 
-                saveSet["lease_liabilities"] = lease_liabilities
-            except:
-                pass
-
-        long_term_employee_benefits_payable = dataSet.get("long_term_employee_benefits_payable") 
-        if long_term_employee_benefits_payable:
-
-            try:
-                long_term_employee_benefits_payable = float(dataSet.get("long_term_employee_benefits_payable")) 
-                saveSet["long_term_employee_benefits_payable"] = long_term_employee_benefits_payable
-            except:
-                pass
-
-        long_term_payables = dataSet.get("long_term_payables") 
-        if long_term_payables:
-
-            try:
-                long_term_payables = float(dataSet.get("long_term_payables")) 
-                saveSet["long_term_payables"] = long_term_payables
-            except:
-                pass
-
-        long_term_payables_total = dataSet.get("long_term_payables_total") 
-        if long_term_payables_total:
-
-            try:
-                long_term_payables_total = float(dataSet.get("long_term_payables_total")) 
-                saveSet["long_term_payables_total"] = long_term_payables_total
-            except:
-                pass
-
-        special_payables = dataSet.get("special_payables") 
-        if special_payables:
-
-            try:
-                special_payables = float(dataSet.get("special_payables")) 
-                saveSet["special_payables"] = special_payables
-            except:
-                pass
-
-        estimated_non_current_liabilities = dataSet.get("estimated_non_current_liabilities") 
-        if estimated_non_current_liabilities:
-
-            try:
-                estimated_non_current_liabilities = float(dataSet.get("estimated_non_current_liabilities")) 
-                saveSet["estimated_non_current_liabilities"] = estimated_non_current_liabilities
-            except:
-                pass
-
-        long_term_deferred_revenue = dataSet.get("long_term_deferred_revenue") 
-        if long_term_deferred_revenue:
-
-            try:
-                long_term_deferred_revenue = float(dataSet.get("long_term_deferred_revenue")) 
-                saveSet["long_term_deferred_revenue"] = long_term_deferred_revenue
-            except:
-                pass
-
-        deferred_tax_liabilities = dataSet.get("deferred_tax_liabilities") 
-        if deferred_tax_liabilities:
-
-            try:
-                deferred_tax_liabilities = float(dataSet.get("deferred_tax_liabilities")) 
-                saveSet["deferred_tax_liabilities"] = deferred_tax_liabilities
-            except:
-                pass
-
-        other_non_current_liabilities = dataSet.get("other_non_current_liabilities") 
-        if other_non_current_liabilities:
-
-            try:
-                other_non_current_liabilities = float(dataSet.get("other_non_current_liabilities")) 
-                saveSet["other_non_current_liabilities"] = other_non_current_liabilities
-            except:
-                pass
-
-        total_non_current_liabilities = dataSet.get("total_non_current_liabilities") 
-        if total_non_current_liabilities:
-
-            try:
-                total_non_current_liabilities = float(dataSet.get("total_non_current_liabilities")) 
-                saveSet["total_non_current_liabilities"] = total_non_current_liabilities
-            except:
-                pass
-
-        total_liabilities = dataSet.get("total_liabilities") 
-        if total_liabilities:
-
-            try:
-                total_liabilities = float(dataSet.get("total_liabilities")) 
-                saveSet["total_liabilities"] = total_liabilities
-            except:
-                pass
-
-        owners_equity = dataSet.get("owners_equity") 
-        if owners_equity:
-
-            try:
-                owners_equity = float(dataSet.get("owners_equity")) 
-                saveSet["owners_equity"] = owners_equity
-            except:
-                pass
-
-        paid_in_capital = dataSet.get("paid_in_capital") 
-        if paid_in_capital:
-
-            try:
-                paid_in_capital = float(dataSet.get("paid_in_capital")) 
-                saveSet["paid_in_capital"] = paid_in_capital
-            except:
-                pass
-
-        other_equity_instruments = dataSet.get("other_equity_instruments") 
-        if other_equity_instruments:
-
-            try:
-                other_equity_instruments = float(dataSet.get("other_equity_instruments")) 
-                saveSet["other_equity_instruments"] = other_equity_instruments
-            except:
-                pass
-
-        preferred_stock = dataSet.get("preferred_stock") 
-        if preferred_stock:
-
-            try:
-                preferred_stock = float(dataSet.get("preferred_stock")) 
-                saveSet["preferred_stock"] = preferred_stock
-            except:
-                pass
-
-        perpetual_bonds = dataSet.get("perpetual_bonds") 
-        if perpetual_bonds:
-
-            try:
-                perpetual_bonds = float(dataSet.get("perpetual_bonds")) 
-                saveSet["perpetual_bonds"] = perpetual_bonds
-            except:
-                pass
-
-        capital_reserve = dataSet.get("capital_reserve") 
-        if capital_reserve:
-
-            try:
-                capital_reserve = float(dataSet.get("capital_reserve")) 
-                saveSet["capital_reserve"] = capital_reserve
-            except:
-                pass
-
-        less_treasury_stock = dataSet.get("less_treasury_stock") 
-        if less_treasury_stock:
-
-            try:
-                less_treasury_stock = float(dataSet.get("less_treasury_stock")) 
-                saveSet["less_treasury_stock"] = less_treasury_stock
-            except:
-                pass
-
-        other_comprehensive_income = dataSet.get("other_comprehensive_income") 
-        if other_comprehensive_income:
-
-            try:
-                other_comprehensive_income = float(dataSet.get("other_comprehensive_income")) 
-                saveSet["other_comprehensive_income"] = other_comprehensive_income
-            except:
-                pass
-
-        special_reserve = dataSet.get("special_reserve") 
-        if special_reserve:
-
-            try:
-                special_reserve = float(dataSet.get("special_reserve")) 
-                saveSet["special_reserve"] = special_reserve
-            except:
-                pass
-
-        surplus_reserve = dataSet.get("surplus_reserve") 
-        if surplus_reserve:
-
-            try:
-                surplus_reserve = float(dataSet.get("surplus_reserve")) 
-                saveSet["surplus_reserve"] = surplus_reserve
-            except:
-                pass
-
-        general_risk_reserve = dataSet.get("general_risk_reserve") 
-        if general_risk_reserve:
-
-            try:
-                general_risk_reserve = float(dataSet.get("general_risk_reserve")) 
-                saveSet["general_risk_reserve"] = general_risk_reserve
-            except:
-                pass
-
-        unrecognized_investment_losses = dataSet.get("unrecognized_investment_losses") 
-        if unrecognized_investment_losses:
-
-            try:
-                unrecognized_investment_losses = float(dataSet.get("unrecognized_investment_losses")) 
-                saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
-            except:
-                pass
-
-        retained_earnings = dataSet.get("retained_earnings") 
-        if retained_earnings:
-
-            try:
-                retained_earnings = float(dataSet.get("retained_earnings")) 
-                saveSet["retained_earnings"] = retained_earnings
-            except:
-                pass
-
-        proposed_cash_dividends = dataSet.get("proposed_cash_dividends") 
-        if proposed_cash_dividends:
-
-            try:
-                proposed_cash_dividends = float(dataSet.get("proposed_cash_dividends")) 
-                saveSet["proposed_cash_dividends"] = proposed_cash_dividends
-            except:
-                pass
-
-        foreign_currency_translation_difference = dataSet.get("foreign_currency_translation_difference") 
-        if foreign_currency_translation_difference:
-
-            try:
-                foreign_currency_translation_difference = float(dataSet.get("foreign_currency_translation_difference")) 
-                saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
-            except:
-                pass
-
-        equity_attributable_to_parent_company = dataSet.get("equity_attributable_to_parent_company") 
-        if equity_attributable_to_parent_company:
-
-            try:
-                equity_attributable_to_parent_company = float(dataSet.get("equity_attributable_to_parent_company")) 
-                saveSet["equity_attributable_to_parent_company"] = equity_attributable_to_parent_company
-            except:
-                pass
-
-        minority_interests = dataSet.get("minority_interests") 
-        if minority_interests:
-
-            try:
-                minority_interests = float(dataSet.get("minority_interests")) 
-                saveSet["minority_interests"] = minority_interests
-            except:
-                pass
-
-        total_owners_equity = dataSet.get("total_owners_equity") 
-        if total_owners_equity:
-
-            try:
-                total_owners_equity = float(dataSet.get("total_owners_equity")) 
-                saveSet["total_owners_equity"] = total_owners_equity
-            except:
-                pass
-
-        total_liabilities_and_owners_equity = dataSet.get("total_liabilities_and_owners_equity") 
-        if total_liabilities_and_owners_equity:
-
-            try:
-                total_liabilities_and_owners_equity = float(dataSet.get("total_liabilities_and_owners_equity")) 
-                saveSet["total_liabilities_and_owners_equity"] = total_liabilities_and_owners_equity
-            except:
-                pass
+        try:
+            monetary_capital = float(dataSet.get("monetary_capital")) 
+            saveSet["monetary_capital"] = monetary_capital
+        except:
+            pass
+
+        try:
+            settlement_provisions = float(dataSet.get("settlement_provisions")) 
+            saveSet["settlement_provisions"] = settlement_provisions
+        except:
+            pass
+
+        try:
+            loans_to_other_banks = float(dataSet.get("loans_to_other_banks")) 
+            saveSet["loans_to_other_banks"] = loans_to_other_banks
+        except:
+            pass
+
+        try:
+            trading_financial_assets = float(dataSet.get("trading_financial_assets")) 
+            saveSet["trading_financial_assets"] = trading_financial_assets
+        except:
+            pass
+
+        try:
+            financial_assets_purchased_for_resale = float(dataSet.get("financial_assets_purchased_for_resale")) 
+            saveSet["financial_assets_purchased_for_resale"] = financial_assets_purchased_for_resale
+        except:
+            pass
+
+        try:
+            derivative_financial_assets = float(dataSet.get("derivative_financial_assets")) 
+            saveSet["derivative_financial_assets"] = derivative_financial_assets
+        except:
+            pass
+
+        try:
+            notes_and_accounts_receivable = float(dataSet.get("notes_and_accounts_receivable")) 
+            saveSet["notes_and_accounts_receivable"] = notes_and_accounts_receivable
+        except:
+            pass
+
+        try:
+            notes_receivable = float(dataSet.get("notes_receivable")) 
+            saveSet["notes_receivable"] = notes_receivable
+        except:
+            pass
+
+        try:
+            accounts_receivable = float(dataSet.get("accounts_receivable")) 
+            saveSet["accounts_receivable"] = accounts_receivable
+        except:
+            pass
+
+        try:
+            receivables_financing = float(dataSet.get("receivables_financing")) 
+            saveSet["receivables_financing"] = receivables_financing
+        except:
+            pass
+
+        try:
+            prepayments = float(dataSet.get("prepayments")) 
+            saveSet["prepayments"] = prepayments
+        except:
+            pass
+
+        try:
+            dividends_receivable = float(dataSet.get("dividends_receivable")) 
+            saveSet["dividends_receivable"] = dividends_receivable
+        except:
+            pass
+
+        try:
+            interest_receivable = float(dataSet.get("interest_receivable")) 
+            saveSet["interest_receivable"] = interest_receivable
+        except:
+            pass
+
+        try:
+            insurance_premiums_receivable = float(dataSet.get("insurance_premiums_receivable")) 
+            saveSet["insurance_premiums_receivable"] = insurance_premiums_receivable
+        except:
+            pass
+
+        try:
+            reinsurance_receivables = float(dataSet.get("reinsurance_receivables")) 
+            saveSet["reinsurance_receivables"] = reinsurance_receivables
+        except:
+            pass
+
+        try:
+            reinsurance_contract_reserves_receivable = float(dataSet.get("reinsurance_contract_reserves_receivable")) 
+            saveSet["reinsurance_contract_reserves_receivable"] = reinsurance_contract_reserves_receivable
+        except:
+            pass
+
+        try:
+            export_tax_rebates_receivable = float(dataSet.get("export_tax_rebates_receivable")) 
+            saveSet["export_tax_rebates_receivable"] = export_tax_rebates_receivable
+        except:
+            pass
+
+        try:
+            subsidies_receivable = float(dataSet.get("subsidies_receivable")) 
+            saveSet["subsidies_receivable"] = subsidies_receivable
+        except:
+            pass
+
+        try:
+            deposits_receivable = float(dataSet.get("deposits_receivable")) 
+            saveSet["deposits_receivable"] = deposits_receivable
+        except:
+            pass
+
+        try:
+            internal_receivables = float(dataSet.get("internal_receivables")) 
+            saveSet["internal_receivables"] = internal_receivables
+        except:
+            pass
+
+        try:
+            other_receivables = float(dataSet.get("other_receivables")) 
+            saveSet["other_receivables"] = other_receivables
+        except:
+            pass
+
+        try:
+            other_receivables_total = float(dataSet.get("other_receivables_total")) 
+            saveSet["other_receivables_total"] = other_receivables_total
+        except:
+            pass
+
+        try:
+            inventories = float(dataSet.get("inventories")) 
+            saveSet["inventories"] = inventories
+        except:
+            pass
+
+        try:
+            assets_held_for_sale = float(dataSet.get("assets_held_for_sale")) 
+            saveSet["assets_held_for_sale"] = assets_held_for_sale
+        except:
+            pass
+
+        try:
+            prepaid_expenses = float(dataSet.get("prepaid_expenses")) 
+            saveSet["prepaid_expenses"] = prepaid_expenses
+        except:
+            pass
+
+        try:
+            current_assets_pending_disposal = float(dataSet.get("current_assets_pending_disposal")) 
+            saveSet["current_assets_pending_disposal"] = current_assets_pending_disposal
+        except:
+            pass
+
+        try:
+            non_current_assets_due_within_one_year = float(dataSet.get("non_current_assets_due_within_one_year")) 
+            saveSet["non_current_assets_due_within_one_year"] = non_current_assets_due_within_one_year
+        except:
+            pass
+
+        try:
+            other_current_assets = float(dataSet.get("other_current_assets")) 
+            saveSet["other_current_assets"] = other_current_assets
+        except:
+            pass
+
+        try:
+            total_current_assets = float(dataSet.get("total_current_assets")) 
+            saveSet["total_current_assets"] = total_current_assets
+        except:
+            pass
+
+        try:
+            non_current_assets = float(dataSet.get("non_current_assets")) 
+            saveSet["non_current_assets"] = non_current_assets
+        except:
+            pass
+
+        try:
+            loans_and_advances = float(dataSet.get("loans_and_advances")) 
+            saveSet["loans_and_advances"] = loans_and_advances
+        except:
+            pass
+
+        try:
+            debt_investments = float(dataSet.get("debt_investments")) 
+            saveSet["debt_investments"] = debt_investments
+        except:
+            pass
+
+        try:
+            other_debt_investments = float(dataSet.get("other_debt_investments")) 
+            saveSet["other_debt_investments"] = other_debt_investments
+        except:
+            pass
+
+        try:
+            financial_assets_at_fvoci = float(dataSet.get("financial_assets_at_fvoci")) 
+            saveSet["financial_assets_at_fvoci"] = financial_assets_at_fvoci
+        except:
+            pass
+
+        try:
+            financial_assets_at_amortized_cost = float(dataSet.get("financial_assets_at_amortized_cost")) 
+            saveSet["financial_assets_at_amortized_cost"] = financial_assets_at_amortized_cost
+        except:
+            pass
+
+        try:
+            available_for_sale_financial_assets = float(dataSet.get("available_for_sale_financial_assets")) 
+            saveSet["available_for_sale_financial_assets"] = available_for_sale_financial_assets
+        except:
+            pass
+
+        try:
+            long_term_equity_investments = float(dataSet.get("long_term_equity_investments")) 
+            saveSet["long_term_equity_investments"] = long_term_equity_investments
+        except:
+            pass
+
+        try:
+            investment_property = float(dataSet.get("investment_property")) 
+            saveSet["investment_property"] = investment_property
+        except:
+            pass
+
+        try:
+            long_term_receivables = float(dataSet.get("long_term_receivables")) 
+            saveSet["long_term_receivables"] = long_term_receivables
+        except:
+            pass
+
+        try:
+            other_equity_instrument_investments = float(dataSet.get("other_equity_instrument_investments")) 
+            saveSet["other_equity_instrument_investments"] = other_equity_instrument_investments
+        except:
+            pass
+
+        try:
+            other_non_current_financial_assets = float(dataSet.get("other_non_current_financial_assets")) 
+            saveSet["other_non_current_financial_assets"] = other_non_current_financial_assets
+        except:
+            pass
+
+        try:
+            other_long_term_investments = float(dataSet.get("other_long_term_investments")) 
+            saveSet["other_long_term_investments"] = other_long_term_investments
+        except:
+            pass
+
+        try:
+            fixed_assets_original_value = float(dataSet.get("fixed_assets_original_value")) 
+            saveSet["fixed_assets_original_value"] = fixed_assets_original_value
+        except:
+            pass
+
+        try:
+            accumulated_depreciation = float(dataSet.get("accumulated_depreciation")) 
+            saveSet["accumulated_depreciation"] = accumulated_depreciation
+        except:
+            pass
+
+        try:
+            fixed_assets_net_value = float(dataSet.get("fixed_assets_net_value")) 
+            saveSet["fixed_assets_net_value"] = fixed_assets_net_value
+        except:
+            pass
+
+        try:
+            fixed_assets_impairment_provision = float(dataSet.get("fixed_assets_impairment_provision")) 
+            saveSet["fixed_assets_impairment_provision"] = fixed_assets_impairment_provision
+        except:
+            pass
+
+        try:
+            construction_in_progress_total = float(dataSet.get("construction_in_progress_total")) 
+            saveSet["construction_in_progress_total"] = construction_in_progress_total
+        except:
+            pass
+
+        try:
+            construction_in_progress = float(dataSet.get("construction_in_progress")) 
+            saveSet["construction_in_progress"] = construction_in_progress
+        except:
+            pass
+
+        try:
+            construction_materials = float(dataSet.get("construction_materials")) 
+            saveSet["construction_materials"] = construction_materials
+        except:
+            pass
+
+        try:
+            fixed_assets_net = float(dataSet.get("fixed_assets_net")) 
+            saveSet["fixed_assets_net"] = fixed_assets_net
+        except:
+            pass
+
+        try:
+            fixed_assets_disposal = float(dataSet.get("fixed_assets_disposal")) 
+            saveSet["fixed_assets_disposal"] = fixed_assets_disposal
+        except:
+            pass
+
+        try:
+            fixed_assets_and_disposal_total = float(dataSet.get("fixed_assets_and_disposal_total")) 
+            saveSet["fixed_assets_and_disposal_total"] = fixed_assets_and_disposal_total
+        except:
+            pass
+
+        try:
+            productive_biological_assets = float(dataSet.get("productive_biological_assets")) 
+            saveSet["productive_biological_assets"] = productive_biological_assets
+        except:
+            pass
+
+        try:
+            consumptive_biological_assets = float(dataSet.get("consumptive_biological_assets")) 
+            saveSet["consumptive_biological_assets"] = consumptive_biological_assets
+        except:
+            pass
+
+        try:
+            oil_and_gas_assets = float(dataSet.get("oil_and_gas_assets")) 
+            saveSet["oil_and_gas_assets"] = oil_and_gas_assets
+        except:
+            pass
+
+        try:
+            contract_assets = float(dataSet.get("contract_assets")) 
+            saveSet["contract_assets"] = contract_assets
+        except:
+            pass
+
+        try:
+            right_of_use_assets = float(dataSet.get("right_of_use_assets")) 
+            saveSet["right_of_use_assets"] = right_of_use_assets
+        except:
+            pass
+
+        try:
+            intangible_assets = float(dataSet.get("intangible_assets")) 
+            saveSet["intangible_assets"] = intangible_assets
+        except:
+            pass
+
+        try:
+            development_expenditure = float(dataSet.get("development_expenditure")) 
+            saveSet["development_expenditure"] = development_expenditure
+        except:
+            pass
+
+        try:
+            goodwill = float(dataSet.get("goodwill")) 
+            saveSet["goodwill"] = goodwill
+        except:
+            pass
+
+        try:
+            long_term_deferred_expenses = float(dataSet.get("long_term_deferred_expenses")) 
+            saveSet["long_term_deferred_expenses"] = long_term_deferred_expenses
+        except:
+            pass
+
+        try:
+            split_share_structure_circulation_rights = float(dataSet.get("split_share_structure_circulation_rights")) 
+            saveSet["split_share_structure_circulation_rights"] = split_share_structure_circulation_rights
+        except:
+            pass
+
+        try:
+            deferred_tax_assets = float(dataSet.get("deferred_tax_assets")) 
+            saveSet["deferred_tax_assets"] = deferred_tax_assets
+        except:
+            pass
+
+        try:
+            other_non_current_assets = float(dataSet.get("other_non_current_assets")) 
+            saveSet["other_non_current_assets"] = other_non_current_assets
+        except:
+            pass
+
+        try:
+            total_non_current_assets = float(dataSet.get("total_non_current_assets")) 
+            saveSet["total_non_current_assets"] = total_non_current_assets
+        except:
+            pass
+
+        try:
+            total_assets = float(dataSet.get("total_assets")) 
+            saveSet["total_assets"] = total_assets
+        except:
+            pass
+
+        try:
+            current_liabilities = float(dataSet.get("current_liabilities")) 
+            saveSet["current_liabilities"] = current_liabilities
+        except:
+            pass
+
+        try:
+            short_term_borrowings = float(dataSet.get("short_term_borrowings")) 
+            saveSet["short_term_borrowings"] = short_term_borrowings
+        except:
+            pass
+
+        try:
+            borrowings_from_central_bank = float(dataSet.get("borrowings_from_central_bank")) 
+            saveSet["borrowings_from_central_bank"] = borrowings_from_central_bank
+        except:
+            pass
+
+        try:
+            deposits_from_customers_and_banks = float(dataSet.get("deposits_from_customers_and_banks")) 
+            saveSet["deposits_from_customers_and_banks"] = deposits_from_customers_and_banks
+        except:
+            pass
+
+        try:
+            borrowings_from_other_banks = float(dataSet.get("borrowings_from_other_banks")) 
+            saveSet["borrowings_from_other_banks"] = borrowings_from_other_banks
+        except:
+            pass
+
+        try:
+            trading_financial_liabilities = float(dataSet.get("trading_financial_liabilities")) 
+            saveSet["trading_financial_liabilities"] = trading_financial_liabilities
+        except:
+            pass
+
+        try:
+            derivative_financial_liabilities = float(dataSet.get("derivative_financial_liabilities")) 
+            saveSet["derivative_financial_liabilities"] = derivative_financial_liabilities
+        except:
+            pass
+
+        try:
+            notes_and_accounts_payable = float(dataSet.get("notes_and_accounts_payable")) 
+            saveSet["notes_and_accounts_payable"] = notes_and_accounts_payable
+        except:
+            pass
+
+        try:
+            notes_payable = float(dataSet.get("notes_payable")) 
+            saveSet["notes_payable"] = notes_payable
+        except:
+            pass
+
+        try:
+            accounts_payable = float(dataSet.get("accounts_payable")) 
+            saveSet["accounts_payable"] = accounts_payable
+        except:
+            pass
+
+        try:
+            advances_from_customers = float(dataSet.get("advances_from_customers")) 
+            saveSet["advances_from_customers"] = advances_from_customers
+        except:
+            pass
+
+        try:
+            contract_liabilities = float(dataSet.get("contract_liabilities")) 
+            saveSet["contract_liabilities"] = contract_liabilities
+        except:
+            pass
+
+        try:
+            financial_assets_sold_for_repurchase = float(dataSet.get("financial_assets_sold_for_repurchase")) 
+            saveSet["financial_assets_sold_for_repurchase"] = financial_assets_sold_for_repurchase
+        except:
+            pass
+
+        try:
+            fees_and_commissions_payable = float(dataSet.get("fees_and_commissions_payable")) 
+            saveSet["fees_and_commissions_payable"] = fees_and_commissions_payable
+        except:
+            pass
+
+        try:
+            employee_benefits_payable = float(dataSet.get("employee_benefits_payable")) 
+            saveSet["employee_benefits_payable"] = employee_benefits_payable
+        except:
+            pass
+
+        try:
+            taxes_payable = float(dataSet.get("taxes_payable")) 
+            saveSet["taxes_payable"] = taxes_payable
+        except:
+            pass
+
+        try:
+            interest_payable = float(dataSet.get("interest_payable")) 
+            saveSet["interest_payable"] = interest_payable
+        except:
+            pass
+
+        try:
+            dividends_payable = float(dataSet.get("dividends_payable")) 
+            saveSet["dividends_payable"] = dividends_payable
+        except:
+            pass
+
+        try:
+            deposits_payable = float(dataSet.get("deposits_payable")) 
+            saveSet["deposits_payable"] = deposits_payable
+        except:
+            pass
+
+        try:
+            internal_payables = float(dataSet.get("internal_payables")) 
+            saveSet["internal_payables"] = internal_payables
+        except:
+            pass
+
+        try:
+            other_payables = float(dataSet.get("other_payables")) 
+            saveSet["other_payables"] = other_payables
+        except:
+            pass
+
+        try:
+            other_payables_total = float(dataSet.get("other_payables_total")) 
+            saveSet["other_payables_total"] = other_payables_total
+        except:
+            pass
+
+        try:
+            other_taxes_payable = float(dataSet.get("other_taxes_payable")) 
+            saveSet["other_taxes_payable"] = other_taxes_payable
+        except:
+            pass
+
+        try:
+            guarantee_liability_reserves = float(dataSet.get("guarantee_liability_reserves")) 
+            saveSet["guarantee_liability_reserves"] = guarantee_liability_reserves
+        except:
+            pass
+
+        try:
+            reinsurance_payables = float(dataSet.get("reinsurance_payables")) 
+            saveSet["reinsurance_payables"] = reinsurance_payables
+        except:
+            pass
+
+        try:
+            insurance_contract_reserves = float(dataSet.get("insurance_contract_reserves")) 
+            saveSet["insurance_contract_reserves"] = insurance_contract_reserves
+        except:
+            pass
+
+        try:
+            securities_trading_agency_payables = float(dataSet.get("securities_trading_agency_payables")) 
+            saveSet["securities_trading_agency_payables"] = securities_trading_agency_payables
+        except:
+            pass
+
+        try:
+            securities_underwriting_agency_payables = float(dataSet.get("securities_underwriting_agency_payables")) 
+            saveSet["securities_underwriting_agency_payables"] = securities_underwriting_agency_payables
+        except:
+            pass
+
+        try:
+            international_settlement = float(dataSet.get("international_settlement")) 
+            saveSet["international_settlement"] = international_settlement
+        except:
+            pass
+
+        try:
+            domestic_settlement = float(dataSet.get("domestic_settlement")) 
+            saveSet["domestic_settlement"] = domestic_settlement
+        except:
+            pass
+
+        try:
+            accrued_expenses = float(dataSet.get("accrued_expenses")) 
+            saveSet["accrued_expenses"] = accrued_expenses
+        except:
+            pass
+
+        try:
+            estimated_current_liabilities = float(dataSet.get("estimated_current_liabilities")) 
+            saveSet["estimated_current_liabilities"] = estimated_current_liabilities
+        except:
+            pass
+
+        try:
+            short_term_bonds_payable = float(dataSet.get("short_term_bonds_payable")) 
+            saveSet["short_term_bonds_payable"] = short_term_bonds_payable
+        except:
+            pass
+
+        try:
+            liabilities_held_for_sale = float(dataSet.get("liabilities_held_for_sale")) 
+            saveSet["liabilities_held_for_sale"] = liabilities_held_for_sale
+        except:
+            pass
+
+        try:
+            deferred_revenue_due_within_one_year = float(dataSet.get("deferred_revenue_due_within_one_year")) 
+            saveSet["deferred_revenue_due_within_one_year"] = deferred_revenue_due_within_one_year
+        except:
+            pass
+
+        try:
+            non_current_liabilities_due_within_one_year = float(dataSet.get("non_current_liabilities_due_within_one_year")) 
+            saveSet["non_current_liabilities_due_within_one_year"] = non_current_liabilities_due_within_one_year
+        except:
+            pass
+
+
+        try:
+            other_current_liabilities = float(dataSet.get("other_current_liabilities")) 
+            saveSet["other_current_liabilities"] = other_current_liabilities
+        except:
+            pass
+
+        try:
+            total_current_liabilities = float(dataSet.get("total_current_liabilities")) 
+            saveSet["total_current_liabilities"] = total_current_liabilities
+        except:
+            pass
+
+        try:
+            non_current_liabilities = float(dataSet.get("non_current_liabilities")) 
+            saveSet["non_current_liabilities"] = non_current_liabilities
+        except:
+            pass
+
+        try:
+            long_term_borrowings = float(dataSet.get("long_term_borrowings")) 
+            saveSet["long_term_borrowings"] = long_term_borrowings
+        except:
+            pass
+
+        try:
+            bonds_payable = float(dataSet.get("bonds_payable")) 
+            saveSet["bonds_payable"] = bonds_payable
+        except:
+            pass
+
+        try:
+            bonds_payable_preferred_stock = float(dataSet.get("bonds_payable_preferred_stock")) 
+            saveSet["bonds_payable_preferred_stock"] = bonds_payable_preferred_stock
+        except:
+            pass
+
+        try:
+            bonds_payable_perpetual_bonds = float(dataSet.get("bonds_payable_perpetual_bonds")) 
+            saveSet["bonds_payable_perpetual_bonds"] = bonds_payable_perpetual_bonds
+        except:
+            pass
+
+        try:
+            lease_liabilities = float(dataSet.get("lease_liabilities")) 
+            saveSet["lease_liabilities"] = lease_liabilities
+        except:
+            pass
+
+        try:
+            long_term_employee_benefits_payable = float(dataSet.get("long_term_employee_benefits_payable")) 
+            saveSet["long_term_employee_benefits_payable"] = long_term_employee_benefits_payable
+        except:
+            pass
+
+        try:
+            long_term_payables = float(dataSet.get("long_term_payables")) 
+            saveSet["long_term_payables"] = long_term_payables
+        except:
+            pass
+
+        try:
+            long_term_payables_total = float(dataSet.get("long_term_payables_total")) 
+            saveSet["long_term_payables_total"] = long_term_payables_total
+        except:
+            pass
+
+        try:
+            special_payables = float(dataSet.get("special_payables")) 
+            saveSet["special_payables"] = special_payables
+        except:
+            pass
+
+        try:
+            estimated_non_current_liabilities = float(dataSet.get("estimated_non_current_liabilities")) 
+            saveSet["estimated_non_current_liabilities"] = estimated_non_current_liabilities
+        except:
+            pass
+
+        try:
+            long_term_deferred_revenue = float(dataSet.get("long_term_deferred_revenue")) 
+            saveSet["long_term_deferred_revenue"] = long_term_deferred_revenue
+        except:
+            pass
+
+        try:
+            deferred_tax_liabilities = float(dataSet.get("deferred_tax_liabilities")) 
+            saveSet["deferred_tax_liabilities"] = deferred_tax_liabilities
+        except:
+            pass
+
+        try:
+            other_non_current_liabilities = float(dataSet.get("other_non_current_liabilities")) 
+            saveSet["other_non_current_liabilities"] = other_non_current_liabilities
+        except:
+            pass
+
+        try:
+            total_non_current_liabilities = float(dataSet.get("total_non_current_liabilities")) 
+            saveSet["total_non_current_liabilities"] = total_non_current_liabilities
+        except:
+            pass
+
+        try:
+            total_liabilities = float(dataSet.get("total_liabilities")) 
+            saveSet["total_liabilities"] = total_liabilities
+        except:
+            pass
+
+        try:
+            owners_equity = float(dataSet.get("owners_equity")) 
+            saveSet["owners_equity"] = owners_equity
+        except:
+            pass
+
+        try:
+            paid_in_capital = float(dataSet.get("paid_in_capital")) 
+            saveSet["paid_in_capital"] = paid_in_capital
+        except:
+            pass
+
+        try:
+            other_equity_instruments = float(dataSet.get("other_equity_instruments")) 
+            saveSet["other_equity_instruments"] = other_equity_instruments
+        except:
+            pass
+
+        try:
+            preferred_stock = float(dataSet.get("preferred_stock")) 
+            saveSet["preferred_stock"] = preferred_stock
+        except:
+            pass
+
+        try:
+            perpetual_bonds = float(dataSet.get("perpetual_bonds")) 
+            saveSet["perpetual_bonds"] = perpetual_bonds
+        except:
+            pass
+
+        try:
+            capital_reserve = float(dataSet.get("capital_reserve")) 
+            saveSet["capital_reserve"] = capital_reserve
+        except:
+            pass
+
+        try:
+            less_treasury_stock = float(dataSet.get("less_treasury_stock")) 
+            saveSet["less_treasury_stock"] = less_treasury_stock
+        except:
+            pass
+
+        try:
+            other_comprehensive_income = float(dataSet.get("other_comprehensive_income")) 
+            saveSet["other_comprehensive_income"] = other_comprehensive_income
+        except:
+            pass
+
+        try:
+            special_reserve = float(dataSet.get("special_reserve")) 
+            saveSet["special_reserve"] = special_reserve
+        except:
+            pass
+
+        try:
+            surplus_reserve = float(dataSet.get("surplus_reserve")) 
+            saveSet["surplus_reserve"] = surplus_reserve
+        except:
+            pass
+
+        try:
+            general_risk_reserve = float(dataSet.get("general_risk_reserve")) 
+            saveSet["general_risk_reserve"] = general_risk_reserve
+        except:
+            pass
+
+        try:
+            unrecognized_investment_losses = float(dataSet.get("unrecognized_investment_losses")) 
+            saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
+        except:
+            pass
+
+        try:
+            retained_earnings = float(dataSet.get("retained_earnings")) 
+            saveSet["retained_earnings"] = retained_earnings
+        except:
+            pass
+
+        try:
+            proposed_cash_dividends = float(dataSet.get("proposed_cash_dividends")) 
+            saveSet["proposed_cash_dividends"] = proposed_cash_dividends
+        except:
+            pass
+
+        try:
+            foreign_currency_translation_difference = float(dataSet.get("foreign_currency_translation_difference")) 
+            saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
+        except:
+            pass
+
+        try:
+            equity_attributable_to_parent_company = float(dataSet.get("equity_attributable_to_parent_company")) 
+            saveSet["equity_attributable_to_parent_company"] = equity_attributable_to_parent_company
+        except:
+            pass
+
+        try:
+            minority_interests = float(dataSet.get("minority_interests")) 
+            saveSet["minority_interests"] = minority_interests
+        except:
+            pass
+
+        try:
+            total_owners_equity = float(dataSet.get("total_owners_equity")) 
+            saveSet["total_owners_equity"] = total_owners_equity
+        except:
+            pass
+
+        try:
+            total_liabilities_and_owners_equity = float(dataSet.get("total_liabilities_and_owners_equity")) 
+            saveSet["total_liabilities_and_owners_equity"] = total_liabilities_and_owners_equity
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -7206,689 +6694,461 @@ def update_income_statements(tableName,id,dataSet):
         if report_date:
             saveSet["report_date"] = report_date
 
-        total_operating_revenue = dataSet.get("total_operating_revenue") 
-        if total_operating_revenue:
-
-            try:
-                total_operating_revenue = float(dataSet.get("total_operating_revenue")) 
-                saveSet["total_operating_revenue"] = total_operating_revenue
-            except:
-                pass
-
-        operating_revenue = dataSet.get("operating_revenue") 
-        if operating_revenue:
-
-            try:
-                operating_revenue = float(dataSet.get("operating_revenue")) 
-                saveSet["operating_revenue"] = operating_revenue
-            except:
-                pass
-
-        interest_income = dataSet.get("interest_income") 
-        if interest_income:
-
-            try:
-                interest_income = float(dataSet.get("interest_income")) 
-                saveSet["interest_income"] = interest_income
-            except:
-                pass
-
-        earned_premiums = dataSet.get("earned_premiums") 
-        if earned_premiums:
-
-            try:
-                earned_premiums = float(dataSet.get("earned_premiums")) 
-                saveSet["earned_premiums"] = earned_premiums
-            except:
-                pass
-
-        fees_and_commissions_income = dataSet.get("fees_and_commissions_income") 
-        if fees_and_commissions_income:
-
-            try:
-                fees_and_commissions_income = float(dataSet.get("fees_and_commissions_income")) 
-                saveSet["fees_and_commissions_income"] = fees_and_commissions_income
-            except:
-                pass
-
-        real_estate_sales_revenue = dataSet.get("real_estate_sales_revenue") 
-        if real_estate_sales_revenue:
-
-            try:
-                real_estate_sales_revenue = float(dataSet.get("real_estate_sales_revenue")) 
-                saveSet["real_estate_sales_revenue"] = real_estate_sales_revenue
-            except:
-                pass
-
-        other_business_revenue = dataSet.get("other_business_revenue") 
-        if other_business_revenue:
-
-            try:
-                other_business_revenue = float(dataSet.get("other_business_revenue")) 
-                saveSet["other_business_revenue"] = other_business_revenue
-            except:
-                pass
-
-        total_operating_costs = dataSet.get("total_operating_costs") 
-        if total_operating_costs:
-
-            try:
-                total_operating_costs = float(dataSet.get("total_operating_costs")) 
-                saveSet["total_operating_costs"] = total_operating_costs
-            except:
-                pass
-
-        operating_costs = dataSet.get("operating_costs") 
-        if operating_costs:
-
-            try:
-                operating_costs = float(dataSet.get("operating_costs")) 
-                saveSet["operating_costs"] = operating_costs
-            except:
-                pass
-
-        fees_and_commissions_expenses = dataSet.get("fees_and_commissions_expenses") 
-        if fees_and_commissions_expenses:
-
-            try:
-                fees_and_commissions_expenses = float(dataSet.get("fees_and_commissions_expenses")) 
-                saveSet["fees_and_commissions_expenses"] = fees_and_commissions_expenses
-            except:
-                pass
-
-        real_estate_sales_costs = dataSet.get("real_estate_sales_costs") 
-        if real_estate_sales_costs:
-
-            try:
-                real_estate_sales_costs = float(dataSet.get("real_estate_sales_costs")) 
-                saveSet["real_estate_sales_costs"] = real_estate_sales_costs
-            except:
-                pass
-
-        surrender_value = dataSet.get("surrender_value") 
-        if surrender_value:
-
-            try:
-                surrender_value = float(dataSet.get("surrender_value")) 
-                saveSet["surrender_value"] = surrender_value
-            except:
-                pass
-
-        net_claims_paid = dataSet.get("net_claims_paid") 
-        if net_claims_paid:
-
-            try:
-                net_claims_paid = float(dataSet.get("net_claims_paid")) 
-                saveSet["net_claims_paid"] = net_claims_paid
-            except:
-                pass
-
-        net_insurance_contract_reserves = dataSet.get("net_insurance_contract_reserves") 
-        if net_insurance_contract_reserves:
-
-            try:
-                net_insurance_contract_reserves = float(dataSet.get("net_insurance_contract_reserves")) 
-                saveSet["net_insurance_contract_reserves"] = net_insurance_contract_reserves
-            except:
-                pass
-
-        policy_dividend_expenses = dataSet.get("policy_dividend_expenses") 
-        if policy_dividend_expenses:
-
-            try:
-                policy_dividend_expenses = float(dataSet.get("policy_dividend_expenses")) 
-                saveSet["policy_dividend_expenses"] = policy_dividend_expenses
-            except:
-                pass
-
-        reinsurance_expenses = dataSet.get("reinsurance_expenses") 
-        if reinsurance_expenses:
-
-            try:
-                reinsurance_expenses = float(dataSet.get("reinsurance_expenses")) 
-                saveSet["reinsurance_expenses"] = reinsurance_expenses
-            except:
-                pass
-
-        other_business_costs = dataSet.get("other_business_costs") 
-        if other_business_costs:
-
-            try:
-                other_business_costs = float(dataSet.get("other_business_costs")) 
-                saveSet["other_business_costs"] = other_business_costs
-            except:
-                pass
-
-        taxes_and_surcharges = dataSet.get("taxes_and_surcharges") 
-        if taxes_and_surcharges:
-
-            try:
-                taxes_and_surcharges = float(dataSet.get("taxes_and_surcharges")) 
-                saveSet["taxes_and_surcharges"] = taxes_and_surcharges
-            except:
-                pass
-
-        rd_expenses = dataSet.get("rd_expenses") 
-        if rd_expenses:
-
-            try:
-                rd_expenses = float(dataSet.get("rd_expenses")) 
-                saveSet["rd_expenses"] = rd_expenses
-            except:
-                pass
-
-        selling_expenses = dataSet.get("selling_expenses") 
-        if selling_expenses:
-
-            try:
-                selling_expenses = float(dataSet.get("selling_expenses")) 
-                saveSet["selling_expenses"] = selling_expenses
-            except:
-                pass
-
-        administrative_expenses = dataSet.get("administrative_expenses") 
-        if administrative_expenses:
-
-            try:
-                administrative_expenses = float(dataSet.get("administrative_expenses")) 
-                saveSet["administrative_expenses"] = administrative_expenses
-            except:
-                pass
-
-        financial_expenses = dataSet.get("financial_expenses") 
-        if financial_expenses:
-
-            try:
-                financial_expenses = float(dataSet.get("financial_expenses")) 
-                saveSet["financial_expenses"] = financial_expenses
-            except:
-                pass
-
-        interest_expenses = dataSet.get("interest_expenses") 
-        if interest_expenses:
-
-            try:
-                interest_expenses = float(dataSet.get("interest_expenses")) 
-                saveSet["interest_expenses"] = interest_expenses
-            except:
-                pass
-
-        interest_expenditure = dataSet.get("interest_expenditure") 
-        if interest_expenditure:
-
-            try:
-                interest_expenditure = float(dataSet.get("interest_expenditure")) 
-                saveSet["interest_expenditure"] = interest_expenditure
-            except:
-                pass
-
-        investment_income = dataSet.get("investment_income") 
-        if investment_income:
-
-            try:
-                investment_income = float(dataSet.get("investment_income")) 
-                saveSet["investment_income"] = investment_income
-            except:
-                pass
-
-        investment_income_from_associates_and_joint_ventures = dataSet.get("investment_income_from_associates_and_joint_ventures") 
-        if investment_income_from_associates_and_joint_ventures:
-
-            try:
-                investment_income_from_associates_and_joint_ventures = float(dataSet.get("investment_income_from_associates_and_joint_ventures")) 
-                saveSet["investment_income_from_associates_and_joint_ventures"] = investment_income_from_associates_and_joint_ventures
-            except:
-                pass
-
-        gain_on_derecognition_of_financial_assets_at_amortized_cost = dataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost") 
-        if gain_on_derecognition_of_financial_assets_at_amortized_cost:
-
-            try:
-                gain_on_derecognition_of_financial_assets_at_amortized_cost = float(dataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost")) 
-                saveSet["gain_on_derecognition_of_financial_assets_at_amortized_cost"] = gain_on_derecognition_of_financial_assets_at_amortized_cost
-            except:
-                pass
-
-        foreign_exchange_gains = dataSet.get("foreign_exchange_gains") 
-        if foreign_exchange_gains:
-
-            try:
-                foreign_exchange_gains = float(dataSet.get("foreign_exchange_gains")) 
-                saveSet["foreign_exchange_gains"] = foreign_exchange_gains
-            except:
-                pass
-
-        net_open_hedge_gains = dataSet.get("net_open_hedge_gains") 
-        if net_open_hedge_gains:
-
-            try:
-                net_open_hedge_gains = float(dataSet.get("net_open_hedge_gains")) 
-                saveSet["net_open_hedge_gains"] = net_open_hedge_gains
-            except:
-                pass
-
-        fair_value_change_gains = dataSet.get("fair_value_change_gains") 
-        if fair_value_change_gains:
-
-            try:
-                fair_value_change_gains = float(dataSet.get("fair_value_change_gains")) 
-                saveSet["fair_value_change_gains"] = fair_value_change_gains
-            except:
-                pass
-
-        futures_gains_losses = dataSet.get("futures_gains_losses") 
-        if futures_gains_losses:
-
-            try:
-                futures_gains_losses = float(dataSet.get("futures_gains_losses")) 
-                saveSet["futures_gains_losses"] = futures_gains_losses
-            except:
-                pass
-
-        custody_income = dataSet.get("custody_income") 
-        if custody_income:
-
-            try:
-                custody_income = float(dataSet.get("custody_income")) 
-                saveSet["custody_income"] = custody_income
-            except:
-                pass
-
-        subsidy_income = dataSet.get("subsidy_income") 
-        if subsidy_income:
-
-            try:
-                subsidy_income = float(dataSet.get("subsidy_income")) 
-                saveSet["subsidy_income"] = subsidy_income
-            except:
-                pass
-
-        other_gains = dataSet.get("other_gains") 
-        if other_gains:
-
-            try:
-                other_gains = float(dataSet.get("other_gains")) 
-                saveSet["other_gains"] = other_gains
-            except:
-                pass
-
-        asset_impairment_losses = dataSet.get("asset_impairment_losses") 
-        if asset_impairment_losses:
-
-            try:
-                asset_impairment_losses = float(dataSet.get("asset_impairment_losses")) 
-                saveSet["asset_impairment_losses"] = asset_impairment_losses
-            except:
-                pass
-
-        credit_impairment_losses = dataSet.get("credit_impairment_losses") 
-        if credit_impairment_losses:
-
-            try:
-                credit_impairment_losses = float(dataSet.get("credit_impairment_losses")) 
-                saveSet["credit_impairment_losses"] = credit_impairment_losses
-            except:
-                pass
-
-        other_business_profits = dataSet.get("other_business_profits") 
-        if other_business_profits:
-
-            try:
-                other_business_profits = float(dataSet.get("other_business_profits")) 
-                saveSet["other_business_profits"] = other_business_profits
-            except:
-                pass
-
-        asset_disposal_gains = dataSet.get("asset_disposal_gains") 
-        if asset_disposal_gains:
-
-            try:
-                asset_disposal_gains = float(dataSet.get("asset_disposal_gains")) 
-                saveSet["asset_disposal_gains"] = asset_disposal_gains
-            except:
-                pass
-
-        operating_profit = dataSet.get("operating_profit") 
-        if operating_profit:
-
-            try:
-                operating_profit = float(dataSet.get("operating_profit")) 
-                saveSet["operating_profit"] = operating_profit
-            except:
-                pass
-
-        non_operating_income = dataSet.get("non_operating_income") 
-        if non_operating_income:
-
-            try:
-                non_operating_income = float(dataSet.get("non_operating_income")) 
-                saveSet["non_operating_income"] = non_operating_income
-            except:
-                pass
-
-        non_current_asset_disposal_gains = dataSet.get("non_current_asset_disposal_gains") 
-        if non_current_asset_disposal_gains:
-
-            try:
-                non_current_asset_disposal_gains = float(dataSet.get("non_current_asset_disposal_gains")) 
-                saveSet["non_current_asset_disposal_gains"] = non_current_asset_disposal_gains
-            except:
-                pass
-
-        non_operating_expenses = dataSet.get("non_operating_expenses") 
-        if non_operating_expenses:
-
-            try:
-                non_operating_expenses = float(dataSet.get("non_operating_expenses")) 
-                saveSet["non_operating_expenses"] = non_operating_expenses
-            except:
-                pass
-
-        non_current_asset_disposal_losses = dataSet.get("non_current_asset_disposal_losses") 
-        if non_current_asset_disposal_losses:
-
-            try:
-                non_current_asset_disposal_losses = float(dataSet.get("non_current_asset_disposal_losses")) 
-                saveSet["non_current_asset_disposal_losses"] = non_current_asset_disposal_losses
-            except:
-                pass
-
-        total_profit = dataSet.get("total_profit") 
-        if total_profit:
-
-            try:
-                total_profit = float(dataSet.get("total_profit")) 
-                saveSet["total_profit"] = total_profit
-            except:
-                pass
-
-        income_tax_expense = dataSet.get("income_tax_expense") 
-        if income_tax_expense:
-
-            try:
-                income_tax_expense = float(dataSet.get("income_tax_expense")) 
-                saveSet["income_tax_expense"] = income_tax_expense
-            except:
-                pass
-
-        unrecognized_investment_losses = dataSet.get("unrecognized_investment_losses") 
-        if unrecognized_investment_losses:
-
-            try:
-                unrecognized_investment_losses = float(dataSet.get("unrecognized_investment_losses")) 
-                saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
-            except:
-                pass
-
-        net_profit = dataSet.get("net_profit") 
-        if net_profit:
-
-            try:
-                net_profit = float(dataSet.get("net_profit")) 
-                saveSet["net_profit"] = net_profit
-            except:
-                pass
-
-        net_profit_from_continuing_operations = dataSet.get("net_profit_from_continuing_operations") 
-        if net_profit_from_continuing_operations:
-
-            try:
-                net_profit_from_continuing_operations = float(dataSet.get("net_profit_from_continuing_operations")) 
-                saveSet["net_profit_from_continuing_operations"] = net_profit_from_continuing_operations
-            except:
-                pass
-
-        net_profit_from_discontinued_operations = dataSet.get("net_profit_from_discontinued_operations") 
-        if net_profit_from_discontinued_operations:
-
-            try:
-                net_profit_from_discontinued_operations = float(dataSet.get("net_profit_from_discontinued_operations")) 
-                saveSet["net_profit_from_discontinued_operations"] = net_profit_from_discontinued_operations
-            except:
-                pass
-
-        net_profit_attributable_to_parent_company = dataSet.get("net_profit_attributable_to_parent_company") 
-        if net_profit_attributable_to_parent_company:
-
-            try:
-                net_profit_attributable_to_parent_company = float(dataSet.get("net_profit_attributable_to_parent_company")) 
-                saveSet["net_profit_attributable_to_parent_company"] = net_profit_attributable_to_parent_company
-            except:
-                pass
-
-        net_profit_of_acquiree_before_merger = dataSet.get("net_profit_of_acquiree_before_merger") 
-        if net_profit_of_acquiree_before_merger:
-
-            try:
-                net_profit_of_acquiree_before_merger = float(dataSet.get("net_profit_of_acquiree_before_merger")) 
-                saveSet["net_profit_of_acquiree_before_merger"] = net_profit_of_acquiree_before_merger
-            except:
-                pass
-
-        minority_interests_profit_loss = dataSet.get("minority_interests_profit_loss") 
-        if minority_interests_profit_loss:
-
-            try:
-                minority_interests_profit_loss = float(dataSet.get("minority_interests_profit_loss")) 
-                saveSet["minority_interests_profit_loss"] = minority_interests_profit_loss
-            except:
-                pass
-
-        other_comprehensive_income = dataSet.get("other_comprehensive_income") 
-        if other_comprehensive_income:
-
-            try:
-                other_comprehensive_income = float(dataSet.get("other_comprehensive_income")) 
-                saveSet["other_comprehensive_income"] = other_comprehensive_income
-            except:
-                pass
-
-        other_comprehensive_income_attributable_to_parent = dataSet.get("other_comprehensive_income_attributable_to_parent") 
-        if other_comprehensive_income_attributable_to_parent:
-
-            try:
-                other_comprehensive_income_attributable_to_parent = float(dataSet.get("other_comprehensive_income_attributable_to_parent")) 
-                saveSet["other_comprehensive_income_attributable_to_parent"] = other_comprehensive_income_attributable_to_parent
-            except:
-                pass
-
-        oci_not_reclassified_to_profit_loss = dataSet.get("oci_not_reclassified_to_profit_loss") 
-        if oci_not_reclassified_to_profit_loss:
-
-            try:
-                oci_not_reclassified_to_profit_loss = float(dataSet.get("oci_not_reclassified_to_profit_loss")) 
-                saveSet["oci_not_reclassified_to_profit_loss"] = oci_not_reclassified_to_profit_loss
-            except:
-                pass
-
-        remeasurement_of_defined_benefit_plans = dataSet.get("remeasurement_of_defined_benefit_plans") 
-        if remeasurement_of_defined_benefit_plans:
-
-            try:
-                remeasurement_of_defined_benefit_plans = float(dataSet.get("remeasurement_of_defined_benefit_plans")) 
-                saveSet["remeasurement_of_defined_benefit_plans"] = remeasurement_of_defined_benefit_plans
-            except:
-                pass
-
-        oci_under_equity_method_not_reclassified = dataSet.get("oci_under_equity_method_not_reclassified") 
-        if oci_under_equity_method_not_reclassified:
-
-            try:
-                oci_under_equity_method_not_reclassified = float(dataSet.get("oci_under_equity_method_not_reclassified")) 
-                saveSet["oci_under_equity_method_not_reclassified"] = oci_under_equity_method_not_reclassified
-            except:
-                pass
-
-        fair_value_change_of_other_equity_instruments = dataSet.get("fair_value_change_of_other_equity_instruments") 
-        if fair_value_change_of_other_equity_instruments:
-
-            try:
-                fair_value_change_of_other_equity_instruments = float(dataSet.get("fair_value_change_of_other_equity_instruments")) 
-                saveSet["fair_value_change_of_other_equity_instruments"] = fair_value_change_of_other_equity_instruments
-            except:
-                pass
-
-        fair_value_change_of_own_credit_risk = dataSet.get("fair_value_change_of_own_credit_risk") 
-        if fair_value_change_of_own_credit_risk:
-
-            try:
-                fair_value_change_of_own_credit_risk = float(dataSet.get("fair_value_change_of_own_credit_risk")) 
-                saveSet["fair_value_change_of_own_credit_risk"] = fair_value_change_of_own_credit_risk
-            except:
-                pass
-
-        oci_reclassified_to_profit_loss = dataSet.get("oci_reclassified_to_profit_loss") 
-        if oci_reclassified_to_profit_loss:
-
-            try:
-                oci_reclassified_to_profit_loss = float(dataSet.get("oci_reclassified_to_profit_loss")) 
-                saveSet["oci_reclassified_to_profit_loss"] = oci_reclassified_to_profit_loss
-            except:
-                pass
-
-        oci_under_equity_method_reclassified = dataSet.get("oci_under_equity_method_reclassified") 
-        if oci_under_equity_method_reclassified:
-
-            try:
-                oci_under_equity_method_reclassified = float(dataSet.get("oci_under_equity_method_reclassified")) 
-                saveSet["oci_under_equity_method_reclassified"] = oci_under_equity_method_reclassified
-            except:
-                pass
-
-        fair_value_change_of_afs_financial_assets = dataSet.get("fair_value_change_of_afs_financial_assets") 
-        if fair_value_change_of_afs_financial_assets:
-
-            try:
-                fair_value_change_of_afs_financial_assets = float(dataSet.get("fair_value_change_of_afs_financial_assets")) 
-                saveSet["fair_value_change_of_afs_financial_assets"] = fair_value_change_of_afs_financial_assets
-            except:
-                pass
-
-        fair_value_change_of_other_debt_investments = dataSet.get("fair_value_change_of_other_debt_investments") 
-        if fair_value_change_of_other_debt_investments:
-
-            try:
-                fair_value_change_of_other_debt_investments = float(dataSet.get("fair_value_change_of_other_debt_investments")) 
-                saveSet["fair_value_change_of_other_debt_investments"] = fair_value_change_of_other_debt_investments
-            except:
-                pass
-
-        financial_assets_reclassified_to_oci = dataSet.get("financial_assets_reclassified_to_oci") 
-        if financial_assets_reclassified_to_oci:
-
-            try:
-                financial_assets_reclassified_to_oci = float(dataSet.get("financial_assets_reclassified_to_oci")) 
-                saveSet["financial_assets_reclassified_to_oci"] = financial_assets_reclassified_to_oci
-            except:
-                pass
-
-        credit_impairment_of_other_debt_investments = dataSet.get("credit_impairment_of_other_debt_investments") 
-        if credit_impairment_of_other_debt_investments:
-
-            try:
-                credit_impairment_of_other_debt_investments = float(dataSet.get("credit_impairment_of_other_debt_investments")) 
-                saveSet["credit_impairment_of_other_debt_investments"] = credit_impairment_of_other_debt_investments
-            except:
-                pass
-
-        htm_reclassified_to_afs_gains_losses = dataSet.get("htm_reclassified_to_afs_gains_losses") 
-        if htm_reclassified_to_afs_gains_losses:
-
-            try:
-                htm_reclassified_to_afs_gains_losses = float(dataSet.get("htm_reclassified_to_afs_gains_losses")) 
-                saveSet["htm_reclassified_to_afs_gains_losses"] = htm_reclassified_to_afs_gains_losses
-            except:
-                pass
-
-        cash_flow_hedge_reserve = dataSet.get("cash_flow_hedge_reserve") 
-        if cash_flow_hedge_reserve:
-
-            try:
-                cash_flow_hedge_reserve = float(dataSet.get("cash_flow_hedge_reserve")) 
-                saveSet["cash_flow_hedge_reserve"] = cash_flow_hedge_reserve
-            except:
-                pass
-
-        effective_portion_of_cash_flow_hedge = dataSet.get("effective_portion_of_cash_flow_hedge") 
-        if effective_portion_of_cash_flow_hedge:
-
-            try:
-                effective_portion_of_cash_flow_hedge = float(dataSet.get("effective_portion_of_cash_flow_hedge")) 
-                saveSet["effective_portion_of_cash_flow_hedge"] = effective_portion_of_cash_flow_hedge
-            except:
-                pass
-
-        foreign_currency_translation_difference = dataSet.get("foreign_currency_translation_difference") 
-        if foreign_currency_translation_difference:
-
-            try:
-                foreign_currency_translation_difference = float(dataSet.get("foreign_currency_translation_difference")) 
-                saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
-            except:
-                pass
-
-        other = dataSet.get("other") 
-        if other:
-
-            try:
-                other = float(dataSet.get("other")) 
-                saveSet["other"] = other
-            except:
-                pass
-
-        other_comprehensive_income_attributable_to_minority = dataSet.get("other_comprehensive_income_attributable_to_minority") 
-        if other_comprehensive_income_attributable_to_minority:
-
-            try:
-                other_comprehensive_income_attributable_to_minority = float(dataSet.get("other_comprehensive_income_attributable_to_minority")) 
-                saveSet["other_comprehensive_income_attributable_to_minority"] = other_comprehensive_income_attributable_to_minority
-            except:
-                pass
-
-        total_comprehensive_income = dataSet.get("total_comprehensive_income") 
-        if total_comprehensive_income:
-
-            try:
-                total_comprehensive_income = float(dataSet.get("total_comprehensive_income")) 
-                saveSet["total_comprehensive_income"] = total_comprehensive_income
-            except:
-                pass
-
-        total_comprehensive_income_attributable_to_parent = dataSet.get("total_comprehensive_income_attributable_to_parent") 
-        if total_comprehensive_income_attributable_to_parent:
-
-            try:
-                total_comprehensive_income_attributable_to_parent = float(dataSet.get("total_comprehensive_income_attributable_to_parent")) 
-                saveSet["total_comprehensive_income_attributable_to_parent"] = total_comprehensive_income_attributable_to_parent
-            except:
-                pass
-
-        total_comprehensive_income_attributable_to_minority = dataSet.get("total_comprehensive_income_attributable_to_minority") 
-        if total_comprehensive_income_attributable_to_minority:
-
-            try:
-                total_comprehensive_income_attributable_to_minority = float(dataSet.get("total_comprehensive_income_attributable_to_minority")) 
-                saveSet["total_comprehensive_income_attributable_to_minority"] = total_comprehensive_income_attributable_to_minority
-            except:
-                pass
-
-        basic_earnings_per_share = dataSet.get("basic_earnings_per_share") 
-        if basic_earnings_per_share:
-
-            try:
-                basic_earnings_per_share = float(dataSet.get("basic_earnings_per_share")) 
-                saveSet["basic_earnings_per_share"] = basic_earnings_per_share
-            except:
-                pass
-
-        diluted_earnings_per_share = dataSet.get("diluted_earnings_per_share") 
-        if diluted_earnings_per_share:
-
-            try:
-                diluted_earnings_per_share = float(dataSet.get("diluted_earnings_per_share")) 
-                saveSet["diluted_earnings_per_share"] = diluted_earnings_per_share
-            except:
-                pass
+        try:
+            total_operating_revenue = float(dataSet.get("total_operating_revenue")) 
+            saveSet["total_operating_revenue"] = total_operating_revenue
+        except:
+            pass
+
+        try:
+            operating_revenue = float(dataSet.get("operating_revenue")) 
+            saveSet["operating_revenue"] = operating_revenue
+        except:
+            pass
+
+        try:
+            interest_income = float(dataSet.get("interest_income")) 
+            saveSet["interest_income"] = interest_income
+        except:
+            pass
+
+        try:
+            earned_premiums = float(dataSet.get("earned_premiums")) 
+            saveSet["earned_premiums"] = earned_premiums
+        except:
+            pass
+
+        try:
+            fees_and_commissions_income = float(dataSet.get("fees_and_commissions_income")) 
+            saveSet["fees_and_commissions_income"] = fees_and_commissions_income
+        except:
+            pass
+
+        try:
+            real_estate_sales_revenue = float(dataSet.get("real_estate_sales_revenue")) 
+            saveSet["real_estate_sales_revenue"] = real_estate_sales_revenue
+        except:
+            pass
+
+        try:
+            other_business_revenue = float(dataSet.get("other_business_revenue")) 
+            saveSet["other_business_revenue"] = other_business_revenue
+        except:
+            pass
+
+        try:
+            total_operating_costs = float(dataSet.get("total_operating_costs")) 
+            saveSet["total_operating_costs"] = total_operating_costs
+        except:
+            pass
+
+        try:
+            operating_costs = float(dataSet.get("operating_costs")) 
+            saveSet["operating_costs"] = operating_costs
+        except:
+            pass
+
+        try:
+            fees_and_commissions_expenses = float(dataSet.get("fees_and_commissions_expenses")) 
+            saveSet["fees_and_commissions_expenses"] = fees_and_commissions_expenses
+        except:
+            pass
+
+        try:
+            real_estate_sales_costs = float(dataSet.get("real_estate_sales_costs")) 
+            saveSet["real_estate_sales_costs"] = real_estate_sales_costs
+        except:
+            pass
+
+        try:
+            surrender_value = float(dataSet.get("surrender_value")) 
+            saveSet["surrender_value"] = surrender_value
+        except:
+            pass
+
+        try:
+            net_claims_paid = float(dataSet.get("net_claims_paid")) 
+            saveSet["net_claims_paid"] = net_claims_paid
+        except:
+            pass
+
+        try:
+            net_insurance_contract_reserves = float(dataSet.get("net_insurance_contract_reserves")) 
+            saveSet["net_insurance_contract_reserves"] = net_insurance_contract_reserves
+        except:
+            pass
+
+        try:
+            policy_dividend_expenses = float(dataSet.get("policy_dividend_expenses")) 
+            saveSet["policy_dividend_expenses"] = policy_dividend_expenses
+        except:
+            pass
+
+        try:
+            reinsurance_expenses = float(dataSet.get("reinsurance_expenses")) 
+            saveSet["reinsurance_expenses"] = reinsurance_expenses
+        except:
+            pass
+
+        try:
+            other_business_costs = float(dataSet.get("other_business_costs")) 
+            saveSet["other_business_costs"] = other_business_costs
+        except:
+            pass
+
+        try:
+            taxes_and_surcharges = float(dataSet.get("taxes_and_surcharges")) 
+            saveSet["taxes_and_surcharges"] = taxes_and_surcharges
+        except:
+            pass
+
+        try:
+            rd_expenses = float(dataSet.get("rd_expenses")) 
+            saveSet["rd_expenses"] = rd_expenses
+        except:
+            pass
+
+        try:
+            selling_expenses = float(dataSet.get("selling_expenses")) 
+            saveSet["selling_expenses"] = selling_expenses
+        except:
+            pass
+
+        try:
+            administrative_expenses = float(dataSet.get("administrative_expenses")) 
+            saveSet["administrative_expenses"] = administrative_expenses
+        except:
+            pass
+
+        try:
+            financial_expenses = float(dataSet.get("financial_expenses")) 
+            saveSet["financial_expenses"] = financial_expenses
+        except:
+            pass
+
+        try:
+            interest_expenses = float(dataSet.get("interest_expenses")) 
+            saveSet["interest_expenses"] = interest_expenses
+        except:
+            pass
+
+        try:
+            interest_expenditure = float(dataSet.get("interest_expenditure")) 
+            saveSet["interest_expenditure"] = interest_expenditure
+        except:
+            pass
+
+        try:
+            investment_income = float(dataSet.get("investment_income")) 
+            saveSet["investment_income"] = investment_income
+        except:
+            pass
+
+        try:
+            investment_income_from_associates_and_joint_ventures = float(dataSet.get("investment_income_from_associates_and_joint_ventures")) 
+            saveSet["investment_income_from_associates_and_joint_ventures"] = investment_income_from_associates_and_joint_ventures
+        except:
+            pass
+
+        try:
+            gain_on_derecognition_of_financial_assets_at_amortized_cost = float(dataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost")) 
+            saveSet["gain_on_derecognition_of_financial_assets_at_amortized_cost"] = gain_on_derecognition_of_financial_assets_at_amortized_cost
+        except:
+            pass
+
+        try:
+            foreign_exchange_gains = float(dataSet.get("foreign_exchange_gains")) 
+            saveSet["foreign_exchange_gains"] = foreign_exchange_gains
+        except:
+            pass
+
+        try:
+            net_open_hedge_gains = float(dataSet.get("net_open_hedge_gains")) 
+            saveSet["net_open_hedge_gains"] = net_open_hedge_gains
+        except:
+            pass
+
+        try:
+            fair_value_change_gains = float(dataSet.get("fair_value_change_gains")) 
+            saveSet["fair_value_change_gains"] = fair_value_change_gains
+        except:
+            pass
+
+        try:
+            futures_gains_losses = float(dataSet.get("futures_gains_losses")) 
+            saveSet["futures_gains_losses"] = futures_gains_losses
+        except:
+            pass
+
+        try:
+            custody_income = float(dataSet.get("custody_income")) 
+            saveSet["custody_income"] = custody_income
+        except:
+            pass
+
+        try:
+            subsidy_income = float(dataSet.get("subsidy_income")) 
+            saveSet["subsidy_income"] = subsidy_income
+        except:
+            pass
+
+        try:
+            other_gains = float(dataSet.get("other_gains")) 
+            saveSet["other_gains"] = other_gains
+        except:
+            pass
+
+        try:
+            asset_impairment_losses = float(dataSet.get("asset_impairment_losses")) 
+            saveSet["asset_impairment_losses"] = asset_impairment_losses
+        except:
+            pass
+
+        try:
+            credit_impairment_losses = float(dataSet.get("credit_impairment_losses")) 
+            saveSet["credit_impairment_losses"] = credit_impairment_losses
+        except:
+            pass
+
+        try:
+            other_business_profits = float(dataSet.get("other_business_profits")) 
+            saveSet["other_business_profits"] = other_business_profits
+        except:
+            pass
+
+        try:
+            asset_disposal_gains = float(dataSet.get("asset_disposal_gains")) 
+            saveSet["asset_disposal_gains"] = asset_disposal_gains
+        except:
+            pass
+
+        try:
+            operating_profit = float(dataSet.get("operating_profit")) 
+            saveSet["operating_profit"] = operating_profit
+        except:
+            pass
+
+        try:
+            non_operating_income = float(dataSet.get("non_operating_income")) 
+            saveSet["non_operating_income"] = non_operating_income
+        except:
+            pass
+
+        try:
+            non_current_asset_disposal_gains = float(dataSet.get("non_current_asset_disposal_gains")) 
+            saveSet["non_current_asset_disposal_gains"] = non_current_asset_disposal_gains
+        except:
+            pass
+
+        try:
+            non_operating_expenses = float(dataSet.get("non_operating_expenses")) 
+            saveSet["non_operating_expenses"] = non_operating_expenses
+        except:
+            pass
+
+        try:
+            non_current_asset_disposal_losses = float(dataSet.get("non_current_asset_disposal_losses")) 
+            saveSet["non_current_asset_disposal_losses"] = non_current_asset_disposal_losses
+        except:
+            pass
+
+        try:
+            total_profit = float(dataSet.get("total_profit")) 
+            saveSet["total_profit"] = total_profit
+        except:
+            pass
+
+        try:
+            income_tax_expense = float(dataSet.get("income_tax_expense")) 
+            saveSet["income_tax_expense"] = income_tax_expense
+        except:
+            pass
+
+        try:
+            unrecognized_investment_losses = float(dataSet.get("unrecognized_investment_losses")) 
+            saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
+        except:
+            pass
+
+        try:
+            net_profit = float(dataSet.get("net_profit")) 
+            saveSet["net_profit"] = net_profit
+        except:
+            pass
+
+        try:
+            net_profit_from_continuing_operations = float(dataSet.get("net_profit_from_continuing_operations")) 
+            saveSet["net_profit_from_continuing_operations"] = net_profit_from_continuing_operations
+        except:
+            pass
+
+        try:
+            net_profit_from_discontinued_operations = float(dataSet.get("net_profit_from_discontinued_operations")) 
+            saveSet["net_profit_from_discontinued_operations"] = net_profit_from_discontinued_operations
+        except:
+            pass
+
+        try:
+            net_profit_attributable_to_parent_company = float(dataSet.get("net_profit_attributable_to_parent_company")) 
+            saveSet["net_profit_attributable_to_parent_company"] = net_profit_attributable_to_parent_company
+        except:
+            pass
+
+        try:
+            net_profit_of_acquiree_before_merger = float(dataSet.get("net_profit_of_acquiree_before_merger")) 
+            saveSet["net_profit_of_acquiree_before_merger"] = net_profit_of_acquiree_before_merger
+        except:
+            pass
+
+        try:
+            minority_interests_profit_loss = float(dataSet.get("minority_interests_profit_loss")) 
+            saveSet["minority_interests_profit_loss"] = minority_interests_profit_loss
+        except:
+            pass
+
+        try:
+            other_comprehensive_income = float(dataSet.get("other_comprehensive_income")) 
+            saveSet["other_comprehensive_income"] = other_comprehensive_income
+        except:
+            pass
+
+        try:
+            other_comprehensive_income_attributable_to_parent = float(dataSet.get("other_comprehensive_income_attributable_to_parent")) 
+            saveSet["other_comprehensive_income_attributable_to_parent"] = other_comprehensive_income_attributable_to_parent
+        except:
+            pass
+
+        try:
+            oci_not_reclassified_to_profit_loss = float(dataSet.get("oci_not_reclassified_to_profit_loss")) 
+            saveSet["oci_not_reclassified_to_profit_loss"] = oci_not_reclassified_to_profit_loss
+        except:
+            pass
+
+        try:
+            remeasurement_of_defined_benefit_plans = float(dataSet.get("remeasurement_of_defined_benefit_plans")) 
+            saveSet["remeasurement_of_defined_benefit_plans"] = remeasurement_of_defined_benefit_plans
+        except:
+            pass
+
+        try:
+            oci_under_equity_method_not_reclassified = float(dataSet.get("oci_under_equity_method_not_reclassified")) 
+            saveSet["oci_under_equity_method_not_reclassified"] = oci_under_equity_method_not_reclassified
+        except:
+            pass
+
+        try:
+            fair_value_change_of_other_equity_instruments = float(dataSet.get("fair_value_change_of_other_equity_instruments")) 
+            saveSet["fair_value_change_of_other_equity_instruments"] = fair_value_change_of_other_equity_instruments
+        except:
+            pass
+
+        try:
+            fair_value_change_of_own_credit_risk = float(dataSet.get("fair_value_change_of_own_credit_risk")) 
+            saveSet["fair_value_change_of_own_credit_risk"] = fair_value_change_of_own_credit_risk
+        except:
+            pass
+
+        try:
+            oci_reclassified_to_profit_loss = float(dataSet.get("oci_reclassified_to_profit_loss")) 
+            saveSet["oci_reclassified_to_profit_loss"] = oci_reclassified_to_profit_loss
+        except:
+            pass
+
+        try:
+            oci_under_equity_method_reclassified = float(dataSet.get("oci_under_equity_method_reclassified")) 
+            saveSet["oci_under_equity_method_reclassified"] = oci_under_equity_method_reclassified
+        except:
+            pass
+
+        try:
+            fair_value_change_of_afs_financial_assets = float(dataSet.get("fair_value_change_of_afs_financial_assets")) 
+            saveSet["fair_value_change_of_afs_financial_assets"] = fair_value_change_of_afs_financial_assets
+        except:
+            pass
+
+        try:
+            fair_value_change_of_other_debt_investments = float(dataSet.get("fair_value_change_of_other_debt_investments")) 
+            saveSet["fair_value_change_of_other_debt_investments"] = fair_value_change_of_other_debt_investments
+        except:
+            pass
+
+        try:
+            financial_assets_reclassified_to_oci = float(dataSet.get("financial_assets_reclassified_to_oci")) 
+            saveSet["financial_assets_reclassified_to_oci"] = financial_assets_reclassified_to_oci
+        except:
+            pass
+
+        try:
+            credit_impairment_of_other_debt_investments = float(dataSet.get("credit_impairment_of_other_debt_investments")) 
+            saveSet["credit_impairment_of_other_debt_investments"] = credit_impairment_of_other_debt_investments
+        except:
+            pass
+
+        try:
+            htm_reclassified_to_afs_gains_losses = float(dataSet.get("htm_reclassified_to_afs_gains_losses")) 
+            saveSet["htm_reclassified_to_afs_gains_losses"] = htm_reclassified_to_afs_gains_losses
+        except:
+            pass
+
+        try:
+            cash_flow_hedge_reserve = float(dataSet.get("cash_flow_hedge_reserve")) 
+            saveSet["cash_flow_hedge_reserve"] = cash_flow_hedge_reserve
+        except:
+            pass
+
+        try:
+            effective_portion_of_cash_flow_hedge = float(dataSet.get("effective_portion_of_cash_flow_hedge")) 
+            saveSet["effective_portion_of_cash_flow_hedge"] = effective_portion_of_cash_flow_hedge
+        except:
+            pass
+
+        try:
+            foreign_currency_translation_difference = float(dataSet.get("foreign_currency_translation_difference")) 
+            saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
+        except:
+            pass
+
+        try:
+            other = float(dataSet.get("other")) 
+            saveSet["other"] = other
+        except:
+            pass
+
+        try:
+            other_comprehensive_income_attributable_to_minority = float(dataSet.get("other_comprehensive_income_attributable_to_minority")) 
+            saveSet["other_comprehensive_income_attributable_to_minority"] = other_comprehensive_income_attributable_to_minority
+        except:
+            pass
+
+        try:
+            total_comprehensive_income = float(dataSet.get("total_comprehensive_income")) 
+            saveSet["total_comprehensive_income"] = total_comprehensive_income
+        except:
+            pass
+
+        try:
+            total_comprehensive_income_attributable_to_parent = float(dataSet.get("total_comprehensive_income_attributable_to_parent")) 
+            saveSet["total_comprehensive_income_attributable_to_parent"] = total_comprehensive_income_attributable_to_parent
+        except:
+            pass
+
+        try:
+            total_comprehensive_income_attributable_to_minority = float(dataSet.get("total_comprehensive_income_attributable_to_minority")) 
+            saveSet["total_comprehensive_income_attributable_to_minority"] = total_comprehensive_income_attributable_to_minority
+        except:
+            pass
+
+        try:
+            basic_earnings_per_share = float(dataSet.get("basic_earnings_per_share")) 
+            saveSet["basic_earnings_per_share"] = basic_earnings_per_share
+        except:
+            pass
+
+        try:
+            diluted_earnings_per_share = float(dataSet.get("diluted_earnings_per_share")) 
+            saveSet["diluted_earnings_per_share"] = diluted_earnings_per_share
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -8648,689 +7908,461 @@ def update_cash_flow_statements(tableName,id,dataSet):
         if report_date:
             saveSet["report_date"] = report_date
 
-        total_operating_revenue = dataSet.get("total_operating_revenue") 
-        if total_operating_revenue:
-
-            try:
-                total_operating_revenue = float(dataSet.get("total_operating_revenue")) 
-                saveSet["total_operating_revenue"] = total_operating_revenue
-            except:
-                pass
-
-        operating_revenue = dataSet.get("operating_revenue") 
-        if operating_revenue:
-
-            try:
-                operating_revenue = float(dataSet.get("operating_revenue")) 
-                saveSet["operating_revenue"] = operating_revenue
-            except:
-                pass
-
-        interest_income = dataSet.get("interest_income") 
-        if interest_income:
-
-            try:
-                interest_income = float(dataSet.get("interest_income")) 
-                saveSet["interest_income"] = interest_income
-            except:
-                pass
-
-        earned_premiums = dataSet.get("earned_premiums") 
-        if earned_premiums:
-
-            try:
-                earned_premiums = float(dataSet.get("earned_premiums")) 
-                saveSet["earned_premiums"] = earned_premiums
-            except:
-                pass
-
-        fees_and_commissions_income = dataSet.get("fees_and_commissions_income") 
-        if fees_and_commissions_income:
-
-            try:
-                fees_and_commissions_income = float(dataSet.get("fees_and_commissions_income")) 
-                saveSet["fees_and_commissions_income"] = fees_and_commissions_income
-            except:
-                pass
-
-        real_estate_sales_revenue = dataSet.get("real_estate_sales_revenue") 
-        if real_estate_sales_revenue:
-
-            try:
-                real_estate_sales_revenue = float(dataSet.get("real_estate_sales_revenue")) 
-                saveSet["real_estate_sales_revenue"] = real_estate_sales_revenue
-            except:
-                pass
-
-        other_business_revenue = dataSet.get("other_business_revenue") 
-        if other_business_revenue:
-
-            try:
-                other_business_revenue = float(dataSet.get("other_business_revenue")) 
-                saveSet["other_business_revenue"] = other_business_revenue
-            except:
-                pass
-
-        total_operating_costs = dataSet.get("total_operating_costs") 
-        if total_operating_costs:
-
-            try:
-                total_operating_costs = float(dataSet.get("total_operating_costs")) 
-                saveSet["total_operating_costs"] = total_operating_costs
-            except:
-                pass
-
-        operating_costs = dataSet.get("operating_costs") 
-        if operating_costs:
-
-            try:
-                operating_costs = float(dataSet.get("operating_costs")) 
-                saveSet["operating_costs"] = operating_costs
-            except:
-                pass
-
-        fees_and_commissions_expenses = dataSet.get("fees_and_commissions_expenses") 
-        if fees_and_commissions_expenses:
-
-            try:
-                fees_and_commissions_expenses = float(dataSet.get("fees_and_commissions_expenses")) 
-                saveSet["fees_and_commissions_expenses"] = fees_and_commissions_expenses
-            except:
-                pass
-
-        real_estate_sales_costs = dataSet.get("real_estate_sales_costs") 
-        if real_estate_sales_costs:
-
-            try:
-                real_estate_sales_costs = float(dataSet.get("real_estate_sales_costs")) 
-                saveSet["real_estate_sales_costs"] = real_estate_sales_costs
-            except:
-                pass
-
-        surrender_value = dataSet.get("surrender_value") 
-        if surrender_value:
-
-            try:
-                surrender_value = float(dataSet.get("surrender_value")) 
-                saveSet["surrender_value"] = surrender_value
-            except:
-                pass
-
-        net_claims_paid = dataSet.get("net_claims_paid") 
-        if net_claims_paid:
-
-            try:
-                net_claims_paid = float(dataSet.get("net_claims_paid")) 
-                saveSet["net_claims_paid"] = net_claims_paid
-            except:
-                pass
-
-        net_insurance_contract_reserves = dataSet.get("net_insurance_contract_reserves") 
-        if net_insurance_contract_reserves:
-
-            try:
-                net_insurance_contract_reserves = float(dataSet.get("net_insurance_contract_reserves")) 
-                saveSet["net_insurance_contract_reserves"] = net_insurance_contract_reserves
-            except:
-                pass
-
-        policy_dividend_expenses = dataSet.get("policy_dividend_expenses") 
-        if policy_dividend_expenses:
-
-            try:
-                policy_dividend_expenses = float(dataSet.get("policy_dividend_expenses")) 
-                saveSet["policy_dividend_expenses"] = policy_dividend_expenses
-            except:
-                pass
-
-        reinsurance_expenses = dataSet.get("reinsurance_expenses") 
-        if reinsurance_expenses:
-
-            try:
-                reinsurance_expenses = float(dataSet.get("reinsurance_expenses")) 
-                saveSet["reinsurance_expenses"] = reinsurance_expenses
-            except:
-                pass
-
-        other_business_costs = dataSet.get("other_business_costs") 
-        if other_business_costs:
-
-            try:
-                other_business_costs = float(dataSet.get("other_business_costs")) 
-                saveSet["other_business_costs"] = other_business_costs
-            except:
-                pass
-
-        taxes_and_surcharges = dataSet.get("taxes_and_surcharges") 
-        if taxes_and_surcharges:
-
-            try:
-                taxes_and_surcharges = float(dataSet.get("taxes_and_surcharges")) 
-                saveSet["taxes_and_surcharges"] = taxes_and_surcharges
-            except:
-                pass
-
-        rd_expenses = dataSet.get("rd_expenses") 
-        if rd_expenses:
-
-            try:
-                rd_expenses = float(dataSet.get("rd_expenses")) 
-                saveSet["rd_expenses"] = rd_expenses
-            except:
-                pass
-
-        selling_expenses = dataSet.get("selling_expenses") 
-        if selling_expenses:
-
-            try:
-                selling_expenses = float(dataSet.get("selling_expenses")) 
-                saveSet["selling_expenses"] = selling_expenses
-            except:
-                pass
-
-        administrative_expenses = dataSet.get("administrative_expenses") 
-        if administrative_expenses:
-
-            try:
-                administrative_expenses = float(dataSet.get("administrative_expenses")) 
-                saveSet["administrative_expenses"] = administrative_expenses
-            except:
-                pass
-
-        financial_expenses = dataSet.get("financial_expenses") 
-        if financial_expenses:
-
-            try:
-                financial_expenses = float(dataSet.get("financial_expenses")) 
-                saveSet["financial_expenses"] = financial_expenses
-            except:
-                pass
-
-        interest_expenses = dataSet.get("interest_expenses") 
-        if interest_expenses:
-
-            try:
-                interest_expenses = float(dataSet.get("interest_expenses")) 
-                saveSet["interest_expenses"] = interest_expenses
-            except:
-                pass
-
-        interest_expenditure = dataSet.get("interest_expenditure") 
-        if interest_expenditure:
-
-            try:
-                interest_expenditure = float(dataSet.get("interest_expenditure")) 
-                saveSet["interest_expenditure"] = interest_expenditure
-            except:
-                pass
-
-        investment_income = dataSet.get("investment_income") 
-        if investment_income:
-
-            try:
-                investment_income = float(dataSet.get("investment_income")) 
-                saveSet["investment_income"] = investment_income
-            except:
-                pass
-
-        investment_income_from_associates_and_joint_ventures = dataSet.get("investment_income_from_associates_and_joint_ventures") 
-        if investment_income_from_associates_and_joint_ventures:
-
-            try:
-                investment_income_from_associates_and_joint_ventures = float(dataSet.get("investment_income_from_associates_and_joint_ventures")) 
-                saveSet["investment_income_from_associates_and_joint_ventures"] = investment_income_from_associates_and_joint_ventures
-            except:
-                pass
-
-        gain_on_derecognition_of_financial_assets_at_amortized_cost = dataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost") 
-        if gain_on_derecognition_of_financial_assets_at_amortized_cost:
-
-            try:
-                gain_on_derecognition_of_financial_assets_at_amortized_cost = float(dataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost")) 
-                saveSet["gain_on_derecognition_of_financial_assets_at_amortized_cost"] = gain_on_derecognition_of_financial_assets_at_amortized_cost
-            except:
-                pass
-
-        foreign_exchange_gains = dataSet.get("foreign_exchange_gains") 
-        if foreign_exchange_gains:
-
-            try:
-                foreign_exchange_gains = float(dataSet.get("foreign_exchange_gains")) 
-                saveSet["foreign_exchange_gains"] = foreign_exchange_gains
-            except:
-                pass
-
-        net_open_hedge_gains = dataSet.get("net_open_hedge_gains") 
-        if net_open_hedge_gains:
-
-            try:
-                net_open_hedge_gains = float(dataSet.get("net_open_hedge_gains")) 
-                saveSet["net_open_hedge_gains"] = net_open_hedge_gains
-            except:
-                pass
-
-        fair_value_change_gains = dataSet.get("fair_value_change_gains") 
-        if fair_value_change_gains:
-
-            try:
-                fair_value_change_gains = float(dataSet.get("fair_value_change_gains")) 
-                saveSet["fair_value_change_gains"] = fair_value_change_gains
-            except:
-                pass
-
-        futures_gains_losses = dataSet.get("futures_gains_losses") 
-        if futures_gains_losses:
-
-            try:
-                futures_gains_losses = float(dataSet.get("futures_gains_losses")) 
-                saveSet["futures_gains_losses"] = futures_gains_losses
-            except:
-                pass
-
-        custody_income = dataSet.get("custody_income") 
-        if custody_income:
-
-            try:
-                custody_income = float(dataSet.get("custody_income")) 
-                saveSet["custody_income"] = custody_income
-            except:
-                pass
-
-        subsidy_income = dataSet.get("subsidy_income") 
-        if subsidy_income:
-
-            try:
-                subsidy_income = float(dataSet.get("subsidy_income")) 
-                saveSet["subsidy_income"] = subsidy_income
-            except:
-                pass
-
-        other_gains = dataSet.get("other_gains") 
-        if other_gains:
-
-            try:
-                other_gains = float(dataSet.get("other_gains")) 
-                saveSet["other_gains"] = other_gains
-            except:
-                pass
-
-        asset_impairment_losses = dataSet.get("asset_impairment_losses") 
-        if asset_impairment_losses:
-
-            try:
-                asset_impairment_losses = float(dataSet.get("asset_impairment_losses")) 
-                saveSet["asset_impairment_losses"] = asset_impairment_losses
-            except:
-                pass
-
-        credit_impairment_losses = dataSet.get("credit_impairment_losses") 
-        if credit_impairment_losses:
-
-            try:
-                credit_impairment_losses = float(dataSet.get("credit_impairment_losses")) 
-                saveSet["credit_impairment_losses"] = credit_impairment_losses
-            except:
-                pass
-
-        other_business_profits = dataSet.get("other_business_profits") 
-        if other_business_profits:
-
-            try:
-                other_business_profits = float(dataSet.get("other_business_profits")) 
-                saveSet["other_business_profits"] = other_business_profits
-            except:
-                pass
-
-        asset_disposal_gains = dataSet.get("asset_disposal_gains") 
-        if asset_disposal_gains:
-
-            try:
-                asset_disposal_gains = float(dataSet.get("asset_disposal_gains")) 
-                saveSet["asset_disposal_gains"] = asset_disposal_gains
-            except:
-                pass
-
-        operating_profit = dataSet.get("operating_profit") 
-        if operating_profit:
-
-            try:
-                operating_profit = float(dataSet.get("operating_profit")) 
-                saveSet["operating_profit"] = operating_profit
-            except:
-                pass
-
-        non_operating_income = dataSet.get("non_operating_income") 
-        if non_operating_income:
-
-            try:
-                non_operating_income = float(dataSet.get("non_operating_income")) 
-                saveSet["non_operating_income"] = non_operating_income
-            except:
-                pass
-
-        non_current_asset_disposal_gains = dataSet.get("non_current_asset_disposal_gains") 
-        if non_current_asset_disposal_gains:
-
-            try:
-                non_current_asset_disposal_gains = float(dataSet.get("non_current_asset_disposal_gains")) 
-                saveSet["non_current_asset_disposal_gains"] = non_current_asset_disposal_gains
-            except:
-                pass
-
-        non_operating_expenses = dataSet.get("non_operating_expenses") 
-        if non_operating_expenses:
-
-            try:
-                non_operating_expenses = float(dataSet.get("non_operating_expenses")) 
-                saveSet["non_operating_expenses"] = non_operating_expenses
-            except:
-                pass
-
-        non_current_asset_disposal_losses = dataSet.get("non_current_asset_disposal_losses") 
-        if non_current_asset_disposal_losses:
-
-            try:
-                non_current_asset_disposal_losses = float(dataSet.get("non_current_asset_disposal_losses")) 
-                saveSet["non_current_asset_disposal_losses"] = non_current_asset_disposal_losses
-            except:
-                pass
-
-        total_profit = dataSet.get("total_profit") 
-        if total_profit:
-
-            try:
-                total_profit = float(dataSet.get("total_profit")) 
-                saveSet["total_profit"] = total_profit
-            except:
-                pass
-
-        income_tax_expense = dataSet.get("income_tax_expense") 
-        if income_tax_expense:
-
-            try:
-                income_tax_expense = float(dataSet.get("income_tax_expense")) 
-                saveSet["income_tax_expense"] = income_tax_expense
-            except:
-                pass
-
-        unrecognized_investment_losses = dataSet.get("unrecognized_investment_losses") 
-        if unrecognized_investment_losses:
-
-            try:
-                unrecognized_investment_losses = float(dataSet.get("unrecognized_investment_losses")) 
-                saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
-            except:
-                pass
-
-        net_profit = dataSet.get("net_profit") 
-        if net_profit:
-
-            try:
-                net_profit = float(dataSet.get("net_profit")) 
-                saveSet["net_profit"] = net_profit
-            except:
-                pass
-
-        net_profit_from_continuing_operations = dataSet.get("net_profit_from_continuing_operations") 
-        if net_profit_from_continuing_operations:
-
-            try:
-                net_profit_from_continuing_operations = float(dataSet.get("net_profit_from_continuing_operations")) 
-                saveSet["net_profit_from_continuing_operations"] = net_profit_from_continuing_operations
-            except:
-                pass
-
-        net_profit_from_discontinued_operations = dataSet.get("net_profit_from_discontinued_operations") 
-        if net_profit_from_discontinued_operations:
-
-            try:
-                net_profit_from_discontinued_operations = float(dataSet.get("net_profit_from_discontinued_operations")) 
-                saveSet["net_profit_from_discontinued_operations"] = net_profit_from_discontinued_operations
-            except:
-                pass
-
-        net_profit_attributable_to_parent_company = dataSet.get("net_profit_attributable_to_parent_company") 
-        if net_profit_attributable_to_parent_company:
-
-            try:
-                net_profit_attributable_to_parent_company = float(dataSet.get("net_profit_attributable_to_parent_company")) 
-                saveSet["net_profit_attributable_to_parent_company"] = net_profit_attributable_to_parent_company
-            except:
-                pass
-
-        net_profit_of_acquiree_before_merger = dataSet.get("net_profit_of_acquiree_before_merger") 
-        if net_profit_of_acquiree_before_merger:
-
-            try:
-                net_profit_of_acquiree_before_merger = float(dataSet.get("net_profit_of_acquiree_before_merger")) 
-                saveSet["net_profit_of_acquiree_before_merger"] = net_profit_of_acquiree_before_merger
-            except:
-                pass
-
-        minority_interests_profit_loss = dataSet.get("minority_interests_profit_loss") 
-        if minority_interests_profit_loss:
-
-            try:
-                minority_interests_profit_loss = float(dataSet.get("minority_interests_profit_loss")) 
-                saveSet["minority_interests_profit_loss"] = minority_interests_profit_loss
-            except:
-                pass
-
-        other_comprehensive_income = dataSet.get("other_comprehensive_income") 
-        if other_comprehensive_income:
-
-            try:
-                other_comprehensive_income = float(dataSet.get("other_comprehensive_income")) 
-                saveSet["other_comprehensive_income"] = other_comprehensive_income
-            except:
-                pass
-
-        other_comprehensive_income_attributable_to_parent = dataSet.get("other_comprehensive_income_attributable_to_parent") 
-        if other_comprehensive_income_attributable_to_parent:
-
-            try:
-                other_comprehensive_income_attributable_to_parent = float(dataSet.get("other_comprehensive_income_attributable_to_parent")) 
-                saveSet["other_comprehensive_income_attributable_to_parent"] = other_comprehensive_income_attributable_to_parent
-            except:
-                pass
-
-        oci_not_reclassified_to_profit_loss = dataSet.get("oci_not_reclassified_to_profit_loss") 
-        if oci_not_reclassified_to_profit_loss:
-
-            try:
-                oci_not_reclassified_to_profit_loss = float(dataSet.get("oci_not_reclassified_to_profit_loss")) 
-                saveSet["oci_not_reclassified_to_profit_loss"] = oci_not_reclassified_to_profit_loss
-            except:
-                pass
-
-        remeasurement_of_defined_benefit_plans = dataSet.get("remeasurement_of_defined_benefit_plans") 
-        if remeasurement_of_defined_benefit_plans:
-
-            try:
-                remeasurement_of_defined_benefit_plans = float(dataSet.get("remeasurement_of_defined_benefit_plans")) 
-                saveSet["remeasurement_of_defined_benefit_plans"] = remeasurement_of_defined_benefit_plans
-            except:
-                pass
-
-        oci_under_equity_method_not_reclassified = dataSet.get("oci_under_equity_method_not_reclassified") 
-        if oci_under_equity_method_not_reclassified:
-
-            try:
-                oci_under_equity_method_not_reclassified = float(dataSet.get("oci_under_equity_method_not_reclassified")) 
-                saveSet["oci_under_equity_method_not_reclassified"] = oci_under_equity_method_not_reclassified
-            except:
-                pass
-
-        fair_value_change_of_other_equity_instruments = dataSet.get("fair_value_change_of_other_equity_instruments") 
-        if fair_value_change_of_other_equity_instruments:
-
-            try:
-                fair_value_change_of_other_equity_instruments = float(dataSet.get("fair_value_change_of_other_equity_instruments")) 
-                saveSet["fair_value_change_of_other_equity_instruments"] = fair_value_change_of_other_equity_instruments
-            except:
-                pass
-
-        fair_value_change_of_own_credit_risk = dataSet.get("fair_value_change_of_own_credit_risk") 
-        if fair_value_change_of_own_credit_risk:
-
-            try:
-                fair_value_change_of_own_credit_risk = float(dataSet.get("fair_value_change_of_own_credit_risk")) 
-                saveSet["fair_value_change_of_own_credit_risk"] = fair_value_change_of_own_credit_risk
-            except:
-                pass
-
-        oci_reclassified_to_profit_loss = dataSet.get("oci_reclassified_to_profit_loss") 
-        if oci_reclassified_to_profit_loss:
-
-            try:
-                oci_reclassified_to_profit_loss = float(dataSet.get("oci_reclassified_to_profit_loss")) 
-                saveSet["oci_reclassified_to_profit_loss"] = oci_reclassified_to_profit_loss
-            except:
-                pass
-
-        oci_under_equity_method_reclassified = dataSet.get("oci_under_equity_method_reclassified") 
-        if oci_under_equity_method_reclassified:
-
-            try:
-                oci_under_equity_method_reclassified = float(dataSet.get("oci_under_equity_method_reclassified")) 
-                saveSet["oci_under_equity_method_reclassified"] = oci_under_equity_method_reclassified
-            except:
-                pass
-
-        fair_value_change_of_afs_financial_assets = dataSet.get("fair_value_change_of_afs_financial_assets") 
-        if fair_value_change_of_afs_financial_assets:
-
-            try:
-                fair_value_change_of_afs_financial_assets = float(dataSet.get("fair_value_change_of_afs_financial_assets")) 
-                saveSet["fair_value_change_of_afs_financial_assets"] = fair_value_change_of_afs_financial_assets
-            except:
-                pass
-
-        fair_value_change_of_other_debt_investments = dataSet.get("fair_value_change_of_other_debt_investments") 
-        if fair_value_change_of_other_debt_investments:
-
-            try:
-                fair_value_change_of_other_debt_investments = float(dataSet.get("fair_value_change_of_other_debt_investments")) 
-                saveSet["fair_value_change_of_other_debt_investments"] = fair_value_change_of_other_debt_investments
-            except:
-                pass
-
-        financial_assets_reclassified_to_oci = dataSet.get("financial_assets_reclassified_to_oci") 
-        if financial_assets_reclassified_to_oci:
-
-            try:
-                financial_assets_reclassified_to_oci = float(dataSet.get("financial_assets_reclassified_to_oci")) 
-                saveSet["financial_assets_reclassified_to_oci"] = financial_assets_reclassified_to_oci
-            except:
-                pass
-
-        credit_impairment_of_other_debt_investments = dataSet.get("credit_impairment_of_other_debt_investments") 
-        if credit_impairment_of_other_debt_investments:
-
-            try:
-                credit_impairment_of_other_debt_investments = float(dataSet.get("credit_impairment_of_other_debt_investments")) 
-                saveSet["credit_impairment_of_other_debt_investments"] = credit_impairment_of_other_debt_investments
-            except:
-                pass
-
-        htm_reclassified_to_afs_gains_losses = dataSet.get("htm_reclassified_to_afs_gains_losses") 
-        if htm_reclassified_to_afs_gains_losses:
-
-            try:
-                htm_reclassified_to_afs_gains_losses = float(dataSet.get("htm_reclassified_to_afs_gains_losses")) 
-                saveSet["htm_reclassified_to_afs_gains_losses"] = htm_reclassified_to_afs_gains_losses
-            except:
-                pass
-
-        cash_flow_hedge_reserve = dataSet.get("cash_flow_hedge_reserve") 
-        if cash_flow_hedge_reserve:
-
-            try:
-                cash_flow_hedge_reserve = float(dataSet.get("cash_flow_hedge_reserve")) 
-                saveSet["cash_flow_hedge_reserve"] = cash_flow_hedge_reserve
-            except:
-                pass
-
-        effective_portion_of_cash_flow_hedge = dataSet.get("effective_portion_of_cash_flow_hedge") 
-        if effective_portion_of_cash_flow_hedge:
-
-            try:
-                effective_portion_of_cash_flow_hedge = float(dataSet.get("effective_portion_of_cash_flow_hedge")) 
-                saveSet["effective_portion_of_cash_flow_hedge"] = effective_portion_of_cash_flow_hedge
-            except:
-                pass
-
-        foreign_currency_translation_difference = dataSet.get("foreign_currency_translation_difference") 
-        if foreign_currency_translation_difference:
-
-            try:
-                foreign_currency_translation_difference = float(dataSet.get("foreign_currency_translation_difference")) 
-                saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
-            except:
-                pass
-
-        other = dataSet.get("other") 
-        if other:
-
-            try:
-                other = float(dataSet.get("other")) 
-                saveSet["other"] = other
-            except:
-                pass
-
-        other_comprehensive_income_attributable_to_minority = dataSet.get("other_comprehensive_income_attributable_to_minority") 
-        if other_comprehensive_income_attributable_to_minority:
-
-            try:
-                other_comprehensive_income_attributable_to_minority = float(dataSet.get("other_comprehensive_income_attributable_to_minority")) 
-                saveSet["other_comprehensive_income_attributable_to_minority"] = other_comprehensive_income_attributable_to_minority
-            except:
-                pass
-
-        total_comprehensive_income = dataSet.get("total_comprehensive_income") 
-        if total_comprehensive_income:
-
-            try:
-                total_comprehensive_income = float(dataSet.get("total_comprehensive_income")) 
-                saveSet["total_comprehensive_income"] = total_comprehensive_income
-            except:
-                pass
-
-        total_comprehensive_income_attributable_to_parent = dataSet.get("total_comprehensive_income_attributable_to_parent") 
-        if total_comprehensive_income_attributable_to_parent:
-
-            try:
-                total_comprehensive_income_attributable_to_parent = float(dataSet.get("total_comprehensive_income_attributable_to_parent")) 
-                saveSet["total_comprehensive_income_attributable_to_parent"] = total_comprehensive_income_attributable_to_parent
-            except:
-                pass
-
-        total_comprehensive_income_attributable_to_minority = dataSet.get("total_comprehensive_income_attributable_to_minority") 
-        if total_comprehensive_income_attributable_to_minority:
-
-            try:
-                total_comprehensive_income_attributable_to_minority = float(dataSet.get("total_comprehensive_income_attributable_to_minority")) 
-                saveSet["total_comprehensive_income_attributable_to_minority"] = total_comprehensive_income_attributable_to_minority
-            except:
-                pass
-
-        basic_earnings_per_share = dataSet.get("basic_earnings_per_share") 
-        if basic_earnings_per_share:
-
-            try:
-                basic_earnings_per_share = float(dataSet.get("basic_earnings_per_share")) 
-                saveSet["basic_earnings_per_share"] = basic_earnings_per_share
-            except:
-                pass
-
-        diluted_earnings_per_share = dataSet.get("diluted_earnings_per_share") 
-        if diluted_earnings_per_share:
-
-            try:
-                diluted_earnings_per_share = float(dataSet.get("diluted_earnings_per_share")) 
-                saveSet["diluted_earnings_per_share"] = diluted_earnings_per_share
-            except:
-                pass
+        try:
+            total_operating_revenue = float(dataSet.get("total_operating_revenue")) 
+            saveSet["total_operating_revenue"] = total_operating_revenue
+        except:
+            pass
+
+        try:
+            operating_revenue = float(dataSet.get("operating_revenue")) 
+            saveSet["operating_revenue"] = operating_revenue
+        except:
+            pass
+
+        try:
+            interest_income = float(dataSet.get("interest_income")) 
+            saveSet["interest_income"] = interest_income
+        except:
+            pass
+
+        try:
+            earned_premiums = float(dataSet.get("earned_premiums")) 
+            saveSet["earned_premiums"] = earned_premiums
+        except:
+            pass
+
+        try:
+            fees_and_commissions_income = float(dataSet.get("fees_and_commissions_income")) 
+            saveSet["fees_and_commissions_income"] = fees_and_commissions_income
+        except:
+            pass
+
+        try:
+            real_estate_sales_revenue = float(dataSet.get("real_estate_sales_revenue")) 
+            saveSet["real_estate_sales_revenue"] = real_estate_sales_revenue
+        except:
+            pass
+
+        try:
+            other_business_revenue = float(dataSet.get("other_business_revenue")) 
+            saveSet["other_business_revenue"] = other_business_revenue
+        except:
+            pass
+
+        try:
+            total_operating_costs = float(dataSet.get("total_operating_costs")) 
+            saveSet["total_operating_costs"] = total_operating_costs
+        except:
+            pass
+
+        try:
+            operating_costs = float(dataSet.get("operating_costs")) 
+            saveSet["operating_costs"] = operating_costs
+        except:
+            pass
+
+        try:
+            fees_and_commissions_expenses = float(dataSet.get("fees_and_commissions_expenses")) 
+            saveSet["fees_and_commissions_expenses"] = fees_and_commissions_expenses
+        except:
+            pass
+
+        try:
+            real_estate_sales_costs = float(dataSet.get("real_estate_sales_costs")) 
+            saveSet["real_estate_sales_costs"] = real_estate_sales_costs
+        except:
+            pass
+
+        try:
+            surrender_value = float(dataSet.get("surrender_value")) 
+            saveSet["surrender_value"] = surrender_value
+        except:
+            pass
+
+        try:
+            net_claims_paid = float(dataSet.get("net_claims_paid")) 
+            saveSet["net_claims_paid"] = net_claims_paid
+        except:
+            pass
+
+        try:
+            net_insurance_contract_reserves = float(dataSet.get("net_insurance_contract_reserves")) 
+            saveSet["net_insurance_contract_reserves"] = net_insurance_contract_reserves
+        except:
+            pass
+
+        try:
+            policy_dividend_expenses = float(dataSet.get("policy_dividend_expenses")) 
+            saveSet["policy_dividend_expenses"] = policy_dividend_expenses
+        except:
+            pass
+
+        try:
+            reinsurance_expenses = float(dataSet.get("reinsurance_expenses")) 
+            saveSet["reinsurance_expenses"] = reinsurance_expenses
+        except:
+            pass
+
+        try:
+            other_business_costs = float(dataSet.get("other_business_costs")) 
+            saveSet["other_business_costs"] = other_business_costs
+        except:
+            pass
+
+        try:
+            taxes_and_surcharges = float(dataSet.get("taxes_and_surcharges")) 
+            saveSet["taxes_and_surcharges"] = taxes_and_surcharges
+        except:
+            pass
+
+        try:
+            rd_expenses = float(dataSet.get("rd_expenses")) 
+            saveSet["rd_expenses"] = rd_expenses
+        except:
+            pass
+
+        try:
+            selling_expenses = float(dataSet.get("selling_expenses")) 
+            saveSet["selling_expenses"] = selling_expenses
+        except:
+            pass
+
+        try:
+            administrative_expenses = float(dataSet.get("administrative_expenses")) 
+            saveSet["administrative_expenses"] = administrative_expenses
+        except:
+            pass
+
+        try:
+            financial_expenses = float(dataSet.get("financial_expenses")) 
+            saveSet["financial_expenses"] = financial_expenses
+        except:
+            pass
+
+        try:
+            interest_expenses = float(dataSet.get("interest_expenses")) 
+            saveSet["interest_expenses"] = interest_expenses
+        except:
+            pass
+
+        try:
+            interest_expenditure = float(dataSet.get("interest_expenditure")) 
+            saveSet["interest_expenditure"] = interest_expenditure
+        except:
+            pass
+
+        try:
+            investment_income = float(dataSet.get("investment_income")) 
+            saveSet["investment_income"] = investment_income
+        except:
+            pass
+
+        try:
+            investment_income_from_associates_and_joint_ventures = float(dataSet.get("investment_income_from_associates_and_joint_ventures")) 
+            saveSet["investment_income_from_associates_and_joint_ventures"] = investment_income_from_associates_and_joint_ventures
+        except:
+            pass
+
+        try:
+            gain_on_derecognition_of_financial_assets_at_amortized_cost = float(dataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost")) 
+            saveSet["gain_on_derecognition_of_financial_assets_at_amortized_cost"] = gain_on_derecognition_of_financial_assets_at_amortized_cost
+        except:
+            pass
+
+        try:
+            foreign_exchange_gains = float(dataSet.get("foreign_exchange_gains")) 
+            saveSet["foreign_exchange_gains"] = foreign_exchange_gains
+        except:
+            pass
+
+        try:
+            net_open_hedge_gains = float(dataSet.get("net_open_hedge_gains")) 
+            saveSet["net_open_hedge_gains"] = net_open_hedge_gains
+        except:
+            pass
+
+        try:
+            fair_value_change_gains = float(dataSet.get("fair_value_change_gains")) 
+            saveSet["fair_value_change_gains"] = fair_value_change_gains
+        except:
+            pass
+
+        try:
+            futures_gains_losses = float(dataSet.get("futures_gains_losses")) 
+            saveSet["futures_gains_losses"] = futures_gains_losses
+        except:
+            pass
+
+        try:
+            custody_income = float(dataSet.get("custody_income")) 
+            saveSet["custody_income"] = custody_income
+        except:
+            pass
+
+        try:
+            subsidy_income = float(dataSet.get("subsidy_income")) 
+            saveSet["subsidy_income"] = subsidy_income
+        except:
+            pass
+
+        try:
+            other_gains = float(dataSet.get("other_gains")) 
+            saveSet["other_gains"] = other_gains
+        except:
+            pass
+
+        try:
+            asset_impairment_losses = float(dataSet.get("asset_impairment_losses")) 
+            saveSet["asset_impairment_losses"] = asset_impairment_losses
+        except:
+            pass
+
+        try:
+            credit_impairment_losses = float(dataSet.get("credit_impairment_losses")) 
+            saveSet["credit_impairment_losses"] = credit_impairment_losses
+        except:
+            pass
+
+        try:
+            other_business_profits = float(dataSet.get("other_business_profits")) 
+            saveSet["other_business_profits"] = other_business_profits
+        except:
+            pass
+
+        try:
+            asset_disposal_gains = float(dataSet.get("asset_disposal_gains")) 
+            saveSet["asset_disposal_gains"] = asset_disposal_gains
+        except:
+            pass
+
+        try:
+            operating_profit = float(dataSet.get("operating_profit")) 
+            saveSet["operating_profit"] = operating_profit
+        except:
+            pass
+
+        try:
+            non_operating_income = float(dataSet.get("non_operating_income")) 
+            saveSet["non_operating_income"] = non_operating_income
+        except:
+            pass
+
+        try:
+            non_current_asset_disposal_gains = float(dataSet.get("non_current_asset_disposal_gains")) 
+            saveSet["non_current_asset_disposal_gains"] = non_current_asset_disposal_gains
+        except:
+            pass
+
+        try:
+            non_operating_expenses = float(dataSet.get("non_operating_expenses")) 
+            saveSet["non_operating_expenses"] = non_operating_expenses
+        except:
+            pass
+
+        try:
+            non_current_asset_disposal_losses = float(dataSet.get("non_current_asset_disposal_losses")) 
+            saveSet["non_current_asset_disposal_losses"] = non_current_asset_disposal_losses
+        except:
+            pass
+
+        try:
+            total_profit = float(dataSet.get("total_profit")) 
+            saveSet["total_profit"] = total_profit
+        except:
+            pass
+
+        try:
+            income_tax_expense = float(dataSet.get("income_tax_expense")) 
+            saveSet["income_tax_expense"] = income_tax_expense
+        except:
+            pass
+
+        try:
+            unrecognized_investment_losses = float(dataSet.get("unrecognized_investment_losses")) 
+            saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
+        except:
+            pass
+
+        try:
+            net_profit = float(dataSet.get("net_profit")) 
+            saveSet["net_profit"] = net_profit
+        except:
+            pass
+
+        try:
+            net_profit_from_continuing_operations = float(dataSet.get("net_profit_from_continuing_operations")) 
+            saveSet["net_profit_from_continuing_operations"] = net_profit_from_continuing_operations
+        except:
+            pass
+
+        try:
+            net_profit_from_discontinued_operations = float(dataSet.get("net_profit_from_discontinued_operations")) 
+            saveSet["net_profit_from_discontinued_operations"] = net_profit_from_discontinued_operations
+        except:
+            pass
+
+        try:
+            net_profit_attributable_to_parent_company = float(dataSet.get("net_profit_attributable_to_parent_company")) 
+            saveSet["net_profit_attributable_to_parent_company"] = net_profit_attributable_to_parent_company
+        except:
+            pass
+
+        try:
+            net_profit_of_acquiree_before_merger = float(dataSet.get("net_profit_of_acquiree_before_merger")) 
+            saveSet["net_profit_of_acquiree_before_merger"] = net_profit_of_acquiree_before_merger
+        except:
+            pass
+
+        try:
+            minority_interests_profit_loss = float(dataSet.get("minority_interests_profit_loss")) 
+            saveSet["minority_interests_profit_loss"] = minority_interests_profit_loss
+        except:
+            pass
+
+        try:
+            other_comprehensive_income = float(dataSet.get("other_comprehensive_income")) 
+            saveSet["other_comprehensive_income"] = other_comprehensive_income
+        except:
+            pass
+
+        try:
+            other_comprehensive_income_attributable_to_parent = float(dataSet.get("other_comprehensive_income_attributable_to_parent")) 
+            saveSet["other_comprehensive_income_attributable_to_parent"] = other_comprehensive_income_attributable_to_parent
+        except:
+            pass
+
+        try:
+            oci_not_reclassified_to_profit_loss = float(dataSet.get("oci_not_reclassified_to_profit_loss")) 
+            saveSet["oci_not_reclassified_to_profit_loss"] = oci_not_reclassified_to_profit_loss
+        except:
+            pass
+
+        try:
+            remeasurement_of_defined_benefit_plans = float(dataSet.get("remeasurement_of_defined_benefit_plans")) 
+            saveSet["remeasurement_of_defined_benefit_plans"] = remeasurement_of_defined_benefit_plans
+        except:
+            pass
+
+        try:
+            oci_under_equity_method_not_reclassified = float(dataSet.get("oci_under_equity_method_not_reclassified")) 
+            saveSet["oci_under_equity_method_not_reclassified"] = oci_under_equity_method_not_reclassified
+        except:
+            pass
+
+        try:
+            fair_value_change_of_other_equity_instruments = float(dataSet.get("fair_value_change_of_other_equity_instruments")) 
+            saveSet["fair_value_change_of_other_equity_instruments"] = fair_value_change_of_other_equity_instruments
+        except:
+            pass
+
+        try:
+            fair_value_change_of_own_credit_risk = float(dataSet.get("fair_value_change_of_own_credit_risk")) 
+            saveSet["fair_value_change_of_own_credit_risk"] = fair_value_change_of_own_credit_risk
+        except:
+            pass
+
+        try:
+            oci_reclassified_to_profit_loss = float(dataSet.get("oci_reclassified_to_profit_loss")) 
+            saveSet["oci_reclassified_to_profit_loss"] = oci_reclassified_to_profit_loss
+        except:
+            pass
+
+        try:
+            oci_under_equity_method_reclassified = float(dataSet.get("oci_under_equity_method_reclassified")) 
+            saveSet["oci_under_equity_method_reclassified"] = oci_under_equity_method_reclassified
+        except:
+            pass
+
+        try:
+            fair_value_change_of_afs_financial_assets = float(dataSet.get("fair_value_change_of_afs_financial_assets")) 
+            saveSet["fair_value_change_of_afs_financial_assets"] = fair_value_change_of_afs_financial_assets
+        except:
+            pass
+
+        try:
+            fair_value_change_of_other_debt_investments = float(dataSet.get("fair_value_change_of_other_debt_investments")) 
+            saveSet["fair_value_change_of_other_debt_investments"] = fair_value_change_of_other_debt_investments
+        except:
+            pass
+
+        try:
+            financial_assets_reclassified_to_oci = float(dataSet.get("financial_assets_reclassified_to_oci")) 
+            saveSet["financial_assets_reclassified_to_oci"] = financial_assets_reclassified_to_oci
+        except:
+            pass
+
+        try:
+            credit_impairment_of_other_debt_investments = float(dataSet.get("credit_impairment_of_other_debt_investments")) 
+            saveSet["credit_impairment_of_other_debt_investments"] = credit_impairment_of_other_debt_investments
+        except:
+            pass
+
+        try:
+            htm_reclassified_to_afs_gains_losses = float(dataSet.get("htm_reclassified_to_afs_gains_losses")) 
+            saveSet["htm_reclassified_to_afs_gains_losses"] = htm_reclassified_to_afs_gains_losses
+        except:
+            pass
+
+        try:
+            cash_flow_hedge_reserve = float(dataSet.get("cash_flow_hedge_reserve")) 
+            saveSet["cash_flow_hedge_reserve"] = cash_flow_hedge_reserve
+        except:
+            pass
+
+        try:
+            effective_portion_of_cash_flow_hedge = float(dataSet.get("effective_portion_of_cash_flow_hedge")) 
+            saveSet["effective_portion_of_cash_flow_hedge"] = effective_portion_of_cash_flow_hedge
+        except:
+            pass
+
+        try:
+            foreign_currency_translation_difference = float(dataSet.get("foreign_currency_translation_difference")) 
+            saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
+        except:
+            pass
+
+        try:
+            other = float(dataSet.get("other")) 
+            saveSet["other"] = other
+        except:
+            pass
+
+        try:
+            other_comprehensive_income_attributable_to_minority = float(dataSet.get("other_comprehensive_income_attributable_to_minority")) 
+            saveSet["other_comprehensive_income_attributable_to_minority"] = other_comprehensive_income_attributable_to_minority
+        except:
+            pass
+
+        try:
+            total_comprehensive_income = float(dataSet.get("total_comprehensive_income")) 
+            saveSet["total_comprehensive_income"] = total_comprehensive_income
+        except:
+            pass
+
+        try:
+            total_comprehensive_income_attributable_to_parent = float(dataSet.get("total_comprehensive_income_attributable_to_parent")) 
+            saveSet["total_comprehensive_income_attributable_to_parent"] = total_comprehensive_income_attributable_to_parent
+        except:
+            pass
+
+        try:
+            total_comprehensive_income_attributable_to_minority = float(dataSet.get("total_comprehensive_income_attributable_to_minority")) 
+            saveSet["total_comprehensive_income_attributable_to_minority"] = total_comprehensive_income_attributable_to_minority
+        except:
+            pass
+
+        try:
+            basic_earnings_per_share = float(dataSet.get("basic_earnings_per_share")) 
+            saveSet["basic_earnings_per_share"] = basic_earnings_per_share
+        except:
+            pass
+
+        try:
+            diluted_earnings_per_share = float(dataSet.get("diluted_earnings_per_share")) 
+            saveSet["diluted_earnings_per_share"] = diluted_earnings_per_share
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -9566,14 +8598,11 @@ def update_indicator_medians(tableName,id,dataSet):
         if report_date:
             saveSet["report_date"] = report_date
 
-        median_value = dataSet.get("median_value") 
-        if median_value:
-
-            try:
-                median_value = float(dataSet.get("median_value")) 
-                saveSet["median_value"] = median_value
-            except:
-                pass
+        try:
+            median_value = float(dataSet.get("median_value")) 
+            saveSet["median_value"] = median_value
+        except:
+            pass
 
         cache_version = dataSet.get("cache_version") 
         if cache_version:
@@ -9893,57 +8922,41 @@ def update_user_stock_list(tableName,id,dataSet):
         if history_end_date:
             saveSet["history_end_date"] = history_end_date
 
-        initial_weight = dataSet.get("initial_weight") 
-        if initial_weight:
+        try:
+            initial_weight = float(dataSet.get("initial_weight")) 
+            saveSet["initial_weight"] = initial_weight
+        except:
+            pass
 
-            try:
-                initial_weight = float(dataSet.get("initial_weight")) 
-                saveSet["initial_weight"] = initial_weight
-            except:
-                pass
+        try:
+            current_weight = float(dataSet.get("current_weight")) 
+            saveSet["current_weight"] = current_weight
+        except:
+            pass
 
-        current_weight = dataSet.get("current_weight") 
-        if current_weight:
+        try:
+            initial_cap = float(dataSet.get("initial_cap")) 
+            saveSet["initial_cap"] = initial_cap
+        except:
+            pass
 
-            try:
-                current_weight = float(dataSet.get("current_weight")) 
-                saveSet["current_weight"] = current_weight
-            except:
-                pass
+        try:
+            current_cap = float(dataSet.get("current_cap")) 
+            saveSet["current_cap"] = current_cap
+        except:
+            pass
 
-        initial_cap = dataSet.get("initial_cap") 
-        if initial_cap:
+        try:
+            initial_volume = int(dataSet.get("initial_volume")) 
+            saveSet["initial_volume"] = initial_volume
+        except:
+            pass
 
-            try:
-                initial_cap = float(dataSet.get("initial_cap")) 
-                saveSet["initial_cap"] = initial_cap
-            except:
-                pass
-
-        current_cap = dataSet.get("current_cap") 
-        if current_cap:
-
-            try:
-                current_cap = float(dataSet.get("current_cap")) 
-                saveSet["current_cap"] = current_cap
-            except:
-                pass
-
-        initial_volume = dataSet.get("initial_volume") 
-        if initial_volume:
-            try:
-                initial_volume = int(dataSet.get("initial_volume")) 
-                saveSet["initial_volume"] = initial_volume
-            except:
-                pass
-
-        current_volume = dataSet.get("current_volume") 
-        if current_volume:
-            try:
-                current_volume = int(dataSet.get("current_volume")) 
-                saveSet["current_volume"] = current_volume
-            except:
-                pass
+        try:
+            current_volume = int(dataSet.get("current_volume")) 
+            saveSet["current_volume"] = current_volume
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -10274,13 +9287,11 @@ def update_data_check_log(tableName,id,dataSet):
         if error_desc:
             saveSet["error_desc"] = error_desc
 
-        proc_num = dataSet.get("proc_num") 
-        if proc_num:
-            try:
-                proc_num = int(dataSet.get("proc_num")) 
-                saveSet["proc_num"] = proc_num
-            except:
-                pass
+        try:
+            proc_num = int(dataSet.get("proc_num")) 
+            saveSet["proc_num"] = proc_num
+        except:
+            pass
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -10682,19 +9693,474 @@ def query_trade_day_record(tableName,id = "0", beginDate="",endDate="",tradeDay=
 
 #trade_day_record end 
 
+#technical_signal begin 
 
-# 查询表数据中date的最大值和最小值(第一个值和最后一个值)
-def query_first_last_data(tableName,column = "date"):
+def tablename_convertor_technical_signal():
+    tableName = "technical_signal"
+    tableName = tableName.lower()
+    return tableName
+
+
+def decode_tablename_technical_signal(tableName):
     result = {}
-    valuesList = [column,column]
-    sqlStr = "SELECT min(%s) as first_data, max(%s) as last_data FROM " + tableName 
+    aList = tableName.split("_")
+    
+    return result
+
+
+#创建technical_signal表
+def create_technical_signal(tableName):
+    aList = ["CREATE TABLE IF NOT EXISTS %s("
+    "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '记录号',",
+    "stock_code VARCHAR(10) NOT NULL COMMENT '股票代码',",
+    "`date` VARCHAR(10) NOT NULL COMMENT '交易日期',",
+    "`action` VARCHAR(5) NOT NULL COMMENT '交易信号',",
+    "adjust VARCHAR(3) COMMENT '数据调整方式',",
+    "period VARCHAR(6) COMMENT '数据周期',",
+    "indicator VARCHAR(4) COMMENT '信号来源',",
+    "subtype VARCHAR(20) COMMENT '信号子类型',",
+    "`description` VARCHAR(500) COMMENT '描述',",
+    "description2 VARCHAR(500) COMMENT '描述2',",
+    "market_trend VARCHAR(10) COMMENT '市场趋势',",
+    "market_status VARCHAR(10) COMMENT '震荡单边',",
+    "calc_result VARCHAR(6000) NULL COMMENT '计算结果json值',",
+    "readFlag VARCHAR(1) COMMENT '是否阅读标记',",
+    "label1 VARCHAR(32) NULL,",
+    "label2 VARCHAR(32) NULL,",
+    "label3 VARCHAR(32) NULL,",
+    "memo VARCHAR(200) NULL,",
+    "regID VARCHAR(32) NOT NULL COMMENT '注册ID',",
+    "regYMDHMS VARCHAR(16) NOT NULL COMMENT '注册年月日',",
+    "modifyID VARCHAR(32) COMMENT '修改ID',",
+    "modifyYMDHMS VARCHAR(16) COMMENT '数据修改年月日',",
+    "dispFlag VARCHAR(1) COMMENT '是否显示标记',",
+    "delFlag VARCHAR(1) COMMENT '是否删除标记'"
+    ")  ENGINE=INNODB DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    ]
+    tempStr = "".join(aList)
+    sqlStr = tempStr % (tableName)
+    rtn = mysqlDB.executeWrite(sqlStr)
+    result = chkTableExist(tableName)
+    if result:
+        pass
+        index_name = f"{tableName}_unique_multi_idx"
+        sqlStr = f"CREATE UNIQUE INDEX {index_name} ON {tableName} ({'stock_code'},{'date'},{'indicator'},{'adjust'},{'period'}) "
+        rtn = mysqlDB.executeWrite(sqlStr)
+        #sqlStr = "CREATE INDEX {1} ON {0}({1}) ".format(tableName, "indexKey")
+        #rtn = mysqlDB.executeWrite(sqlStr)
+        #sqlStr = "ALTER TABLE {0} auto_increment = {1} ".format(tableName,auto_increment_default_value)
+        #rtn = mysqlDB.executeWrite(sqlStr)
+
+    return result
+
+
+#删除technical_signal表
+def drop_technical_signal(tableName):
+    result = dropTableGeneral(tableName)
+    return result
+
+
+#technical_signal 删除记录
+def delete_technical_signal(tableName,id):
+    result = 0
+    sqlStr = f"DELETE FROM {tableName}"
+    try:
+
+        sqlStr += " WHERE id = %s"
+        valuesList = [id] 
+        result = mysqlDB.executeWrite(sqlStr,tuple(valuesList))
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#technical_signal 增加记录
+def insert_technical_signal(tableName,dataSet):
+    result = 0
+    try:
+
+        saveSet = {}
+
+        saveSet["stock_code"] = dataSet.get("stock_code", "") 
+
+        saveSet["date"] = dataSet.get("date", "") 
+
+        saveSet["action"] = dataSet.get("action", "") 
+
+        saveSet["adjust"] = dataSet.get("adjust", "") 
+
+        saveSet["period"] = dataSet.get("period", "") 
+
+        saveSet["indicator"] = dataSet.get("indicator", "") 
+
+        saveSet["subtype"] = dataSet.get("subtype", "") 
+
+        saveSet["description"] = dataSet.get("description", "") 
+
+        saveSet["description2"] = dataSet.get("description2", "") 
+
+        saveSet["market_trend"] = dataSet.get("market_trend", "") 
+
+        saveSet["market_status"] = dataSet.get("market_status", "") 
+
+        saveSet["calc_result"] = dataSet.get("calc_result", "") 
+
+        saveSet["readFlag"] = dataSet.get("readFlag", "") 
+
+        saveSet["label1"] = dataSet.get("label1", "") 
+
+        saveSet["label2"] = dataSet.get("label2", "") 
+
+        saveSet["label3"] = dataSet.get("label3", "") 
+
+        saveSet["memo"] = dataSet.get("memo", "") 
+
+        saveSet["regID"] = dataSet.get("regID", "") 
+
+        saveSet["regYMDHMS"] = dataSet.get("regYMDHMS", "") 
+
+        saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+
+        saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+
+        result = insertTableGeneral(tableName, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#technical_signal 修改记录
+def update_technical_signal(tableName,id,dataSet):
+    result = -2
+    try:
+        saveSet = {}
+
+        stock_code = dataSet.get("stock_code") 
+        if stock_code:
+            saveSet["stock_code"] = stock_code
+
+        date = dataSet.get("date") 
+        if date:
+            saveSet["date"] = date
+
+        action = dataSet.get("action") 
+        if action:
+            saveSet["action"] = action
+
+        adjust = dataSet.get("adjust") 
+        if adjust:
+            saveSet["adjust"] = adjust
+
+        period = dataSet.get("period") 
+        if period:
+            saveSet["period"] = period
+
+        indicator = dataSet.get("indicator") 
+        if indicator:
+            saveSet["indicator"] = indicator
+
+        subtype = dataSet.get("subtype") 
+        if subtype:
+            saveSet["subtype"] = subtype
+
+        description = dataSet.get("description") 
+        if description:
+            saveSet["description"] = description
+
+        description2 = dataSet.get("description2") 
+        if description2:
+            saveSet["description2"] = description2
+
+        market_trend = dataSet.get("market_trend") 
+        if market_trend:
+            saveSet["market_trend"] = market_trend
+
+        market_status = dataSet.get("market_status") 
+        if market_status:
+            saveSet["market_status"] = market_status
+
+        calc_result = dataSet.get("calc_result") 
+        if calc_result:
+            saveSet["calc_result"] = calc_result
+
+        readFlag = dataSet.get("readFlag") 
+        if readFlag:
+            saveSet["readFlag"] = readFlag
+
+        label1 = dataSet.get("label1") 
+        if label1:
+            saveSet["label1"] = label1
+
+        label2 = dataSet.get("label2") 
+        if label2:
+            saveSet["label2"] = label2
+
+        label3 = dataSet.get("label3") 
+        if label3:
+            saveSet["label3"] = label3
+
+        memo = dataSet.get("memo") 
+        if memo:
+            saveSet["memo"] = memo
+
+        modifyID = dataSet.get("modifyID") 
+        if modifyID:
+            saveSet["modifyID"] = modifyID
+
+        modifyYMDHMS = dataSet.get("modifyYMDHMS") 
+        if modifyYMDHMS:
+            saveSet["modifyYMDHMS"] = modifyYMDHMS
+
+        dispFlag = dataSet.get("dispFlag") 
+        if dispFlag:
+            saveSet["dispFlag"] = dispFlag
+
+        delFlag = dataSet.get("delFlag") 
+        if delFlag:
+            saveSet["delFlag"] = delFlag
+
+        keySqlstr = "id = %s"
+        keyValues = [id]
+
+        result = updateTableGeneral(tableName, keySqlstr,  keyValues, saveSet)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#technical_signal 查询记录
+def query_technical_signal(tableName,id = "0", stock_code="", sortFlag="DESC", action="", date="", start_date="", end_date="",readFlag="", adjust="", period="", indicator="", delFlag = "0", limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+    result = []
+    columns = "*"
+    valuesList = []
+    sqlStr = f"SELECT {columns} FROM {tableName}"
 
     try:
+
+        try:
+            id = int(id)
+        except:
+            id = 0
+
+        if id > 0:
+            sqlStr =  sqlStr + " WHERE id = %s" 
+            valuesList = [id]  
+        if stock_code:
+            if valuesList:
+                sqlStr += " AND stock_code = %s"
+            else:
+                sqlStr += " WHERE stock_code = %s"
+            valuesList.append(stock_code)
+        if action:
+            if valuesList:
+                sqlStr += " AND action = %s"
+            else:
+                sqlStr += " WHERE action = %s"
+            valuesList.append(action)
+        if readFlag:
+            if valuesList:
+                sqlStr += " AND readFlag = %s"
+            else:
+                sqlStr += " WHERE readFlag = %s"
+            valuesList.append(readFlag)
+        if adjust:
+            if valuesList:
+                sqlStr += " AND adjust = %s"
+            else:
+                sqlStr += " WHERE adjust = %s"
+            valuesList.append(adjust)
+        if period:
+            if valuesList:
+                sqlStr += " AND period = %s"
+            else:
+                sqlStr += " WHERE period = %s"
+            valuesList.append(period)
+        if indicator:
+            if valuesList:
+                sqlStr += " AND indicator = %s"
+            else:
+                sqlStr += " WHERE indicator = %s"
+            valuesList.append(indicator)
+
+        if date:
+            if valuesList:
+                sqlStr += " AND date = %s"
+            else:
+                sqlStr += " WHERE date = %s"
+            valuesList.append(date)
+
+        if start_date:
+            if valuesList:
+                sqlStr += " AND date >= %s"
+            else:
+                sqlStr += " WHERE date >= %s"
+            valuesList.append(start_date)
+        if end_date:
+            if valuesList:
+                sqlStr += " AND date < %s"
+            else:
+                sqlStr += " WHERE date < %s"
+            valuesList.append(end_date)
+
+        if sortFlag:
+            sqlStr += " ORDER BY date DESC"
+
+        if limitNum > 0:
+            sqlStr += " LIMIT {0}".format(limitNum)
+
         rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
         if rtn > 0:
             dataList = mysqlDB.fetchAll()
-            result["first_date"] = dataList[0]["first_date"]
-            result["last_date"] = dataList[0]["last_date"]
+            dataList = dataFormatConvert(dataList)
+            result = list(dataList)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+#technical_signal and user_stock_list查询记录
+def query_user_technical_signal(stock_code="", sortFlag="DESC", action="", date="", start_date="", end_date="",readFlag="", adjust="", period="", indicator="", userID = "", limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+    result = []
+    tableName = tablename_convertor_technical_signal()
+    tableName2 = tablename_convertor_user_stock_list()
+    columns = "*"
+    valuesList = []
+    sqlStr = f"SELECT T1.*, T2.userID as userID, T2.username as username,T2.stock_name as stock_name FROM {tableName} as T1, {tableName2} as T2 WHERE T1.stock_code = T2.stock_code"
+
+    try:
+        if stock_code:
+            sqlStr += " AND T1.stock_code = %s"
+            valuesList.append(stock_code)
+        if action:
+            sqlStr += " AND action = %s"
+            valuesList.append(action)
+        if readFlag:
+            if valuesList:
+                sqlStr += " AND readFlag = %s"
+            else:
+                sqlStr += " WHERE readFlag = %s"
+            valuesList.append(readFlag)
+        if adjust:
+            if valuesList:
+                sqlStr += " AND adjust = %s"
+            else:
+                sqlStr += " WHERE adjust = %s"
+            valuesList.append(adjust)
+        if period:
+            if valuesList:
+                sqlStr += " AND period = %s"
+            else:
+                sqlStr += " WHERE period = %s"
+            valuesList.append(period)
+        if indicator:
+            if valuesList:
+                sqlStr += " AND indicator = %s"
+            else:
+                sqlStr += " WHERE indicator = %s"
+            valuesList.append(indicator)
+        
+        if date:
+            if valuesList:
+                sqlStr += " AND date = %s"
+            else:
+                sqlStr += " WHERE date = %s"
+            valuesList.append(date)
+       
+        if start_date:
+            if valuesList:
+                sqlStr += " AND date >= %s"
+            else:
+                sqlStr += " WHERE date >= %s"
+            valuesList.append(start_date)
+        if end_date:
+            if valuesList:
+                sqlStr += " AND date < %s"
+            else:
+                sqlStr += " WHERE date < %s"
+            valuesList.append(end_date)
+
+        if sortFlag:
+            sqlStr += " ORDER BY date DESC"
+
+        if limitNum > 0:
+            sqlStr += " LIMIT {0}".format(limitNum)
+
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            dataList = dataFormatConvert(dataList)
+            result = list(dataList)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+#technical_signal end 
+
+
+# 查询表数据中date的最大值和最小值(第一个值和最后一个值)
+def query_min_max_data(tableName,column="date",symbol="",period="",adjust="",indicator=""):
+    result = {}
+    valuesList = []
+    sqlStr = f"SELECT min({column}) as min_data, max({column}) as max_data FROM {tableName}"
+
+    try:
+        if symbol:
+            sqlStr += " WHERE symbol = %s"
+            valuesList.append(symbol)
+        if period:
+            if valuesList:
+                sqlStr += " AND period = %s"
+            else:
+                sqlStr += " WHERE period = %s"
+            valuesList.append(period)
+        if adjust:
+            if valuesList:
+                sqlStr += " AND adjust = %s"
+            else:
+                sqlStr += " WHERE adjust = %s"
+            valuesList.append(adjust)
+        if indicator:
+            if valuesList:
+                sqlStr += " AND indicator = %s"
+            else:
+                sqlStr += " WHERE indicator = %s"
+            valuesList.append(indicator)
+        
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            min_data = dataList[0]["min_data"]
+            if not min_data:
+                min_data = ""
+            max_data = dataList[0]["max_data"]
+            if not max_data:
+                max_data = ""
+            result["min_data"] = min_data
+            result["max_data"] = max_data
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
@@ -10785,6 +10251,10 @@ def checkMySqlDataBase():
     if chkTableExist(tableName) == False:
         rtn = create_trade_day_record(tableName)
 
+    tableName = tablename_convertor_technical_signal()
+    if chkTableExist(tableName) == False:
+        rtn = create_technical_signal(tableName)
+
 
 def dropMySqlDataBase():
     YMDHMS = misc.getTime()
@@ -10863,6 +10333,10 @@ def dropMySqlDataBase():
     tableName = tablename_convertor_trade_day_record()
     if chkTableExist(tableName):
         rtn = drop_trade_day_record(tableName)
+
+    tableName = tablename_convertor_technical_signal()
+    if chkTableExist(tableName):
+        rtn = drop_technical_signal(tableName)
 
 
 checkMySqlDataBase()

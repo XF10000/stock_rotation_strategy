@@ -7,7 +7,7 @@
 #Date: 2019-08-01
 #Description:   定义全局常量
 
-_VERSION="20260317"
+_VERSION="20260329"
 
 #导入具体应用的全局变量
 
@@ -331,6 +331,9 @@ _DEF_STOCK_BACKTEST_WINDOWS = 14 #默认回测至少保留14个数据
 #默认初始资金
 _DEF_STOCK_INITIAL_CAPITAL = 1000000 #默认初始资金1000000元
 
+#默认股票每天数据最小数量, 5000只股票
+_DEF_STOCK_MIN_DAILY_STOCK_NUM = 5000
+
 #价值比过滤器判断
 _DEF_STOCK_VALUE_SCREEN_SELL = "sell" #价值比大于80%
 _DEF_STOCK_VALUE_SCREEN_BUY = "buy" #价值比小于70%
@@ -346,7 +349,20 @@ _DEF_STOCK_ACTION_CN = {
     _DEF_STOCK_ACTION_HOLD:"持仓",
 }
 
+_DEF_STOCK_SIGNAL_RELIABILITY_HIGH = "high" #默认信号可靠性
+_DEF_STOCK_SIGNAL_RELIABILITY_LOW = "low" #默认信号可靠性低
+_DEF_STOCK_SIGNAL_RELIABILITY_MED = "med" #默认信号可靠性中
+
+_DEF_STOCK_SIGNAL_MARKET_BULLISH = "bullish" #默认市场趋势向上,牛市
+_DEF_STOCK_SIGNAL_MARKET_BEARISH = "bearish" #默认市场趋势向下,熊市
+
+_DEF_STOCK_SIGNAL_BOLL_TREND_UP = "up" #默认布林带趋势向上,多头趋势
+_DEF_STOCK_SIGNAL_BOLL_TREND_DOWN = "down" #默认布林带趋势向下,空头趋势
+_DEF_STOCK_SIGNAL_BOLL_TREND_RANGE = "range" #默认布林带趋势震荡,震荡行情
+_DEF_STOCK_SIGNAL_BOLL_TREND_NEUTRAL = "neutral" #默认布林带趋势中性
+
 #股票主要技术指标
+_DEF_STOCK_TECHNICAL_INDICATOR_INTERGRED  = "int" #综合指标
 _DEF_STOCK_TECHNICAL_INDICATOR_DCF = "dcf" #DCF指标
 _DEF_STOCK_TECHNICAL_INDICATOR_MA = "ma" #MA指标
 _DEF_STOCK_TECHNICAL_INDICATOR_MACD = "macd" #MACD指标
@@ -399,7 +415,7 @@ _DEF_LOG_STOCK_REGULAR_UPDATE_NAME = "stockregularupdatelog"
 
 _DEF_LOG_STOCK_MAIN_LOG_NAME = "stockmainlog"
 
-
+_DEF_LOG_TRANS_MYSQL_LOG = "transfermysqllog"
 #stock info end 
 
 

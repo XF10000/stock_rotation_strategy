@@ -13,7 +13,7 @@
 # 3. 其他接口
 
 
-_VERSION="20260315"
+_VERSION="20260331"
 
 
 import os
@@ -308,6 +308,17 @@ YLWZ_STOCK_API_URL_DATA = {
         "port":80,
         "headers":{"content-type": "application/json"},
         "urlPath":"stockapi/technicalindicatorsqry",  
+        "params":{}
+    },
+    #综合查询股票历史数据和技术指标数据
+    "historytechnicalindicatorqry":
+    {
+        "method":"post",
+        "description":"综合查询股票历史数据和技术指标数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/historytechnicalindicatorqry",  
         "params":{}
     },
     #stock dividend data
@@ -659,7 +670,68 @@ YLWZ_STOCK_API_URL_DATA = {
         "urlPath":"stockapi/maxmindataqry",   
         "params":{}
     },
-    
+    #technical信号
+    "technicalsignaladd":
+    {
+        "method":"post",
+        "description":"添加技术信号数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalsignaladd",  
+        "params":{}
+    },
+    "technicalsignaldel":
+    {
+        "method":"post",
+        "description":"删除技术信号数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalsignaldel",  
+        "params":{}
+    },
+    "technicalsignalmodify":
+    {
+        "method":"post",
+        "description":"修改技术信号数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalsignalmodify",  
+        "params":{}
+    },
+    "technicalsignalqry":
+    {
+        "method":"post",
+        "description":"查询技术信号数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/technicalsignalqry",   
+        "params":{}
+    },
+    "usertechnicalsignalqry":
+    {
+        "method":"post",
+        "description":"查询用户技术信号数据",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/usertechnicalsignalqry",   
+        "params":{}
+    },
+    #生成用户会话ID
+    "genusersessionid":
+    {
+        "method":"post",
+        "description":"生成用户会话ID",
+        "host":"",
+        "port":80,
+        "headers":{"content-type": "application/json"},
+        "urlPath":"stockapi/genusersessionid",   
+        "params":{}
+    },
 }
 
 QUERY_CMD_LIST = [
@@ -839,11 +911,11 @@ class StockServer:
         return result
     
     #应用部分 begin
-    def readUserStockList(self,userID=""):
+    def readUserStockList(self,userID="",symbol=""):
         result = []
         try:
             cmd = "userstocklistqry"
-            querySet = {"userID":userID,"limitNum":10000}
+            querySet = {"userID":userID,"symbol":symbol,"limitNum":10000}
             rtnData = self.query(cmd,querySet)
             if rtnData and "data" in rtnData:
                 data = rtnData["data"]
@@ -869,6 +941,21 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
+    #获取历史数据和当前数据的技术指标
+    def readHistoryTechnicalIndicators(self,symbol="",period="",adjust=""):
+        result = []
+        try:
+            cmd = "historytechnicalindicatorqry"
+            querySet = {"symbol":symbol,"period":period,"adjust":adjust}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
 
     #获取所有用户股票唯一名称
     def getUniqueUserStockList(self):
@@ -960,7 +1047,7 @@ class StockServer:
         return result
 
     #获取股票历史数据, date 格式 YYYYMMDD
-    def queryStockData(self,symbol,startDate,endDate,period="day",adjust="",limitNum=10000):
+    def queryStockData(self,symbol,startDate="",endDate="",period="day",adjust="",limitNum=0):
         result = []
         try:
             if (startDate < endDate) or (startDate=="") or (endDate==""):
@@ -992,7 +1079,6 @@ class StockServer:
             errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
             self._errMsg = errMsg       
         return result
-
 
     #从股票基本信息中读取行业级别信息
     def readIndustryBasicFromStockInfo(self):
@@ -1029,6 +1115,51 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
+    #补充缺失指标数据, 临时代码, 后续需要根据实际情况, 进行优化
+    def fillMissingTechnicalIndicatorData(self,currDataSet,dataSet):
+        result = 0
+        try:
+            # need to remove or modify
+            if False:
+            # if True:
+                #如果指标存在, 则判断是否需要更新, 只有macd_line_long,macd_signal_long,macd_histogram_long 有变化, 才需要更新
+                try:
+                    currMacdLineLong = float(currDataSet.get("macd_line_long",""))
+                except:
+                    currMacdLineLong = None
+                try:
+                    currMacdSignalLong = float(currDataSet.get("macd_signal_long",""))
+                except:
+                    currMacdSignalLong = None
+                try:
+                    currMacdHistogramLong = float(currDataSet.get("macd_histogram_long",""))
+                except:
+                    currMacdHistogramLong = None
+                try:
+                    currMa60 = float(currDataSet.get("ma_60",""))
+                except:
+                    currMa60 = None
+                if (not currMacdLineLong) or (not currMacdSignalLong) or (not currMacdHistogramLong) or (currMa60==0.0) or (not currMa60):
+                    cmd = "technicalindicatorsmodify"
+                    querySet = {}
+                    querySet["id"] = currDataSet.get("id","")
+                    querySet["macd_line_long"] = dataSet.get("macd_line_long","")
+                    querySet["macd_signal_long"] = dataSet.get("macd_signal_long","")
+                    querySet["macd_histogram_long"] = dataSet.get("macd_histogram_long","")
+                    querySet["ma_60"] = dataSet.get("ma_60","")
+                    #其他               
+                    querySet["stock_code"] = symbol
+                    querySet["period"] = period
+                    querySet["adjust"] = adjust
+                    rtnData = self.query(cmd,querySet)
+                    if rtnData and "data" in rtnData:
+                        data = rtnData["data"]
+                        if "rtn" in data:
+                            result = int(data["rtn"])
+        except:
+            pass
+        return result
+
     #添加技术指标
     def addTechnicalIndicator(self,symbol,dataSet,period="day",adjust=""):
         result = 0
@@ -1043,10 +1174,12 @@ class StockServer:
             querySet["adjust"] = adjust
             querySet["limitNum"] = 1
             rtnData = self.query(cmd,querySet)
+            currDataSet = {}
             if rtnData and "data" in rtnData:
                 data = rtnData["data"]
                 if "data" in data:
                     if data["data"]:
+                        currDataSet = data["data"][0]
                         existFlag = True
 
             if not existFlag:
@@ -1060,6 +1193,49 @@ class StockServer:
                     data = rtnData["data"]
                     if "recID" in data:
                         result = int(data["recID"])
+            else:
+                #零时代码, 临时处理, 后续需要根据实际情况, 进行优化
+                pass
+                self.fillMissingTechnicalIndicatorData(currDataSet,dataSet)
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+    
+    #增加技术指标信号
+    def addTechnicalSignal(self,symbol,dataSet):
+        result = 0
+        try:
+            cmd = "technicalsignaladd"
+            querySet = dataSet
+            querySet["stock_code"] = symbol
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "recID" in data:
+                    result = int(data["recID"])
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #查询用户技术指标信号, 默认查询最近28天
+    #passDays: 查询最近passDays天的信号
+    def readUserTechnicalSignal(self,symbol,limitNum=100,passDays=28):
+        result = 0
+        try:
+            cmd = "usertechnicalsignalqry"
+            if passDays > 0:
+                startYMD = misc.getPassday(passDays)
+            else:
+                startYMD = misc.getPassday(28)
+            start_date = misc.YMD2HumanDate(startYMD)
+            querySet = {"symbol":symbol,"limitNum":limitNum,"start_date":start_date}
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
         except Exception as e:
             errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
             self._errMsg = errMsg       
@@ -1081,6 +1257,22 @@ class StockServer:
                         industryCode = item.get("industry_code","")
                         if industryCode not in result:
                             result[industryCode] = item
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #获取某个指标的最大最小值(dataType="indicator","signal","industry","stock")
+    def getMaxMinData(self,dataType,columnName="date",period="day",adjust="",indicator=""):
+        result = {}
+        try:
+            cmd = "maxmindataqry"
+            querySet = {"dataType":dataType,"columnName":columnName,"period":period,"adjust":adjust,"indicator":indicator}    
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    result = data["data"]
         except Exception as e:
             errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
             self._errMsg = errMsg       

@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260317"
+_VERSION="20260329"
 
 
 import os
@@ -1501,6 +1501,13 @@ def funcUserSearchMysql(CMD, dataSet, sessionIDSet):
 
                         # extend items begin, per project
                         aSet["extSessionID"] = currDataSet.get("extSessionID","")
+                        
+                        try:
+                            extCapital = float(currDataSet.get("extCapital")) 
+                        except:
+                            extCapital = 0.0 
+                        aSet["extCapital"] = extCapital
+                        
                         aSet["extStartYMDHMS"] = currDataSet.get("extStartYMDHMS","")
                         aSet["extLeaveYMDHMS"] = currDataSet.get("extLeaveYMDHMS","")
                         aSet["extJobPosition"] = currDataSet.get("extJobPosition","")
@@ -1760,6 +1767,12 @@ def funcGetUserInfoMysql(CMD, dataSet, sessionIDSet):
 
                     # extend items begin, per project
                     aSet["extSessionID"] = currDataSet.get("extSessionID","")
+                    
+                    try:
+                        extCapital = float(currDataSet.get("extCapital")) 
+                    except:
+                        extCapital = 0.0 
+                    aSet["extCapital"] = extCapital
                     aSet["extStartYMDHMS"] = currDataSet.get("extStartYMDHMS","")
                     aSet["extLeaveYMDHMS"] = currDataSet.get("extLeaveYMDHMS","")
                     aSet["extJobPosition"] = currDataSet.get("extJobPosition","")
@@ -3138,19 +3151,19 @@ def funcIndustryInfoModify(CMD,dataSet,sessionIDSet):
                             if industry_level_em != currDataSet.get("industry_level_em") and industry_level_em:
                                 saveSet["industry_level_em"] = industry_level_em
 
-                            if num_of_constituents != currDataSet.get("num_of_constituents") and num_of_constituents:
+                            if num_of_constituents != currDataSet.get("num_of_constituents"):
                                 saveSet["num_of_constituents"] = num_of_constituents
 
-                            if static_PE_ratio != currDataSet.get("static_PE_ratio") and static_PE_ratio:
+                            if static_PE_ratio != currDataSet.get("static_PE_ratio"):
                                 saveSet["static_PE_ratio"] = static_PE_ratio
 
-                            if TTM_PE_ratio != currDataSet.get("TTM_PE_ratio") and TTM_PE_ratio:
+                            if TTM_PE_ratio != currDataSet.get("TTM_PE_ratio"):
                                 saveSet["TTM_PE_ratio"] = TTM_PE_ratio
 
-                            if PB_ratio != currDataSet.get("PB_ratio") and PB_ratio:
+                            if PB_ratio != currDataSet.get("PB_ratio"):
                                 saveSet["PB_ratio"] = PB_ratio
 
-                            if static_divident_yield != currDataSet.get("static_divident_yield") and static_divident_yield:
+                            if static_divident_yield != currDataSet.get("static_divident_yield"):
                                 saveSet["static_divident_yield"] = static_divident_yield
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -3439,6 +3452,7 @@ def funcStockInfoAdd(CMD,dataSet,sessionIDSet):
                     saveSet["public_float"] = dataSet.get("public_float", "") 
                     saveSet["market_cap"] = dataSet.get("market_cap", "") 
                     saveSet["free_market_cap"] = dataSet.get("free_market_cap", "") 
+                    saveSet["dcf_value_pre_share"] = dataSet.get("dcf_value_pre_share", "") 
                     saveSet["industry_code"] = dataSet.get("industry_code", "") 
                     saveSet["industry_name"] = dataSet.get("industry_name", "") 
                     saveSet["industry_name_sw"] = dataSet.get("industry_name_sw", "") 
@@ -3594,6 +3608,7 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
                 public_float = dataSet.get("public_float") 
                 market_cap = dataSet.get("market_cap") 
                 free_market_cap = dataSet.get("free_market_cap") 
+                dcf_value_pre_share = dataSet.get("dcf_value_pre_share") 
                 industry_code = dataSet.get("industry_code") 
                 industry_name = dataSet.get("industry_name") 
                 industry_name_sw = dataSet.get("industry_name_sw") 
@@ -3628,17 +3643,20 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
                             if stock_name != currDataSet.get("stock_name") and stock_name:
                                 saveSet["stock_name"] = stock_name
 
-                            if total_shares_outstanding != currDataSet.get("total_shares_outstanding") and total_shares_outstanding:
+                            if total_shares_outstanding != currDataSet.get("total_shares_outstanding"):
                                 saveSet["total_shares_outstanding"] = total_shares_outstanding
 
-                            if public_float != currDataSet.get("public_float") and public_float:
+                            if public_float != currDataSet.get("public_float"):
                                 saveSet["public_float"] = public_float
 
-                            if market_cap != currDataSet.get("market_cap") and market_cap:
+                            if market_cap != currDataSet.get("market_cap"):
                                 saveSet["market_cap"] = market_cap
 
-                            if free_market_cap != currDataSet.get("free_market_cap") and free_market_cap:
+                            if free_market_cap != currDataSet.get("free_market_cap"):
                                 saveSet["free_market_cap"] = free_market_cap
+
+                            if dcf_value_pre_share != currDataSet.get("dcf_value_pre_share"):
+                                saveSet["dcf_value_pre_share"] = dcf_value_pre_share
 
                             if industry_code != currDataSet.get("industry_code") and industry_code:
                                 saveSet["industry_code"] = industry_code
@@ -3765,6 +3783,8 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                 industry_code = dataSet.get("industry_code","")
                 industry_name = dataSet.get("industry_name","")
 
+                searchKey = dataSet.get("searchKey","").strip()
+
                 forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
 
                 searchOption = dataSet.get("searchOption")
@@ -3791,6 +3811,8 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                         indexKeyDataSet["industry_code"] = industry_code
                     if industry_name:
                         indexKeyDataSet["industry_name"] = industry_name
+                    if searchKey:
+                        indexKeyDataSet["searchKey"] = searchKey
 
                     if searchOption:
                         indexKeyDataSet["searchOption"] = searchOption
@@ -3823,7 +3845,7 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                             else:
                                 tableName = comMysql.tablename_convertor_stock_info()
                                 currDataList = comMysql.query_stock_info(tableName,stock_code=stock_code,stock_name=stock_name,
-                                    industry_code=industry_code,industry_name=industry_name,limitNum=limitNum)
+                                    industry_code=industry_code,industry_name=industry_name,searchKey=searchKey,limitNum=limitNum)
 
                         dataList = []
 
@@ -4147,34 +4169,34 @@ def funcStockHistoryModify(CMD,dataSet,sessionIDSet):
                             if date != currDataSet.get("date") and date:
                                 saveSet["date"] = date
 
-                            if open != currDataSet.get("open") and open:
+                            if open != currDataSet.get("open"):
                                 saveSet["open"] = open
 
-                            if close != currDataSet.get("close") and close:
+                            if close != currDataSet.get("close"):
                                 saveSet["close"] = close
 
-                            if high != currDataSet.get("high") and high:
+                            if high != currDataSet.get("high"):
                                 saveSet["high"] = high
 
-                            if low != currDataSet.get("low") and low:
+                            if low != currDataSet.get("low"):
                                 saveSet["low"] = low
 
-                            if volume != currDataSet.get("volume") and volume:
+                            if volume != currDataSet.get("volume"):
                                 saveSet["volume"] = volume
 
-                            if amount != currDataSet.get("amount") and amount:
+                            if amount != currDataSet.get("amount"):
                                 saveSet["amount"] = amount
 
-                            if amplitude != currDataSet.get("amplitude") and amplitude:
+                            if amplitude != currDataSet.get("amplitude"):
                                 saveSet["amplitude"] = amplitude
 
-                            if pct_change != currDataSet.get("pct_change") and pct_change:
+                            if pct_change != currDataSet.get("pct_change"):
                                 saveSet["pct_change"] = pct_change
 
-                            if price_change != currDataSet.get("price_change") and price_change:
+                            if price_change != currDataSet.get("price_change"):
                                 saveSet["price_change"] = price_change
 
-                            if turnover_rate != currDataSet.get("turnover_rate") and turnover_rate:
+                            if turnover_rate != currDataSet.get("turnover_rate"):
                                 saveSet["turnover_rate"] = turnover_rate
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -4476,6 +4498,9 @@ def funcTechnicalIndicatorsAdd(CMD,dataSet,sessionIDSet):
                     saveSet["macd_line"] = dataSet.get("macd_line", "") 
                     saveSet["macd_signal"] = dataSet.get("macd_signal", "") 
                     saveSet["macd_histogram"] = dataSet.get("macd_histogram", "") 
+                    saveSet["macd_line_long"] = dataSet.get("macd_line_long", "") 
+                    saveSet["macd_signal_long"] = dataSet.get("macd_signal_long", "") 
+                    saveSet["macd_histogram_long"] = dataSet.get("macd_histogram_long", "") 
                     saveSet["boll_upper"] = dataSet.get("boll_upper", "") 
                     saveSet["boll_mid"] = dataSet.get("boll_mid", "") 
                     saveSet["boll_lower"] = dataSet.get("boll_lower", "") 
@@ -4660,6 +4685,9 @@ def funcTechnicalIndicatorsModify(CMD,dataSet,sessionIDSet):
                 macd_line = dataSet.get("macd_line") 
                 macd_signal = dataSet.get("macd_signal") 
                 macd_histogram = dataSet.get("macd_histogram") 
+                macd_line_long = dataSet.get("macd_line_long") 
+                macd_signal_long = dataSet.get("macd_signal_long") 
+                macd_histogram_long = dataSet.get("macd_histogram_long") 
                 boll_upper = dataSet.get("boll_upper") 
                 boll_mid = dataSet.get("boll_mid") 
                 boll_lower = dataSet.get("boll_lower") 
@@ -4695,10 +4723,14 @@ def funcTechnicalIndicatorsModify(CMD,dataSet,sessionIDSet):
                 dispFlag = dataSet.get("dispFlag") 
                 delFlag = dataSet.get("delFlag") 
                 #data valid 检查
+                #当前记录获取
+                recID = dataSet.get("id", "")
+                if not recID:
+                    recID = dataSet.get("recID","")
+                if not recID:
+                    dataValidFlag = False
 
                 if dataValidFlag:
-                    #当前记录获取
-                    recID = dataSet.get("id", "")
 
                     tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
                     currDataList = comMysql.query_technical_indicators(tableName,recID)
@@ -4717,109 +4749,118 @@ def funcTechnicalIndicatorsModify(CMD,dataSet,sessionIDSet):
                             if date != currDataSet.get("date") and date:
                                 saveSet["date"] = date
 
-                            if close != currDataSet.get("close") and close:
+                            if close != currDataSet.get("close"):
                                 saveSet["close"] = close
 
-                            if ma_5 != currDataSet.get("ma_5") and ma_5:
+                            if ma_5 != currDataSet.get("ma_5"):
                                 saveSet["ma_5"] = ma_5
 
-                            if ma_10 != currDataSet.get("ma_10") and ma_10:
+                            if ma_10 != currDataSet.get("ma_10"):
                                 saveSet["ma_10"] = ma_10
 
-                            if ma_20 != currDataSet.get("ma_20") and ma_20:
+                            if ma_20 != currDataSet.get("ma_20"):
                                 saveSet["ma_20"] = ma_20
 
-                            if ma_60 != currDataSet.get("ma_60") and ma_60:
+                            if ma_60 != currDataSet.get("ma_60"):
                                 saveSet["ma_60"] = ma_60
 
-                            if macd_line != currDataSet.get("macd_line") and macd_line:
+                            if macd_line != currDataSet.get("macd_line"):
                                 saveSet["macd_line"] = macd_line
 
-                            if macd_signal != currDataSet.get("macd_signal") and macd_signal:
+                            if macd_signal != currDataSet.get("macd_signal"):
                                 saveSet["macd_signal"] = macd_signal
 
-                            if macd_histogram != currDataSet.get("macd_histogram") and macd_histogram:
+                            if macd_histogram != currDataSet.get("macd_histogram"):
                                 saveSet["macd_histogram"] = macd_histogram
 
-                            if boll_upper != currDataSet.get("boll_upper") and boll_upper:
+                            if macd_line_long != currDataSet.get("macd_line_long"):
+                                saveSet["macd_line_long"] = macd_line_long
+
+                            if macd_signal_long != currDataSet.get("macd_signal_long"):
+                                saveSet["macd_signal_long"] = macd_signal_long
+
+                            if macd_histogram_long != currDataSet.get("macd_histogram_long"): 
+                                saveSet["macd_histogram_long"] = macd_histogram_long
+
+                            if boll_upper != currDataSet.get("boll_upper"):
                                 saveSet["boll_upper"] = boll_upper
 
-                            if boll_mid != currDataSet.get("boll_mid") and boll_mid:
+                            if boll_mid != currDataSet.get("boll_mid"):
                                 saveSet["boll_mid"] = boll_mid
 
-                            if boll_lower != currDataSet.get("boll_lower") and boll_lower:
+                            if boll_lower != currDataSet.get("boll_lower"):
                                 saveSet["boll_lower"] = boll_lower
 
-                            if ene_upper != currDataSet.get("ene_upper") and ene_upper:
+                            if ene_upper != currDataSet.get("ene_upper"):
                                 saveSet["ene_upper"] = ene_upper
 
-                            if ene_mid != currDataSet.get("ene_mid") and ene_mid:
+                            if ene_mid != currDataSet.get("ene_mid"):
                                 saveSet["ene_mid"] = ene_mid
 
-                            if ene_lower != currDataSet.get("ene_lower") and ene_lower:
+                            if ene_lower != currDataSet.get("ene_lower"):
                                 saveSet["ene_lower"] = ene_lower
 
-                            if dmi_pdi != currDataSet.get("dmi_pdi") and dmi_pdi:
+                            if dmi_pdi != currDataSet.get("dmi_pdi"):
                                 saveSet["dmi_pdi"] = dmi_pdi
 
-                            if dmi_mdi != currDataSet.get("dmi_mdi") and dmi_mdi:
+                            if dmi_mdi != currDataSet.get("dmi_mdi"):
                                 saveSet["dmi_mdi"] = dmi_mdi
 
-                            if dmi_adx != currDataSet.get("dmi_adx") and dmi_adx:
+                            if dmi_adx != currDataSet.get("dmi_adx"):
                                 saveSet["dmi_adx"] = dmi_adx
 
-                            if dma_line != currDataSet.get("dma_line") and dma_line:
+                            if dma_line != currDataSet.get("dma_line"):
                                 saveSet["dma_line"] = dma_line
 
-                            if ama_line != currDataSet.get("ama_line") and ama_line:
+                            if ama_line != currDataSet.get("ama_line"):
                                 saveSet["ama_line"] = ama_line
 
-                            if sar != currDataSet.get("sar") and sar:
+                            if sar != currDataSet.get("sar"):
                                 saveSet["sar"] = sar
 
-                            if kdj_k != currDataSet.get("kdj_k") and kdj_k:
+                            if kdj_k != currDataSet.get("kdj_k"):
                                 saveSet["kdj_k"] = kdj_k
 
-                            if kdj_d != currDataSet.get("kdj_d") and kdj_d:
+                            if kdj_d != currDataSet.get("kdj_d"):
                                 saveSet["kdj_d"] = kdj_d
 
-                            if kdj_j != currDataSet.get("kdj_j") and kdj_j:
+                            if kdj_j != currDataSet.get("kdj_j"):
                                 saveSet["kdj_j"] = kdj_j
 
-                            if rsi_6 != currDataSet.get("rsi_6") and rsi_6:
+                            if rsi_6 != currDataSet.get("rsi_6"):
                                 saveSet["rsi_6"] = rsi_6
 
-                            if rsi_12 != currDataSet.get("rsi_12") and rsi_12:
+                            if rsi_12 != currDataSet.get("rsi_12"):
                                 saveSet["rsi_12"] = rsi_12
 
-                            if rsi_24 != currDataSet.get("rsi_24") and rsi_24:
+                            if rsi_24 != currDataSet.get("rsi_24"):
                                 saveSet["rsi_24"] = rsi_24
 
-                            if cci != currDataSet.get("cci") and cci:
+                            if cci != currDataSet.get("cci"):
                                 saveSet["cci"] = cci
 
-                            if bias_5 != currDataSet.get("bias_5") and bias_5:
+                            if bias_5 != currDataSet.get("bias_5"):
                                 saveSet["bias_5"] = bias_5
 
-                            if bias_10 != currDataSet.get("bias_10") and bias_10:
+                            if bias_10 != currDataSet.get("bias_10"):
                                 saveSet["bias_10"] = bias_10
 
-                            if bias_20 != currDataSet.get("bias_20") and bias_20:
+                            if bias_20 != currDataSet.get("bias_20"):
                                 saveSet["bias_20"] = bias_20
 
-                            if wr_6 != currDataSet.get("wr_6") and wr_6:
+                            if wr_6 != currDataSet.get("wr_6"):
                                 saveSet["wr_6"] = wr_6
 
-                            if wr_14 != currDataSet.get("wr_14") and wr_14:
+                            if wr_14 != currDataSet.get("wr_14"):
                                 saveSet["wr_14"] = wr_14
 
-                            if volume != currDataSet.get("volume") and volume:
+                            if volume != currDataSet.get("volume"):
                                 saveSet["volume"] = volume
 
-                            if turnover_rate != currDataSet.get("turnover_rate") and turnover_rate:
+                            if turnover_rate != currDataSet.get("turnover_rate"):
                                 saveSet["turnover_rate"] = turnover_rate
 
-                            if obv != currDataSet.get("obv") and obv:
+                            if obv != currDataSet.get("obv"):
                                 saveSet["obv"] = obv
 
                             if hashval != currDataSet.get("hashval") and hashval:
@@ -4947,10 +4988,7 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
                 limitNum = dataSet.get("limitNum",0)
 
                 #权限检查/功能检测
-                if comFC.chkIsManager(roleName) == False:
-                    rightCheckFlag = False
-                else:
-                    rightCheckFlag = True
+                rightCheckFlag = True
 
                 if rightCheckFlag:
 
@@ -5025,6 +5063,9 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
                             aSet["macd_line"] = currDataSet.get("macd_line","")
                             aSet["macd_signal"] = currDataSet.get("macd_signal","")
                             aSet["macd_histogram"] = currDataSet.get("macd_histogram","")
+                            aSet["macd_line_long"] = currDataSet.get("macd_line_long","")
+                            aSet["macd_signal_long"] = currDataSet.get("macd_signal_long","")
+                            aSet["macd_histogram_long"] = currDataSet.get("macd_histogram_long","")
                             aSet["boll_upper"] = currDataSet.get("boll_upper","")
                             aSet["boll_mid"] = currDataSet.get("boll_mid","")
                             aSet["boll_lower"] = currDataSet.get("boll_lower","")
@@ -5051,6 +5092,184 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
                             aSet["wr_14"] = currDataSet.get("wr_14","")
                             aSet["volume"] = currDataSet.get("volume","")
                             aSet["turnover_rate"] = currDataSet.get("turnover_rate","")
+                            aSet["obv"] = currDataSet.get("obv","")
+                            aSet["hashval"] = currDataSet.get("hashval","")
+                            aSet["label1"] = currDataSet.get("label1","")
+                            aSet["label2"] = currDataSet.get("label2","")
+                            aSet["label3"] = currDataSet.get("label3","")
+                            aSet["memo"] = currDataSet.get("memo","")
+                            aSet["regID"] = currDataSet.get("regID","")
+                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                            aSet["modifyID"] = currDataSet.get("modifyID","")
+                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                            dataList.append(aSet)
+
+                        #临时缓存机制,改进型, 2023/10/16
+                        indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+
+                    rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
+
+                    #rtnData["limitNum"] = limitNum
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#股票历史数据和技术参数查询代码
+def funcHistoryTechnicalIndicatorQry(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+                #获取查询输入参数
+
+                period = dataSet.get("period", "day")
+                adjust = dataSet.get("adjust", "")
+
+                queryDate = dataSet.get("date", "")
+
+                startDate = dataSet.get("start_date", "")
+                
+                endDate = dataSet.get("end_date", "")
+
+                symbol = dataSet.get("symbol", "")
+                if symbol:
+                    stock_code = symbol
+                else:
+                    stock_code = dataSet.get("stock_code","")
+
+                forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
+
+                limitNum = dataSet.get("limitNum",0)
+
+                #权限检查/功能检测
+                rightCheckFlag = True
+
+                if rightCheckFlag:
+
+                    #生成indexKey
+                    indexKeyDataSet = {} #查询生成index的因素
+                    if stock_code:
+                        indexKeyDataSet["stock_code"] = stock_code
+                    if period:
+                        indexKeyDataSet["period"] = period
+                    if adjust:
+                        indexKeyDataSet["adjust"] = adjust
+                    if queryDate:
+                        indexKeyDataSet["queryDate"] = queryDate    
+                    if startDate:
+                        indexKeyDataSet["startDate"] = startDate
+                    if endDate:
+                        indexKeyDataSet["endDate"] = endDate
+
+                    indexKeyDataSet["limitNum"] = limitNum
+
+                    sessionID = sessionIDSet.get("sessionID", "")
+                    indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
+                    beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
+                    endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
+
+                    #判断数据是否在缓冲区:
+                    if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+
+                        currDataList = comMysql.query_history_technical_indicator(stock_code=stock_code,date=queryDate,
+                                        start_date=startDate,end_date=endDate,limitNum=limitNum)
+
+                        dataList = []
+
+                        for currDataSet in currDataList:
+                            aSet = {}
+
+                            aSet["stock_code"] = currDataSet.get("stock_code","")
+                            aSet["date"] = currDataSet.get("date","")
+                            
+                            aSet["open"] = currDataSet.get("open","")
+                            aSet["close"] = currDataSet.get("close","")
+                            aSet["high"] = currDataSet.get("high","")
+                            aSet["low"] = currDataSet.get("low","")
+                            aSet["amount"] = currDataSet.get("amount","")
+                            aSet["volume"] = currDataSet.get("volume","")
+                            aSet["amplitude"] = currDataSet.get("amplitude","")
+                            aSet["turnover_rate"] = currDataSet.get("turnover_rate","")
+
+                            aSet["ma_5"] = currDataSet.get("ma_5","")
+                            aSet["ma_10"] = currDataSet.get("ma_10","")
+                            aSet["ma_20"] = currDataSet.get("ma_20","")
+                            aSet["ma_60"] = currDataSet.get("ma_60","")
+                            aSet["macd_line"] = currDataSet.get("macd_line","")
+                            aSet["macd_signal"] = currDataSet.get("macd_signal","")
+                            aSet["macd_histogram"] = currDataSet.get("macd_histogram","")
+                            aSet["macd_line_long"] = currDataSet.get("macd_line_long","")
+                            aSet["macd_signal_long"] = currDataSet.get("macd_signal_long","")
+                            aSet["macd_histogram_long"] = currDataSet.get("macd_histogram_long","")
+                            aSet["boll_upper"] = currDataSet.get("boll_upper","")
+                            aSet["boll_mid"] = currDataSet.get("boll_mid","")
+                            aSet["boll_lower"] = currDataSet.get("boll_lower","")
+                            aSet["ene_upper"] = currDataSet.get("ene_upper","")
+                            aSet["ene_mid"] = currDataSet.get("ene_mid","")
+                            aSet["ene_lower"] = currDataSet.get("ene_lower","")
+                            aSet["dmi_pdi"] = currDataSet.get("dmi_pdi","")
+                            aSet["dmi_mdi"] = currDataSet.get("dmi_mdi","")
+                            aSet["dmi_adx"] = currDataSet.get("dmi_adx","")
+                            aSet["dma_line"] = currDataSet.get("dma_line","")
+                            aSet["ama_line"] = currDataSet.get("ama_line","")
+                            aSet["sar"] = currDataSet.get("sar","")
+                            aSet["kdj_k"] = currDataSet.get("kdj_k","")
+                            aSet["kdj_d"] = currDataSet.get("kdj_d","")
+                            aSet["kdj_j"] = currDataSet.get("kdj_j","")
+                            aSet["rsi_6"] = currDataSet.get("rsi_6","")
+                            aSet["rsi_12"] = currDataSet.get("rsi_12","")
+                            aSet["rsi_24"] = currDataSet.get("rsi_24","")
+                            aSet["cci"] = currDataSet.get("cci","")
+                            aSet["bias_5"] = currDataSet.get("bias_5","")
+                            aSet["bias_10"] = currDataSet.get("bias_10","")
+                            aSet["bias_20"] = currDataSet.get("bias_20","")
+                            aSet["wr_6"] = currDataSet.get("wr_6","")
+                            aSet["wr_14"] = currDataSet.get("wr_14","")
                             aSet["obv"] = currDataSet.get("obv","")
                             aSet["hashval"] = currDataSet.get("hashval","")
                             aSet["label1"] = currDataSet.get("label1","")
@@ -5329,19 +5548,19 @@ def funcStockDividendModify(CMD,dataSet,sessionIDSet):
                             if ipo_date != currDataSet.get("ipo_date") and ipo_date:
                                 saveSet["ipo_date"] = ipo_date
 
-                            if cumulative_dividend != currDataSet.get("cumulative_dividend") and cumulative_dividend:
+                            if cumulative_dividend != currDataSet.get("cumulative_dividend"):
                                 saveSet["cumulative_dividend"] = cumulative_dividend
 
-                            if annual_dividend != currDataSet.get("annual_dividend") and annual_dividend:
+                            if annual_dividend != currDataSet.get("annual_dividend"):
                                 saveSet["annual_dividend"] = annual_dividend
 
-                            if dividend_count != currDataSet.get("dividend_count") and dividend_count:
+                            if dividend_count != currDataSet.get("dividend_count"):
                                 saveSet["dividend_count"] = dividend_count
 
-                            if total_financing != currDataSet.get("total_financing") and total_financing:
+                            if total_financing != currDataSet.get("total_financing"):
                                 saveSet["total_financing"] = total_financing
 
-                            if financing_count != currDataSet.get("financing_count") and financing_count:
+                            if financing_count != currDataSet.get("financing_count"):
                                 saveSet["financing_count"] = financing_count
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -6547,421 +6766,421 @@ def funcBalanceSheetModify(CMD,dataSet,sessionIDSet):
                             if report_date != currDataSet.get("report_date") and report_date:
                                 saveSet["report_date"] = report_date
 
-                            if monetary_capital != currDataSet.get("monetary_capital") and monetary_capital:
+                            if monetary_capital != currDataSet.get("monetary_capital"):
                                 saveSet["monetary_capital"] = monetary_capital
 
-                            if settlement_provisions != currDataSet.get("settlement_provisions") and settlement_provisions:
+                            if settlement_provisions != currDataSet.get("settlement_provisions"):
                                 saveSet["settlement_provisions"] = settlement_provisions
 
-                            if loans_to_other_banks != currDataSet.get("loans_to_other_banks") and loans_to_other_banks:
+                            if loans_to_other_banks != currDataSet.get("loans_to_other_banks"):
                                 saveSet["loans_to_other_banks"] = loans_to_other_banks
 
-                            if trading_financial_assets != currDataSet.get("trading_financial_assets") and trading_financial_assets:
+                            if trading_financial_assets != currDataSet.get("trading_financial_assets"):
                                 saveSet["trading_financial_assets"] = trading_financial_assets
 
-                            if financial_assets_purchased_for_resale != currDataSet.get("financial_assets_purchased_for_resale") and financial_assets_purchased_for_resale:
+                            if financial_assets_purchased_for_resale != currDataSet.get("financial_assets_purchased_for_resale"):
                                 saveSet["financial_assets_purchased_for_resale"] = financial_assets_purchased_for_resale
 
-                            if derivative_financial_assets != currDataSet.get("derivative_financial_assets") and derivative_financial_assets:
+                            if derivative_financial_assets != currDataSet.get("derivative_financial_assets"):
                                 saveSet["derivative_financial_assets"] = derivative_financial_assets
 
-                            if notes_and_accounts_receivable != currDataSet.get("notes_and_accounts_receivable") and notes_and_accounts_receivable:
+                            if notes_and_accounts_receivable != currDataSet.get("notes_and_accounts_receivable"):
                                 saveSet["notes_and_accounts_receivable"] = notes_and_accounts_receivable
 
-                            if notes_receivable != currDataSet.get("notes_receivable") and notes_receivable:
+                            if notes_receivable != currDataSet.get("notes_receivable"):
                                 saveSet["notes_receivable"] = notes_receivable
 
-                            if accounts_receivable != currDataSet.get("accounts_receivable") and accounts_receivable:
+                            if accounts_receivable != currDataSet.get("accounts_receivable"):
                                 saveSet["accounts_receivable"] = accounts_receivable
 
-                            if receivables_financing != currDataSet.get("receivables_financing") and receivables_financing:
+                            if receivables_financing != currDataSet.get("receivables_financing"):
                                 saveSet["receivables_financing"] = receivables_financing
 
-                            if prepayments != currDataSet.get("prepayments") and prepayments:
+                            if prepayments != currDataSet.get("prepayments"):
                                 saveSet["prepayments"] = prepayments
 
-                            if dividends_receivable != currDataSet.get("dividends_receivable") and dividends_receivable:
+                            if dividends_receivable != currDataSet.get("dividends_receivable"):
                                 saveSet["dividends_receivable"] = dividends_receivable
 
-                            if interest_receivable != currDataSet.get("interest_receivable") and interest_receivable:
+                            if interest_receivable != currDataSet.get("interest_receivable"):
                                 saveSet["interest_receivable"] = interest_receivable
 
-                            if insurance_premiums_receivable != currDataSet.get("insurance_premiums_receivable") and insurance_premiums_receivable:
+                            if insurance_premiums_receivable != currDataSet.get("insurance_premiums_receivable"):
                                 saveSet["insurance_premiums_receivable"] = insurance_premiums_receivable
 
-                            if reinsurance_receivables != currDataSet.get("reinsurance_receivables") and reinsurance_receivables:
+                            if reinsurance_receivables != currDataSet.get("reinsurance_receivables"):
                                 saveSet["reinsurance_receivables"] = reinsurance_receivables
 
-                            if reinsurance_contract_reserves_receivable != currDataSet.get("reinsurance_contract_reserves_receivable") and reinsurance_contract_reserves_receivable:
+                            if reinsurance_contract_reserves_receivable != currDataSet.get("reinsurance_contract_reserves_receivable"):
                                 saveSet["reinsurance_contract_reserves_receivable"] = reinsurance_contract_reserves_receivable
 
-                            if export_tax_rebates_receivable != currDataSet.get("export_tax_rebates_receivable") and export_tax_rebates_receivable:
+                            if export_tax_rebates_receivable != currDataSet.get("export_tax_rebates_receivable"):
                                 saveSet["export_tax_rebates_receivable"] = export_tax_rebates_receivable
 
-                            if subsidies_receivable != currDataSet.get("subsidies_receivable") and subsidies_receivable:
+                            if subsidies_receivable != currDataSet.get("subsidies_receivable"):
                                 saveSet["subsidies_receivable"] = subsidies_receivable
 
-                            if deposits_receivable != currDataSet.get("deposits_receivable") and deposits_receivable:
+                            if deposits_receivable != currDataSet.get("deposits_receivable"):
                                 saveSet["deposits_receivable"] = deposits_receivable
 
-                            if internal_receivables != currDataSet.get("internal_receivables") and internal_receivables:
+                            if internal_receivables != currDataSet.get("internal_receivables"):
                                 saveSet["internal_receivables"] = internal_receivables
 
-                            if other_receivables != currDataSet.get("other_receivables") and other_receivables:
+                            if other_receivables != currDataSet.get("other_receivables"):
                                 saveSet["other_receivables"] = other_receivables
 
-                            if other_receivables_total != currDataSet.get("other_receivables_total") and other_receivables_total:
+                            if other_receivables_total != currDataSet.get("other_receivables_total"):
                                 saveSet["other_receivables_total"] = other_receivables_total
 
-                            if inventories != currDataSet.get("inventories") and inventories:
+                            if inventories != currDataSet.get("inventories"):
                                 saveSet["inventories"] = inventories
 
-                            if assets_held_for_sale != currDataSet.get("assets_held_for_sale") and assets_held_for_sale:
+                            if assets_held_for_sale != currDataSet.get("assets_held_for_sale"):
                                 saveSet["assets_held_for_sale"] = assets_held_for_sale
 
-                            if prepaid_expenses != currDataSet.get("prepaid_expenses") and prepaid_expenses:
+                            if prepaid_expenses != currDataSet.get("prepaid_expenses"):
                                 saveSet["prepaid_expenses"] = prepaid_expenses
 
-                            if current_assets_pending_disposal != currDataSet.get("current_assets_pending_disposal") and current_assets_pending_disposal:
+                            if current_assets_pending_disposal != currDataSet.get("current_assets_pending_disposal"):
                                 saveSet["current_assets_pending_disposal"] = current_assets_pending_disposal
 
-                            if non_current_assets_due_within_one_year != currDataSet.get("non_current_assets_due_within_one_year") and non_current_assets_due_within_one_year:
+                            if non_current_assets_due_within_one_year != currDataSet.get("non_current_assets_due_within_one_year"):
                                 saveSet["non_current_assets_due_within_one_year"] = non_current_assets_due_within_one_year
 
-                            if other_current_assets != currDataSet.get("other_current_assets") and other_current_assets:
+                            if other_current_assets != currDataSet.get("other_current_assets"):
                                 saveSet["other_current_assets"] = other_current_assets
 
-                            if total_current_assets != currDataSet.get("total_current_assets") and total_current_assets:
+                            if total_current_assets != currDataSet.get("total_current_assets"):
                                 saveSet["total_current_assets"] = total_current_assets
 
-                            if non_current_assets != currDataSet.get("non_current_assets") and non_current_assets:
+                            if non_current_assets != currDataSet.get("non_current_assets"):
                                 saveSet["non_current_assets"] = non_current_assets
 
-                            if loans_and_advances != currDataSet.get("loans_and_advances") and loans_and_advances:
+                            if loans_and_advances != currDataSet.get("loans_and_advances"):
                                 saveSet["loans_and_advances"] = loans_and_advances
 
-                            if debt_investments != currDataSet.get("debt_investments") and debt_investments:
+                            if debt_investments != currDataSet.get("debt_investments"):
                                 saveSet["debt_investments"] = debt_investments
 
-                            if other_debt_investments != currDataSet.get("other_debt_investments") and other_debt_investments:
+                            if other_debt_investments != currDataSet.get("other_debt_investments"):
                                 saveSet["other_debt_investments"] = other_debt_investments
 
-                            if financial_assets_at_fvoci != currDataSet.get("financial_assets_at_fvoci") and financial_assets_at_fvoci:
+                            if financial_assets_at_fvoci != currDataSet.get("financial_assets_at_fvoci"):
                                 saveSet["financial_assets_at_fvoci"] = financial_assets_at_fvoci
 
-                            if financial_assets_at_amortized_cost != currDataSet.get("financial_assets_at_amortized_cost") and financial_assets_at_amortized_cost:
+                            if financial_assets_at_amortized_cost != currDataSet.get("financial_assets_at_amortized_cost"):
                                 saveSet["financial_assets_at_amortized_cost"] = financial_assets_at_amortized_cost
 
-                            if available_for_sale_financial_assets != currDataSet.get("available_for_sale_financial_assets") and available_for_sale_financial_assets:
+                            if available_for_sale_financial_assets != currDataSet.get("available_for_sale_financial_assets"):
                                 saveSet["available_for_sale_financial_assets"] = available_for_sale_financial_assets
 
-                            if long_term_equity_investments != currDataSet.get("long_term_equity_investments") and long_term_equity_investments:
+                            if long_term_equity_investments != currDataSet.get("long_term_equity_investments"):
                                 saveSet["long_term_equity_investments"] = long_term_equity_investments
 
-                            if investment_property != currDataSet.get("investment_property") and investment_property:
+                            if investment_property != currDataSet.get("investment_property"):
                                 saveSet["investment_property"] = investment_property
 
-                            if long_term_receivables != currDataSet.get("long_term_receivables") and long_term_receivables:
+                            if long_term_receivables != currDataSet.get("long_term_receivables"):
                                 saveSet["long_term_receivables"] = long_term_receivables
 
-                            if other_equity_instrument_investments != currDataSet.get("other_equity_instrument_investments") and other_equity_instrument_investments:
+                            if other_equity_instrument_investments != currDataSet.get("other_equity_instrument_investments"):
                                 saveSet["other_equity_instrument_investments"] = other_equity_instrument_investments
 
-                            if other_non_current_financial_assets != currDataSet.get("other_non_current_financial_assets") and other_non_current_financial_assets:
+                            if other_non_current_financial_assets != currDataSet.get("other_non_current_financial_assets"):
                                 saveSet["other_non_current_financial_assets"] = other_non_current_financial_assets
 
-                            if other_long_term_investments != currDataSet.get("other_long_term_investments") and other_long_term_investments:
+                            if other_long_term_investments != currDataSet.get("other_long_term_investments"):
                                 saveSet["other_long_term_investments"] = other_long_term_investments
 
-                            if fixed_assets_original_value != currDataSet.get("fixed_assets_original_value") and fixed_assets_original_value:
+                            if fixed_assets_original_value != currDataSet.get("fixed_assets_original_value"):
                                 saveSet["fixed_assets_original_value"] = fixed_assets_original_value
 
-                            if accumulated_depreciation != currDataSet.get("accumulated_depreciation") and accumulated_depreciation:
+                            if accumulated_depreciation != currDataSet.get("accumulated_depreciation"):
                                 saveSet["accumulated_depreciation"] = accumulated_depreciation
 
-                            if fixed_assets_net_value != currDataSet.get("fixed_assets_net_value") and fixed_assets_net_value:
+                            if fixed_assets_net_value != currDataSet.get("fixed_assets_net_value"):
                                 saveSet["fixed_assets_net_value"] = fixed_assets_net_value
 
-                            if fixed_assets_impairment_provision != currDataSet.get("fixed_assets_impairment_provision") and fixed_assets_impairment_provision:
+                            if fixed_assets_impairment_provision != currDataSet.get("fixed_assets_impairment_provision"):
                                 saveSet["fixed_assets_impairment_provision"] = fixed_assets_impairment_provision
 
-                            if construction_in_progress_total != currDataSet.get("construction_in_progress_total") and construction_in_progress_total:
+                            if construction_in_progress_total != currDataSet.get("construction_in_progress_total"):
                                 saveSet["construction_in_progress_total"] = construction_in_progress_total
 
-                            if construction_in_progress != currDataSet.get("construction_in_progress") and construction_in_progress:
+                            if construction_in_progress != currDataSet.get("construction_in_progress"):
                                 saveSet["construction_in_progress"] = construction_in_progress
 
-                            if construction_materials != currDataSet.get("construction_materials") and construction_materials:
+                            if construction_materials != currDataSet.get("construction_materials"):
                                 saveSet["construction_materials"] = construction_materials
 
-                            if fixed_assets_net != currDataSet.get("fixed_assets_net") and fixed_assets_net:
+                            if fixed_assets_net != currDataSet.get("fixed_assets_net"):
                                 saveSet["fixed_assets_net"] = fixed_assets_net
 
-                            if fixed_assets_disposal != currDataSet.get("fixed_assets_disposal") and fixed_assets_disposal:
+                            if fixed_assets_disposal != currDataSet.get("fixed_assets_disposal"):
                                 saveSet["fixed_assets_disposal"] = fixed_assets_disposal
 
-                            if fixed_assets_and_disposal_total != currDataSet.get("fixed_assets_and_disposal_total") and fixed_assets_and_disposal_total:
+                            if fixed_assets_and_disposal_total != currDataSet.get("fixed_assets_and_disposal_total"):
                                 saveSet["fixed_assets_and_disposal_total"] = fixed_assets_and_disposal_total
 
-                            if productive_biological_assets != currDataSet.get("productive_biological_assets") and productive_biological_assets:
+                            if productive_biological_assets != currDataSet.get("productive_biological_assets"):
                                 saveSet["productive_biological_assets"] = productive_biological_assets
 
-                            if consumptive_biological_assets != currDataSet.get("consumptive_biological_assets") and consumptive_biological_assets:
+                            if consumptive_biological_assets != currDataSet.get("consumptive_biological_assets"):
                                 saveSet["consumptive_biological_assets"] = consumptive_biological_assets
 
-                            if oil_and_gas_assets != currDataSet.get("oil_and_gas_assets") and oil_and_gas_assets:
+                            if oil_and_gas_assets != currDataSet.get("oil_and_gas_assets"):
                                 saveSet["oil_and_gas_assets"] = oil_and_gas_assets
 
-                            if contract_assets != currDataSet.get("contract_assets") and contract_assets:
+                            if contract_assets != currDataSet.get("contract_assets"):
                                 saveSet["contract_assets"] = contract_assets
 
-                            if right_of_use_assets != currDataSet.get("right_of_use_assets") and right_of_use_assets:
+                            if right_of_use_assets != currDataSet.get("right_of_use_assets"):
                                 saveSet["right_of_use_assets"] = right_of_use_assets
 
-                            if intangible_assets != currDataSet.get("intangible_assets") and intangible_assets:
+                            if intangible_assets != currDataSet.get("intangible_assets"):
                                 saveSet["intangible_assets"] = intangible_assets
 
-                            if development_expenditure != currDataSet.get("development_expenditure") and development_expenditure:
+                            if development_expenditure != currDataSet.get("development_expenditure"):
                                 saveSet["development_expenditure"] = development_expenditure
 
-                            if goodwill != currDataSet.get("goodwill") and goodwill:
+                            if goodwill != currDataSet.get("goodwill"):
                                 saveSet["goodwill"] = goodwill
 
-                            if long_term_deferred_expenses != currDataSet.get("long_term_deferred_expenses") and long_term_deferred_expenses:
+                            if long_term_deferred_expenses != currDataSet.get("long_term_deferred_expenses"):
                                 saveSet["long_term_deferred_expenses"] = long_term_deferred_expenses
 
-                            if split_share_structure_circulation_rights != currDataSet.get("split_share_structure_circulation_rights") and split_share_structure_circulation_rights:
+                            if split_share_structure_circulation_rights != currDataSet.get("split_share_structure_circulation_rights"):
                                 saveSet["split_share_structure_circulation_rights"] = split_share_structure_circulation_rights
 
-                            if deferred_tax_assets != currDataSet.get("deferred_tax_assets") and deferred_tax_assets:
+                            if deferred_tax_assets != currDataSet.get("deferred_tax_assets"):
                                 saveSet["deferred_tax_assets"] = deferred_tax_assets
 
-                            if other_non_current_assets != currDataSet.get("other_non_current_assets") and other_non_current_assets:
+                            if other_non_current_assets != currDataSet.get("other_non_current_assets"):
                                 saveSet["other_non_current_assets"] = other_non_current_assets
 
-                            if total_non_current_assets != currDataSet.get("total_non_current_assets") and total_non_current_assets:
+                            if total_non_current_assets != currDataSet.get("total_non_current_assets"):
                                 saveSet["total_non_current_assets"] = total_non_current_assets
 
-                            if total_assets != currDataSet.get("total_assets") and total_assets:
+                            if total_assets != currDataSet.get("total_assets"):
                                 saveSet["total_assets"] = total_assets
 
-                            if current_liabilities != currDataSet.get("current_liabilities") and current_liabilities:
+                            if current_liabilities != currDataSet.get("current_liabilities"):
                                 saveSet["current_liabilities"] = current_liabilities
 
-                            if short_term_borrowings != currDataSet.get("short_term_borrowings") and short_term_borrowings:
+                            if short_term_borrowings != currDataSet.get("short_term_borrowings"):
                                 saveSet["short_term_borrowings"] = short_term_borrowings
 
-                            if borrowings_from_central_bank != currDataSet.get("borrowings_from_central_bank") and borrowings_from_central_bank:
+                            if borrowings_from_central_bank != currDataSet.get("borrowings_from_central_bank"):
                                 saveSet["borrowings_from_central_bank"] = borrowings_from_central_bank
 
-                            if deposits_from_customers_and_banks != currDataSet.get("deposits_from_customers_and_banks") and deposits_from_customers_and_banks:
+                            if deposits_from_customers_and_banks != currDataSet.get("deposits_from_customers_and_banks"):
                                 saveSet["deposits_from_customers_and_banks"] = deposits_from_customers_and_banks
 
-                            if borrowings_from_other_banks != currDataSet.get("borrowings_from_other_banks") and borrowings_from_other_banks:
+                            if borrowings_from_other_banks != currDataSet.get("borrowings_from_other_banks"):
                                 saveSet["borrowings_from_other_banks"] = borrowings_from_other_banks
 
-                            if trading_financial_liabilities != currDataSet.get("trading_financial_liabilities") and trading_financial_liabilities:
+                            if trading_financial_liabilities != currDataSet.get("trading_financial_liabilities"):
                                 saveSet["trading_financial_liabilities"] = trading_financial_liabilities
 
-                            if derivative_financial_liabilities != currDataSet.get("derivative_financial_liabilities") and derivative_financial_liabilities:
+                            if derivative_financial_liabilities != currDataSet.get("derivative_financial_liabilities"):
                                 saveSet["derivative_financial_liabilities"] = derivative_financial_liabilities
 
-                            if notes_and_accounts_payable != currDataSet.get("notes_and_accounts_payable") and notes_and_accounts_payable:
+                            if notes_and_accounts_payable != currDataSet.get("notes_and_accounts_payable"):
                                 saveSet["notes_and_accounts_payable"] = notes_and_accounts_payable
 
-                            if notes_payable != currDataSet.get("notes_payable") and notes_payable:
+                            if notes_payable != currDataSet.get("notes_payable"):
                                 saveSet["notes_payable"] = notes_payable
 
-                            if accounts_payable != currDataSet.get("accounts_payable") and accounts_payable:
+                            if accounts_payable != currDataSet.get("accounts_payable"):
                                 saveSet["accounts_payable"] = accounts_payable
 
-                            if advances_from_customers != currDataSet.get("advances_from_customers") and advances_from_customers:
+                            if advances_from_customers != currDataSet.get("advances_from_customers"):
                                 saveSet["advances_from_customers"] = advances_from_customers
 
-                            if contract_liabilities != currDataSet.get("contract_liabilities") and contract_liabilities:
+                            if contract_liabilities != currDataSet.get("contract_liabilities"):
                                 saveSet["contract_liabilities"] = contract_liabilities
 
-                            if financial_assets_sold_for_repurchase != currDataSet.get("financial_assets_sold_for_repurchase") and financial_assets_sold_for_repurchase:
+                            if financial_assets_sold_for_repurchase != currDataSet.get("financial_assets_sold_for_repurchase"):
                                 saveSet["financial_assets_sold_for_repurchase"] = financial_assets_sold_for_repurchase
 
-                            if fees_and_commissions_payable != currDataSet.get("fees_and_commissions_payable") and fees_and_commissions_payable:
+                            if fees_and_commissions_payable != currDataSet.get("fees_and_commissions_payable"):
                                 saveSet["fees_and_commissions_payable"] = fees_and_commissions_payable
 
-                            if employee_benefits_payable != currDataSet.get("employee_benefits_payable") and employee_benefits_payable:
+                            if employee_benefits_payable != currDataSet.get("employee_benefits_payable"):
                                 saveSet["employee_benefits_payable"] = employee_benefits_payable
 
-                            if taxes_payable != currDataSet.get("taxes_payable") and taxes_payable:
+                            if taxes_payable != currDataSet.get("taxes_payable"):
                                 saveSet["taxes_payable"] = taxes_payable
 
-                            if interest_payable != currDataSet.get("interest_payable") and interest_payable:
+                            if interest_payable != currDataSet.get("interest_payable"):
                                 saveSet["interest_payable"] = interest_payable
 
-                            if dividends_payable != currDataSet.get("dividends_payable") and dividends_payable:
+                            if dividends_payable != currDataSet.get("dividends_payable"):
                                 saveSet["dividends_payable"] = dividends_payable
 
-                            if deposits_payable != currDataSet.get("deposits_payable") and deposits_payable:
+                            if deposits_payable != currDataSet.get("deposits_payable"):
                                 saveSet["deposits_payable"] = deposits_payable
 
-                            if internal_payables != currDataSet.get("internal_payables") and internal_payables:
+                            if internal_payables != currDataSet.get("internal_payables"):
                                 saveSet["internal_payables"] = internal_payables
 
-                            if other_payables != currDataSet.get("other_payables") and other_payables:
+                            if other_payables != currDataSet.get("other_payables"):
                                 saveSet["other_payables"] = other_payables
 
-                            if other_payables_total != currDataSet.get("other_payables_total") and other_payables_total:
+                            if other_payables_total != currDataSet.get("other_payables_total"):
                                 saveSet["other_payables_total"] = other_payables_total
 
-                            if other_taxes_payable != currDataSet.get("other_taxes_payable") and other_taxes_payable:
+                            if other_taxes_payable != currDataSet.get("other_taxes_payable"):
                                 saveSet["other_taxes_payable"] = other_taxes_payable
 
-                            if guarantee_liability_reserves != currDataSet.get("guarantee_liability_reserves") and guarantee_liability_reserves:
+                            if guarantee_liability_reserves != currDataSet.get("guarantee_liability_reserves"):
                                 saveSet["guarantee_liability_reserves"] = guarantee_liability_reserves
 
-                            if reinsurance_payables != currDataSet.get("reinsurance_payables") and reinsurance_payables:
+                            if reinsurance_payables != currDataSet.get("reinsurance_payables"):
                                 saveSet["reinsurance_payables"] = reinsurance_payables
 
-                            if insurance_contract_reserves != currDataSet.get("insurance_contract_reserves") and insurance_contract_reserves:
+                            if insurance_contract_reserves != currDataSet.get("insurance_contract_reserves"):
                                 saveSet["insurance_contract_reserves"] = insurance_contract_reserves
 
-                            if securities_trading_agency_payables != currDataSet.get("securities_trading_agency_payables") and securities_trading_agency_payables:
+                            if securities_trading_agency_payables != currDataSet.get("securities_trading_agency_payables"):
                                 saveSet["securities_trading_agency_payables"] = securities_trading_agency_payables
 
-                            if securities_underwriting_agency_payables != currDataSet.get("securities_underwriting_agency_payables") and securities_underwriting_agency_payables:
+                            if securities_underwriting_agency_payables != currDataSet.get("securities_underwriting_agency_payables"):
                                 saveSet["securities_underwriting_agency_payables"] = securities_underwriting_agency_payables
 
-                            if international_settlement != currDataSet.get("international_settlement") and international_settlement:
+                            if international_settlement != currDataSet.get("international_settlement"):
                                 saveSet["international_settlement"] = international_settlement
 
-                            if domestic_settlement != currDataSet.get("domestic_settlement") and domestic_settlement:
+                            if domestic_settlement != currDataSet.get("domestic_settlement"):
                                 saveSet["domestic_settlement"] = domestic_settlement
 
-                            if accrued_expenses != currDataSet.get("accrued_expenses") and accrued_expenses:
+                            if accrued_expenses != currDataSet.get("accrued_expenses"):
                                 saveSet["accrued_expenses"] = accrued_expenses
 
-                            if estimated_current_liabilities != currDataSet.get("estimated_current_liabilities") and estimated_current_liabilities:
+                            if estimated_current_liabilities != currDataSet.get("estimated_current_liabilities"):
                                 saveSet["estimated_current_liabilities"] = estimated_current_liabilities
 
-                            if short_term_bonds_payable != currDataSet.get("short_term_bonds_payable") and short_term_bonds_payable:
+                            if short_term_bonds_payable != currDataSet.get("short_term_bonds_payable"):
                                 saveSet["short_term_bonds_payable"] = short_term_bonds_payable
 
-                            if liabilities_held_for_sale != currDataSet.get("liabilities_held_for_sale") and liabilities_held_for_sale:
+                            if liabilities_held_for_sale != currDataSet.get("liabilities_held_for_sale"):
                                 saveSet["liabilities_held_for_sale"] = liabilities_held_for_sale
 
-                            if deferred_revenue_due_within_one_year != currDataSet.get("deferred_revenue_due_within_one_year") and deferred_revenue_due_within_one_year:
+                            if deferred_revenue_due_within_one_year != currDataSet.get("deferred_revenue_due_within_one_year"):
                                 saveSet["deferred_revenue_due_within_one_year"] = deferred_revenue_due_within_one_year
 
-                            if non_current_liabilities_due_within_one_year != currDataSet.get("non_current_liabilities_due_within_one_year") and non_current_liabilities_due_within_one_year:
+                            if non_current_liabilities_due_within_one_year != currDataSet.get("non_current_liabilities_due_within_one_year"):
                                 saveSet["non_current_liabilities_due_within_one_year"] = non_current_liabilities_due_within_one_year
 
-                            if other_current_liabilities != currDataSet.get("other_current_liabilities") and other_current_liabilities:
+                            if other_current_liabilities != currDataSet.get("other_current_liabilities"):
                                 saveSet["other_current_liabilities"] = other_current_liabilities
 
-                            if total_current_liabilities != currDataSet.get("total_current_liabilities") and total_current_liabilities:
+                            if total_current_liabilities != currDataSet.get("total_current_liabilities"):
                                 saveSet["total_current_liabilities"] = total_current_liabilities
 
-                            if non_current_liabilities != currDataSet.get("non_current_liabilities") and non_current_liabilities:
+                            if non_current_liabilities != currDataSet.get("non_current_liabilities"):
                                 saveSet["non_current_liabilities"] = non_current_liabilities
 
-                            if long_term_borrowings != currDataSet.get("long_term_borrowings") and long_term_borrowings:
+                            if long_term_borrowings != currDataSet.get("long_term_borrowings"):
                                 saveSet["long_term_borrowings"] = long_term_borrowings
 
-                            if bonds_payable != currDataSet.get("bonds_payable") and bonds_payable:
+                            if bonds_payable != currDataSet.get("bonds_payable"):
                                 saveSet["bonds_payable"] = bonds_payable
 
-                            if bonds_payable_preferred_stock != currDataSet.get("bonds_payable_preferred_stock") and bonds_payable_preferred_stock:
+                            if bonds_payable_preferred_stock != currDataSet.get("bonds_payable_preferred_stock"):
                                 saveSet["bonds_payable_preferred_stock"] = bonds_payable_preferred_stock
 
-                            if bonds_payable_perpetual_bonds != currDataSet.get("bonds_payable_perpetual_bonds") and bonds_payable_perpetual_bonds:
+                            if bonds_payable_perpetual_bonds != currDataSet.get("bonds_payable_perpetual_bonds"):
                                 saveSet["bonds_payable_perpetual_bonds"] = bonds_payable_perpetual_bonds
 
-                            if lease_liabilities != currDataSet.get("lease_liabilities") and lease_liabilities:
+                            if lease_liabilities != currDataSet.get("lease_liabilities"):
                                 saveSet["lease_liabilities"] = lease_liabilities
 
-                            if long_term_employee_benefits_payable != currDataSet.get("long_term_employee_benefits_payable") and long_term_employee_benefits_payable:
+                            if long_term_employee_benefits_payable != currDataSet.get("long_term_employee_benefits_payable"):
                                 saveSet["long_term_employee_benefits_payable"] = long_term_employee_benefits_payable
 
-                            if long_term_payables != currDataSet.get("long_term_payables") and long_term_payables:
+                            if long_term_payables != currDataSet.get("long_term_payables"):
                                 saveSet["long_term_payables"] = long_term_payables
 
-                            if long_term_payables_total != currDataSet.get("long_term_payables_total") and long_term_payables_total:
+                            if long_term_payables_total != currDataSet.get("long_term_payables_total"):
                                 saveSet["long_term_payables_total"] = long_term_payables_total
 
-                            if special_payables != currDataSet.get("special_payables") and special_payables:
+                            if special_payables != currDataSet.get("special_payables"):
                                 saveSet["special_payables"] = special_payables
 
-                            if estimated_non_current_liabilities != currDataSet.get("estimated_non_current_liabilities") and estimated_non_current_liabilities:
+                            if estimated_non_current_liabilities != currDataSet.get("estimated_non_current_liabilities"):
                                 saveSet["estimated_non_current_liabilities"] = estimated_non_current_liabilities
 
-                            if long_term_deferred_revenue != currDataSet.get("long_term_deferred_revenue") and long_term_deferred_revenue:
+                            if long_term_deferred_revenue != currDataSet.get("long_term_deferred_revenue"):
                                 saveSet["long_term_deferred_revenue"] = long_term_deferred_revenue
 
-                            if deferred_tax_liabilities != currDataSet.get("deferred_tax_liabilities") and deferred_tax_liabilities:
+                            if deferred_tax_liabilities != currDataSet.get("deferred_tax_liabilities"):
                                 saveSet["deferred_tax_liabilities"] = deferred_tax_liabilities
 
-                            if other_non_current_liabilities != currDataSet.get("other_non_current_liabilities") and other_non_current_liabilities:
+                            if other_non_current_liabilities != currDataSet.get("other_non_current_liabilities"):
                                 saveSet["other_non_current_liabilities"] = other_non_current_liabilities
 
-                            if total_non_current_liabilities != currDataSet.get("total_non_current_liabilities") and total_non_current_liabilities:
+                            if total_non_current_liabilities != currDataSet.get("total_non_current_liabilities"):
                                 saveSet["total_non_current_liabilities"] = total_non_current_liabilities
 
-                            if total_liabilities != currDataSet.get("total_liabilities") and total_liabilities:
+                            if total_liabilities != currDataSet.get("total_liabilities"):
                                 saveSet["total_liabilities"] = total_liabilities
 
-                            if owners_equity != currDataSet.get("owners_equity") and owners_equity:
+                            if owners_equity != currDataSet.get("owners_equity"):
                                 saveSet["owners_equity"] = owners_equity
 
-                            if paid_in_capital != currDataSet.get("paid_in_capital") and paid_in_capital:
+                            if paid_in_capital != currDataSet.get("paid_in_capital"):
                                 saveSet["paid_in_capital"] = paid_in_capital
 
-                            if other_equity_instruments != currDataSet.get("other_equity_instruments") and other_equity_instruments:
+                            if other_equity_instruments != currDataSet.get("other_equity_instruments"):
                                 saveSet["other_equity_instruments"] = other_equity_instruments
 
-                            if preferred_stock != currDataSet.get("preferred_stock") and preferred_stock:
+                            if preferred_stock != currDataSet.get("preferred_stock"):
                                 saveSet["preferred_stock"] = preferred_stock
 
-                            if perpetual_bonds != currDataSet.get("perpetual_bonds") and perpetual_bonds:
+                            if perpetual_bonds != currDataSet.get("perpetual_bonds"):
                                 saveSet["perpetual_bonds"] = perpetual_bonds
 
-                            if capital_reserve != currDataSet.get("capital_reserve") and capital_reserve:
+                            if capital_reserve != currDataSet.get("capital_reserve"):
                                 saveSet["capital_reserve"] = capital_reserve
 
-                            if less_treasury_stock != currDataSet.get("less_treasury_stock") and less_treasury_stock:
+                            if less_treasury_stock != currDataSet.get("less_treasury_stock"):
                                 saveSet["less_treasury_stock"] = less_treasury_stock
 
-                            if other_comprehensive_income != currDataSet.get("other_comprehensive_income") and other_comprehensive_income:
+                            if other_comprehensive_income != currDataSet.get("other_comprehensive_income"):
                                 saveSet["other_comprehensive_income"] = other_comprehensive_income
 
-                            if special_reserve != currDataSet.get("special_reserve") and special_reserve:
+                            if special_reserve != currDataSet.get("special_reserve"):
                                 saveSet["special_reserve"] = special_reserve
 
-                            if surplus_reserve != currDataSet.get("surplus_reserve") and surplus_reserve:
+                            if surplus_reserve != currDataSet.get("surplus_reserve"):
                                 saveSet["surplus_reserve"] = surplus_reserve
 
-                            if general_risk_reserve != currDataSet.get("general_risk_reserve") and general_risk_reserve:
+                            if general_risk_reserve != currDataSet.get("general_risk_reserve"):
                                 saveSet["general_risk_reserve"] = general_risk_reserve
 
-                            if unrecognized_investment_losses != currDataSet.get("unrecognized_investment_losses") and unrecognized_investment_losses:
+                            if unrecognized_investment_losses != currDataSet.get("unrecognized_investment_losses"):
                                 saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
 
-                            if retained_earnings != currDataSet.get("retained_earnings") and retained_earnings:
+                            if retained_earnings != currDataSet.get("retained_earnings"):
                                 saveSet["retained_earnings"] = retained_earnings
 
-                            if proposed_cash_dividends != currDataSet.get("proposed_cash_dividends") and proposed_cash_dividends:
+                            if proposed_cash_dividends != currDataSet.get("proposed_cash_dividends"):
                                 saveSet["proposed_cash_dividends"] = proposed_cash_dividends
 
-                            if foreign_currency_translation_difference != currDataSet.get("foreign_currency_translation_difference") and foreign_currency_translation_difference:
+                            if foreign_currency_translation_difference != currDataSet.get("foreign_currency_translation_difference"):
                                 saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
 
-                            if equity_attributable_to_parent_company != currDataSet.get("equity_attributable_to_parent_company") and equity_attributable_to_parent_company:
+                            if equity_attributable_to_parent_company != currDataSet.get("equity_attributable_to_parent_company"):
                                 saveSet["equity_attributable_to_parent_company"] = equity_attributable_to_parent_company
 
-                            if minority_interests != currDataSet.get("minority_interests") and minority_interests:
+                            if minority_interests != currDataSet.get("minority_interests"):
                                 saveSet["minority_interests"] = minority_interests
 
-                            if total_owners_equity != currDataSet.get("total_owners_equity") and total_owners_equity:
+                            if total_owners_equity != currDataSet.get("total_owners_equity"):
                                 saveSet["total_owners_equity"] = total_owners_equity
 
-                            if total_liabilities_and_owners_equity != currDataSet.get("total_liabilities_and_owners_equity") and total_liabilities_and_owners_equity:
+                            if total_liabilities_and_owners_equity != currDataSet.get("total_liabilities_and_owners_equity"):
                                 saveSet["total_liabilities_and_owners_equity"] = total_liabilities_and_owners_equity
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -7694,232 +7913,232 @@ def funcIncomeStatementsModify(CMD,dataSet,sessionIDSet):
                             if report_date != currDataSet.get("report_date") and report_date:
                                 saveSet["report_date"] = report_date
 
-                            if total_operating_revenue != currDataSet.get("total_operating_revenue") and total_operating_revenue:
+                            if total_operating_revenue != currDataSet.get("total_operating_revenue"):
                                 saveSet["total_operating_revenue"] = total_operating_revenue
 
-                            if operating_revenue != currDataSet.get("operating_revenue") and operating_revenue:
+                            if operating_revenue != currDataSet.get("operating_revenue"):
                                 saveSet["operating_revenue"] = operating_revenue
 
-                            if interest_income != currDataSet.get("interest_income") and interest_income:
+                            if interest_income != currDataSet.get("interest_income"):
                                 saveSet["interest_income"] = interest_income
 
-                            if earned_premiums != currDataSet.get("earned_premiums") and earned_premiums:
+                            if earned_premiums != currDataSet.get("earned_premiums"):
                                 saveSet["earned_premiums"] = earned_premiums
 
-                            if fees_and_commissions_income != currDataSet.get("fees_and_commissions_income") and fees_and_commissions_income:
+                            if fees_and_commissions_income != currDataSet.get("fees_and_commissions_income"):
                                 saveSet["fees_and_commissions_income"] = fees_and_commissions_income
 
-                            if real_estate_sales_revenue != currDataSet.get("real_estate_sales_revenue") and real_estate_sales_revenue:
+                            if real_estate_sales_revenue != currDataSet.get("real_estate_sales_revenue"):
                                 saveSet["real_estate_sales_revenue"] = real_estate_sales_revenue
 
-                            if other_business_revenue != currDataSet.get("other_business_revenue") and other_business_revenue:
+                            if other_business_revenue != currDataSet.get("other_business_revenue"):
                                 saveSet["other_business_revenue"] = other_business_revenue
 
-                            if total_operating_costs != currDataSet.get("total_operating_costs") and total_operating_costs:
+                            if total_operating_costs != currDataSet.get("total_operating_costs"):
                                 saveSet["total_operating_costs"] = total_operating_costs
 
-                            if operating_costs != currDataSet.get("operating_costs") and operating_costs:
+                            if operating_costs != currDataSet.get("operating_costs"):
                                 saveSet["operating_costs"] = operating_costs
 
-                            if fees_and_commissions_expenses != currDataSet.get("fees_and_commissions_expenses") and fees_and_commissions_expenses:
+                            if fees_and_commissions_expenses != currDataSet.get("fees_and_commissions_expenses"):
                                 saveSet["fees_and_commissions_expenses"] = fees_and_commissions_expenses
 
-                            if real_estate_sales_costs != currDataSet.get("real_estate_sales_costs") and real_estate_sales_costs:
+                            if real_estate_sales_costs != currDataSet.get("real_estate_sales_costs"):
                                 saveSet["real_estate_sales_costs"] = real_estate_sales_costs
 
-                            if surrender_value != currDataSet.get("surrender_value") and surrender_value:
+                            if surrender_value != currDataSet.get("surrender_value"):
                                 saveSet["surrender_value"] = surrender_value
 
-                            if net_claims_paid != currDataSet.get("net_claims_paid") and net_claims_paid:
+                            if net_claims_paid != currDataSet.get("net_claims_paid"):
                                 saveSet["net_claims_paid"] = net_claims_paid
 
-                            if net_insurance_contract_reserves != currDataSet.get("net_insurance_contract_reserves") and net_insurance_contract_reserves:
+                            if net_insurance_contract_reserves != currDataSet.get("net_insurance_contract_reserves"):
                                 saveSet["net_insurance_contract_reserves"] = net_insurance_contract_reserves
 
-                            if policy_dividend_expenses != currDataSet.get("policy_dividend_expenses") and policy_dividend_expenses:
+                            if policy_dividend_expenses != currDataSet.get("policy_dividend_expenses"):
                                 saveSet["policy_dividend_expenses"] = policy_dividend_expenses
 
-                            if reinsurance_expenses != currDataSet.get("reinsurance_expenses") and reinsurance_expenses:
+                            if reinsurance_expenses != currDataSet.get("reinsurance_expenses"):
                                 saveSet["reinsurance_expenses"] = reinsurance_expenses
 
-                            if other_business_costs != currDataSet.get("other_business_costs") and other_business_costs:
+                            if other_business_costs != currDataSet.get("other_business_costs"):
                                 saveSet["other_business_costs"] = other_business_costs
 
-                            if taxes_and_surcharges != currDataSet.get("taxes_and_surcharges") and taxes_and_surcharges:
+                            if taxes_and_surcharges != currDataSet.get("taxes_and_surcharges"):
                                 saveSet["taxes_and_surcharges"] = taxes_and_surcharges
 
-                            if rd_expenses != currDataSet.get("rd_expenses") and rd_expenses:
+                            if rd_expenses != currDataSet.get("rd_expenses"):
                                 saveSet["rd_expenses"] = rd_expenses
 
-                            if selling_expenses != currDataSet.get("selling_expenses") and selling_expenses:
+                            if selling_expenses != currDataSet.get("selling_expenses"):
                                 saveSet["selling_expenses"] = selling_expenses
 
-                            if administrative_expenses != currDataSet.get("administrative_expenses") and administrative_expenses:
+                            if administrative_expenses != currDataSet.get("administrative_expenses"):
                                 saveSet["administrative_expenses"] = administrative_expenses
 
-                            if financial_expenses != currDataSet.get("financial_expenses") and financial_expenses:
+                            if financial_expenses != currDataSet.get("financial_expenses"):
                                 saveSet["financial_expenses"] = financial_expenses
 
-                            if interest_expenses != currDataSet.get("interest_expenses") and interest_expenses:
+                            if interest_expenses != currDataSet.get("interest_expenses"):
                                 saveSet["interest_expenses"] = interest_expenses
 
-                            if interest_expenditure != currDataSet.get("interest_expenditure") and interest_expenditure:
+                            if interest_expenditure != currDataSet.get("interest_expenditure"):
                                 saveSet["interest_expenditure"] = interest_expenditure
 
-                            if investment_income != currDataSet.get("investment_income") and investment_income:
+                            if investment_income != currDataSet.get("investment_income"):
                                 saveSet["investment_income"] = investment_income
 
-                            if investment_income_from_associates_and_joint_ventures != currDataSet.get("investment_income_from_associates_and_joint_ventures") and investment_income_from_associates_and_joint_ventures:
+                            if investment_income_from_associates_and_joint_ventures != currDataSet.get("investment_income_from_associates_and_joint_ventures"):
                                 saveSet["investment_income_from_associates_and_joint_ventures"] = investment_income_from_associates_and_joint_ventures
 
-                            if gain_on_derecognition_of_financial_assets_at_amortized_cost != currDataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost") and gain_on_derecognition_of_financial_assets_at_amortized_cost:
+                            if gain_on_derecognition_of_financial_assets_at_amortized_cost != currDataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost"):
                                 saveSet["gain_on_derecognition_of_financial_assets_at_amortized_cost"] = gain_on_derecognition_of_financial_assets_at_amortized_cost
 
-                            if foreign_exchange_gains != currDataSet.get("foreign_exchange_gains") and foreign_exchange_gains:
+                            if foreign_exchange_gains != currDataSet.get("foreign_exchange_gains"):
                                 saveSet["foreign_exchange_gains"] = foreign_exchange_gains
 
-                            if net_open_hedge_gains != currDataSet.get("net_open_hedge_gains") and net_open_hedge_gains:
+                            if net_open_hedge_gains != currDataSet.get("net_open_hedge_gains"):
                                 saveSet["net_open_hedge_gains"] = net_open_hedge_gains
 
-                            if fair_value_change_gains != currDataSet.get("fair_value_change_gains") and fair_value_change_gains:
+                            if fair_value_change_gains != currDataSet.get("fair_value_change_gains"):
                                 saveSet["fair_value_change_gains"] = fair_value_change_gains
 
-                            if futures_gains_losses != currDataSet.get("futures_gains_losses") and futures_gains_losses:
+                            if futures_gains_losses != currDataSet.get("futures_gains_losses"):
                                 saveSet["futures_gains_losses"] = futures_gains_losses
 
-                            if custody_income != currDataSet.get("custody_income") and custody_income:
+                            if custody_income != currDataSet.get("custody_income"):
                                 saveSet["custody_income"] = custody_income
 
-                            if subsidy_income != currDataSet.get("subsidy_income") and subsidy_income:
+                            if subsidy_income != currDataSet.get("subsidy_income"):
                                 saveSet["subsidy_income"] = subsidy_income
 
-                            if other_gains != currDataSet.get("other_gains") and other_gains:
+                            if other_gains != currDataSet.get("other_gains"):
                                 saveSet["other_gains"] = other_gains
 
-                            if asset_impairment_losses != currDataSet.get("asset_impairment_losses") and asset_impairment_losses:
+                            if asset_impairment_losses != currDataSet.get("asset_impairment_losses"):
                                 saveSet["asset_impairment_losses"] = asset_impairment_losses
 
-                            if credit_impairment_losses != currDataSet.get("credit_impairment_losses") and credit_impairment_losses:
+                            if credit_impairment_losses != currDataSet.get("credit_impairment_losses"):
                                 saveSet["credit_impairment_losses"] = credit_impairment_losses
 
-                            if other_business_profits != currDataSet.get("other_business_profits") and other_business_profits:
+                            if other_business_profits != currDataSet.get("other_business_profits"):
                                 saveSet["other_business_profits"] = other_business_profits
 
-                            if asset_disposal_gains != currDataSet.get("asset_disposal_gains") and asset_disposal_gains:
+                            if asset_disposal_gains != currDataSet.get("asset_disposal_gains"):
                                 saveSet["asset_disposal_gains"] = asset_disposal_gains
 
-                            if operating_profit != currDataSet.get("operating_profit") and operating_profit:
+                            if operating_profit != currDataSet.get("operating_profit"):
                                 saveSet["operating_profit"] = operating_profit
 
-                            if non_operating_income != currDataSet.get("non_operating_income") and non_operating_income:
+                            if non_operating_income != currDataSet.get("non_operating_income"):
                                 saveSet["non_operating_income"] = non_operating_income
 
-                            if non_current_asset_disposal_gains != currDataSet.get("non_current_asset_disposal_gains") and non_current_asset_disposal_gains:
+                            if non_current_asset_disposal_gains != currDataSet.get("non_current_asset_disposal_gains"):
                                 saveSet["non_current_asset_disposal_gains"] = non_current_asset_disposal_gains
 
-                            if non_operating_expenses != currDataSet.get("non_operating_expenses") and non_operating_expenses:
+                            if non_operating_expenses != currDataSet.get("non_operating_expenses"):
                                 saveSet["non_operating_expenses"] = non_operating_expenses
 
-                            if non_current_asset_disposal_losses != currDataSet.get("non_current_asset_disposal_losses") and non_current_asset_disposal_losses:
+                            if non_current_asset_disposal_losses != currDataSet.get("non_current_asset_disposal_losses"):
                                 saveSet["non_current_asset_disposal_losses"] = non_current_asset_disposal_losses
 
-                            if total_profit != currDataSet.get("total_profit") and total_profit:
+                            if total_profit != currDataSet.get("total_profit"):
                                 saveSet["total_profit"] = total_profit
 
-                            if income_tax_expense != currDataSet.get("income_tax_expense") and income_tax_expense:
+                            if income_tax_expense != currDataSet.get("income_tax_expense"):
                                 saveSet["income_tax_expense"] = income_tax_expense
 
-                            if unrecognized_investment_losses != currDataSet.get("unrecognized_investment_losses") and unrecognized_investment_losses:
+                            if unrecognized_investment_losses != currDataSet.get("unrecognized_investment_losses"):
                                 saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
 
-                            if net_profit != currDataSet.get("net_profit") and net_profit:
+                            if net_profit != currDataSet.get("net_profit"):
                                 saveSet["net_profit"] = net_profit
 
-                            if net_profit_from_continuing_operations != currDataSet.get("net_profit_from_continuing_operations") and net_profit_from_continuing_operations:
+                            if net_profit_from_continuing_operations != currDataSet.get("net_profit_from_continuing_operations"):
                                 saveSet["net_profit_from_continuing_operations"] = net_profit_from_continuing_operations
 
-                            if net_profit_from_discontinued_operations != currDataSet.get("net_profit_from_discontinued_operations") and net_profit_from_discontinued_operations:
+                            if net_profit_from_discontinued_operations != currDataSet.get("net_profit_from_discontinued_operations"):
                                 saveSet["net_profit_from_discontinued_operations"] = net_profit_from_discontinued_operations
 
-                            if net_profit_attributable_to_parent_company != currDataSet.get("net_profit_attributable_to_parent_company") and net_profit_attributable_to_parent_company:
+                            if net_profit_attributable_to_parent_company != currDataSet.get("net_profit_attributable_to_parent_company"):
                                 saveSet["net_profit_attributable_to_parent_company"] = net_profit_attributable_to_parent_company
 
-                            if net_profit_of_acquiree_before_merger != currDataSet.get("net_profit_of_acquiree_before_merger") and net_profit_of_acquiree_before_merger:
+                            if net_profit_of_acquiree_before_merger != currDataSet.get("net_profit_of_acquiree_before_merger"):
                                 saveSet["net_profit_of_acquiree_before_merger"] = net_profit_of_acquiree_before_merger
 
-                            if minority_interests_profit_loss != currDataSet.get("minority_interests_profit_loss") and minority_interests_profit_loss:
+                            if minority_interests_profit_loss != currDataSet.get("minority_interests_profit_loss"):
                                 saveSet["minority_interests_profit_loss"] = minority_interests_profit_loss
 
-                            if other_comprehensive_income != currDataSet.get("other_comprehensive_income") and other_comprehensive_income:
+                            if other_comprehensive_income != currDataSet.get("other_comprehensive_income"):
                                 saveSet["other_comprehensive_income"] = other_comprehensive_income
 
-                            if other_comprehensive_income_attributable_to_parent != currDataSet.get("other_comprehensive_income_attributable_to_parent") and other_comprehensive_income_attributable_to_parent:
+                            if other_comprehensive_income_attributable_to_parent != currDataSet.get("other_comprehensive_income_attributable_to_parent"):
                                 saveSet["other_comprehensive_income_attributable_to_parent"] = other_comprehensive_income_attributable_to_parent
 
-                            if oci_not_reclassified_to_profit_loss != currDataSet.get("oci_not_reclassified_to_profit_loss") and oci_not_reclassified_to_profit_loss:
+                            if oci_not_reclassified_to_profit_loss != currDataSet.get("oci_not_reclassified_to_profit_loss"):
                                 saveSet["oci_not_reclassified_to_profit_loss"] = oci_not_reclassified_to_profit_loss
 
-                            if remeasurement_of_defined_benefit_plans != currDataSet.get("remeasurement_of_defined_benefit_plans") and remeasurement_of_defined_benefit_plans:
+                            if remeasurement_of_defined_benefit_plans != currDataSet.get("remeasurement_of_defined_benefit_plans"):
                                 saveSet["remeasurement_of_defined_benefit_plans"] = remeasurement_of_defined_benefit_plans
 
-                            if oci_under_equity_method_not_reclassified != currDataSet.get("oci_under_equity_method_not_reclassified") and oci_under_equity_method_not_reclassified:
+                            if oci_under_equity_method_not_reclassified != currDataSet.get("oci_under_equity_method_not_reclassified"):
                                 saveSet["oci_under_equity_method_not_reclassified"] = oci_under_equity_method_not_reclassified
 
-                            if fair_value_change_of_other_equity_instruments != currDataSet.get("fair_value_change_of_other_equity_instruments") and fair_value_change_of_other_equity_instruments:
+                            if fair_value_change_of_other_equity_instruments != currDataSet.get("fair_value_change_of_other_equity_instruments"):
                                 saveSet["fair_value_change_of_other_equity_instruments"] = fair_value_change_of_other_equity_instruments
 
-                            if fair_value_change_of_own_credit_risk != currDataSet.get("fair_value_change_of_own_credit_risk") and fair_value_change_of_own_credit_risk:
+                            if fair_value_change_of_own_credit_risk != currDataSet.get("fair_value_change_of_own_credit_risk"):
                                 saveSet["fair_value_change_of_own_credit_risk"] = fair_value_change_of_own_credit_risk
 
-                            if oci_reclassified_to_profit_loss != currDataSet.get("oci_reclassified_to_profit_loss") and oci_reclassified_to_profit_loss:
+                            if oci_reclassified_to_profit_loss != currDataSet.get("oci_reclassified_to_profit_loss"):
                                 saveSet["oci_reclassified_to_profit_loss"] = oci_reclassified_to_profit_loss
 
-                            if oci_under_equity_method_reclassified != currDataSet.get("oci_under_equity_method_reclassified") and oci_under_equity_method_reclassified:
+                            if oci_under_equity_method_reclassified != currDataSet.get("oci_under_equity_method_reclassified"):
                                 saveSet["oci_under_equity_method_reclassified"] = oci_under_equity_method_reclassified
 
-                            if fair_value_change_of_afs_financial_assets != currDataSet.get("fair_value_change_of_afs_financial_assets") and fair_value_change_of_afs_financial_assets:
+                            if fair_value_change_of_afs_financial_assets != currDataSet.get("fair_value_change_of_afs_financial_assets"):
                                 saveSet["fair_value_change_of_afs_financial_assets"] = fair_value_change_of_afs_financial_assets
 
-                            if fair_value_change_of_other_debt_investments != currDataSet.get("fair_value_change_of_other_debt_investments") and fair_value_change_of_other_debt_investments:
+                            if fair_value_change_of_other_debt_investments != currDataSet.get("fair_value_change_of_other_debt_investments"):
                                 saveSet["fair_value_change_of_other_debt_investments"] = fair_value_change_of_other_debt_investments
 
-                            if financial_assets_reclassified_to_oci != currDataSet.get("financial_assets_reclassified_to_oci") and financial_assets_reclassified_to_oci:
+                            if financial_assets_reclassified_to_oci != currDataSet.get("financial_assets_reclassified_to_oci"):
                                 saveSet["financial_assets_reclassified_to_oci"] = financial_assets_reclassified_to_oci
 
-                            if credit_impairment_of_other_debt_investments != currDataSet.get("credit_impairment_of_other_debt_investments") and credit_impairment_of_other_debt_investments:
+                            if credit_impairment_of_other_debt_investments != currDataSet.get("credit_impairment_of_other_debt_investments"):
                                 saveSet["credit_impairment_of_other_debt_investments"] = credit_impairment_of_other_debt_investments
 
-                            if htm_reclassified_to_afs_gains_losses != currDataSet.get("htm_reclassified_to_afs_gains_losses") and htm_reclassified_to_afs_gains_losses:
+                            if htm_reclassified_to_afs_gains_losses != currDataSet.get("htm_reclassified_to_afs_gains_losses"):
                                 saveSet["htm_reclassified_to_afs_gains_losses"] = htm_reclassified_to_afs_gains_losses
 
-                            if cash_flow_hedge_reserve != currDataSet.get("cash_flow_hedge_reserve") and cash_flow_hedge_reserve:
+                            if cash_flow_hedge_reserve != currDataSet.get("cash_flow_hedge_reserve"):
                                 saveSet["cash_flow_hedge_reserve"] = cash_flow_hedge_reserve
 
-                            if effective_portion_of_cash_flow_hedge != currDataSet.get("effective_portion_of_cash_flow_hedge") and effective_portion_of_cash_flow_hedge:
+                            if effective_portion_of_cash_flow_hedge != currDataSet.get("effective_portion_of_cash_flow_hedge"):
                                 saveSet["effective_portion_of_cash_flow_hedge"] = effective_portion_of_cash_flow_hedge
 
-                            if foreign_currency_translation_difference != currDataSet.get("foreign_currency_translation_difference") and foreign_currency_translation_difference:
+                            if foreign_currency_translation_difference != currDataSet.get("foreign_currency_translation_difference"):
                                 saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
 
-                            if other != currDataSet.get("other") and other:
+                            if other != currDataSet.get("other"):
                                 saveSet["other"] = other
 
-                            if other_comprehensive_income_attributable_to_minority != currDataSet.get("other_comprehensive_income_attributable_to_minority") and other_comprehensive_income_attributable_to_minority:
+                            if other_comprehensive_income_attributable_to_minority != currDataSet.get("other_comprehensive_income_attributable_to_minority"):
                                 saveSet["other_comprehensive_income_attributable_to_minority"] = other_comprehensive_income_attributable_to_minority
 
-                            if total_comprehensive_income != currDataSet.get("total_comprehensive_income") and total_comprehensive_income:
+                            if total_comprehensive_income != currDataSet.get("total_comprehensive_income"):
                                 saveSet["total_comprehensive_income"] = total_comprehensive_income
 
-                            if total_comprehensive_income_attributable_to_parent != currDataSet.get("total_comprehensive_income_attributable_to_parent") and total_comprehensive_income_attributable_to_parent:
+                            if total_comprehensive_income_attributable_to_parent != currDataSet.get("total_comprehensive_income_attributable_to_parent"):
                                 saveSet["total_comprehensive_income_attributable_to_parent"] = total_comprehensive_income_attributable_to_parent
 
-                            if total_comprehensive_income_attributable_to_minority != currDataSet.get("total_comprehensive_income_attributable_to_minority") and total_comprehensive_income_attributable_to_minority:
+                            if total_comprehensive_income_attributable_to_minority != currDataSet.get("total_comprehensive_income_attributable_to_minority"):
                                 saveSet["total_comprehensive_income_attributable_to_minority"] = total_comprehensive_income_attributable_to_minority
 
-                            if basic_earnings_per_share != currDataSet.get("basic_earnings_per_share") and basic_earnings_per_share:
+                            if basic_earnings_per_share != currDataSet.get("basic_earnings_per_share"):
                                 saveSet["basic_earnings_per_share"] = basic_earnings_per_share
 
-                            if diluted_earnings_per_share != currDataSet.get("diluted_earnings_per_share") and diluted_earnings_per_share:
+                            if diluted_earnings_per_share != currDataSet.get("diluted_earnings_per_share"):
                                 saveSet["diluted_earnings_per_share"] = diluted_earnings_per_share
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -8597,232 +8816,232 @@ def funcCashFlowModify(CMD,dataSet,sessionIDSet):
                             if report_date != currDataSet.get("report_date") and report_date:
                                 saveSet["report_date"] = report_date
 
-                            if total_operating_revenue != currDataSet.get("total_operating_revenue") and total_operating_revenue:
+                            if total_operating_revenue != currDataSet.get("total_operating_revenue"):
                                 saveSet["total_operating_revenue"] = total_operating_revenue
 
-                            if operating_revenue != currDataSet.get("operating_revenue") and operating_revenue:
+                            if operating_revenue != currDataSet.get("operating_revenue"):
                                 saveSet["operating_revenue"] = operating_revenue
 
-                            if interest_income != currDataSet.get("interest_income") and interest_income:
+                            if interest_income != currDataSet.get("interest_income"):
                                 saveSet["interest_income"] = interest_income
 
-                            if earned_premiums != currDataSet.get("earned_premiums") and earned_premiums:
+                            if earned_premiums != currDataSet.get("earned_premiums"):
                                 saveSet["earned_premiums"] = earned_premiums
 
-                            if fees_and_commissions_income != currDataSet.get("fees_and_commissions_income") and fees_and_commissions_income:
+                            if fees_and_commissions_income != currDataSet.get("fees_and_commissions_income"):
                                 saveSet["fees_and_commissions_income"] = fees_and_commissions_income
 
-                            if real_estate_sales_revenue != currDataSet.get("real_estate_sales_revenue") and real_estate_sales_revenue:
+                            if real_estate_sales_revenue != currDataSet.get("real_estate_sales_revenue"):
                                 saveSet["real_estate_sales_revenue"] = real_estate_sales_revenue
 
-                            if other_business_revenue != currDataSet.get("other_business_revenue") and other_business_revenue:
+                            if other_business_revenue != currDataSet.get("other_business_revenue"):
                                 saveSet["other_business_revenue"] = other_business_revenue
 
-                            if total_operating_costs != currDataSet.get("total_operating_costs") and total_operating_costs:
+                            if total_operating_costs != currDataSet.get("total_operating_costs"):
                                 saveSet["total_operating_costs"] = total_operating_costs
 
-                            if operating_costs != currDataSet.get("operating_costs") and operating_costs:
+                            if operating_costs != currDataSet.get("operating_costs"):
                                 saveSet["operating_costs"] = operating_costs
 
-                            if fees_and_commissions_expenses != currDataSet.get("fees_and_commissions_expenses") and fees_and_commissions_expenses:
+                            if fees_and_commissions_expenses != currDataSet.get("fees_and_commissions_expenses"):
                                 saveSet["fees_and_commissions_expenses"] = fees_and_commissions_expenses
 
-                            if real_estate_sales_costs != currDataSet.get("real_estate_sales_costs") and real_estate_sales_costs:
+                            if real_estate_sales_costs != currDataSet.get("real_estate_sales_costs"):
                                 saveSet["real_estate_sales_costs"] = real_estate_sales_costs
 
-                            if surrender_value != currDataSet.get("surrender_value") and surrender_value:
+                            if surrender_value != currDataSet.get("surrender_value"):
                                 saveSet["surrender_value"] = surrender_value
 
-                            if net_claims_paid != currDataSet.get("net_claims_paid") and net_claims_paid:
+                            if net_claims_paid != currDataSet.get("net_claims_paid"):
                                 saveSet["net_claims_paid"] = net_claims_paid
 
-                            if net_insurance_contract_reserves != currDataSet.get("net_insurance_contract_reserves") and net_insurance_contract_reserves:
+                            if net_insurance_contract_reserves != currDataSet.get("net_insurance_contract_reserves"):
                                 saveSet["net_insurance_contract_reserves"] = net_insurance_contract_reserves
 
-                            if policy_dividend_expenses != currDataSet.get("policy_dividend_expenses") and policy_dividend_expenses:
+                            if policy_dividend_expenses != currDataSet.get("policy_dividend_expenses"):
                                 saveSet["policy_dividend_expenses"] = policy_dividend_expenses
 
-                            if reinsurance_expenses != currDataSet.get("reinsurance_expenses") and reinsurance_expenses:
+                            if reinsurance_expenses != currDataSet.get("reinsurance_expenses"):
                                 saveSet["reinsurance_expenses"] = reinsurance_expenses
 
-                            if other_business_costs != currDataSet.get("other_business_costs") and other_business_costs:
+                            if other_business_costs != currDataSet.get("other_business_costs"):
                                 saveSet["other_business_costs"] = other_business_costs
 
-                            if taxes_and_surcharges != currDataSet.get("taxes_and_surcharges") and taxes_and_surcharges:
+                            if taxes_and_surcharges != currDataSet.get("taxes_and_surcharges"):
                                 saveSet["taxes_and_surcharges"] = taxes_and_surcharges
 
-                            if rd_expenses != currDataSet.get("rd_expenses") and rd_expenses:
+                            if rd_expenses != currDataSet.get("rd_expenses"):
                                 saveSet["rd_expenses"] = rd_expenses
 
-                            if selling_expenses != currDataSet.get("selling_expenses") and selling_expenses:
+                            if selling_expenses != currDataSet.get("selling_expenses"):
                                 saveSet["selling_expenses"] = selling_expenses
 
-                            if administrative_expenses != currDataSet.get("administrative_expenses") and administrative_expenses:
+                            if administrative_expenses != currDataSet.get("administrative_expenses"):
                                 saveSet["administrative_expenses"] = administrative_expenses
 
-                            if financial_expenses != currDataSet.get("financial_expenses") and financial_expenses:
+                            if financial_expenses != currDataSet.get("financial_expenses"):
                                 saveSet["financial_expenses"] = financial_expenses
 
-                            if interest_expenses != currDataSet.get("interest_expenses") and interest_expenses:
+                            if interest_expenses != currDataSet.get("interest_expenses"):
                                 saveSet["interest_expenses"] = interest_expenses
 
-                            if interest_expenditure != currDataSet.get("interest_expenditure") and interest_expenditure:
+                            if interest_expenditure != currDataSet.get("interest_expenditure"):
                                 saveSet["interest_expenditure"] = interest_expenditure
 
-                            if investment_income != currDataSet.get("investment_income") and investment_income:
+                            if investment_income != currDataSet.get("investment_income"):
                                 saveSet["investment_income"] = investment_income
 
-                            if investment_income_from_associates_and_joint_ventures != currDataSet.get("investment_income_from_associates_and_joint_ventures") and investment_income_from_associates_and_joint_ventures:
+                            if investment_income_from_associates_and_joint_ventures != currDataSet.get("investment_income_from_associates_and_joint_ventures"):
                                 saveSet["investment_income_from_associates_and_joint_ventures"] = investment_income_from_associates_and_joint_ventures
 
-                            if gain_on_derecognition_of_financial_assets_at_amortized_cost != currDataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost") and gain_on_derecognition_of_financial_assets_at_amortized_cost:
+                            if gain_on_derecognition_of_financial_assets_at_amortized_cost != currDataSet.get("gain_on_derecognition_of_financial_assets_at_amortized_cost"):
                                 saveSet["gain_on_derecognition_of_financial_assets_at_amortized_cost"] = gain_on_derecognition_of_financial_assets_at_amortized_cost
 
-                            if foreign_exchange_gains != currDataSet.get("foreign_exchange_gains") and foreign_exchange_gains:
+                            if foreign_exchange_gains != currDataSet.get("foreign_exchange_gains"):
                                 saveSet["foreign_exchange_gains"] = foreign_exchange_gains
 
-                            if net_open_hedge_gains != currDataSet.get("net_open_hedge_gains") and net_open_hedge_gains:
+                            if net_open_hedge_gains != currDataSet.get("net_open_hedge_gains"):
                                 saveSet["net_open_hedge_gains"] = net_open_hedge_gains
 
-                            if fair_value_change_gains != currDataSet.get("fair_value_change_gains") and fair_value_change_gains:
+                            if fair_value_change_gains != currDataSet.get("fair_value_change_gains"):
                                 saveSet["fair_value_change_gains"] = fair_value_change_gains
 
-                            if futures_gains_losses != currDataSet.get("futures_gains_losses") and futures_gains_losses:
+                            if futures_gains_losses != currDataSet.get("futures_gains_losses"):
                                 saveSet["futures_gains_losses"] = futures_gains_losses
 
-                            if custody_income != currDataSet.get("custody_income") and custody_income:
+                            if custody_income != currDataSet.get("custody_income"):
                                 saveSet["custody_income"] = custody_income
 
-                            if subsidy_income != currDataSet.get("subsidy_income") and subsidy_income:
+                            if subsidy_income != currDataSet.get("subsidy_income"):
                                 saveSet["subsidy_income"] = subsidy_income
 
-                            if other_gains != currDataSet.get("other_gains") and other_gains:
+                            if other_gains != currDataSet.get("other_gains"):
                                 saveSet["other_gains"] = other_gains
 
-                            if asset_impairment_losses != currDataSet.get("asset_impairment_losses") and asset_impairment_losses:
+                            if asset_impairment_losses != currDataSet.get("asset_impairment_losses"):
                                 saveSet["asset_impairment_losses"] = asset_impairment_losses
 
-                            if credit_impairment_losses != currDataSet.get("credit_impairment_losses") and credit_impairment_losses:
+                            if credit_impairment_losses != currDataSet.get("credit_impairment_losses"):
                                 saveSet["credit_impairment_losses"] = credit_impairment_losses
 
-                            if other_business_profits != currDataSet.get("other_business_profits") and other_business_profits:
+                            if other_business_profits != currDataSet.get("other_business_profits"):
                                 saveSet["other_business_profits"] = other_business_profits
 
-                            if asset_disposal_gains != currDataSet.get("asset_disposal_gains") and asset_disposal_gains:
+                            if asset_disposal_gains != currDataSet.get("asset_disposal_gains"):
                                 saveSet["asset_disposal_gains"] = asset_disposal_gains
 
-                            if operating_profit != currDataSet.get("operating_profit") and operating_profit:
+                            if operating_profit != currDataSet.get("operating_profit"):
                                 saveSet["operating_profit"] = operating_profit
 
-                            if non_operating_income != currDataSet.get("non_operating_income") and non_operating_income:
+                            if non_operating_income != currDataSet.get("non_operating_income"):
                                 saveSet["non_operating_income"] = non_operating_income
 
-                            if non_current_asset_disposal_gains != currDataSet.get("non_current_asset_disposal_gains") and non_current_asset_disposal_gains:
+                            if non_current_asset_disposal_gains != currDataSet.get("non_current_asset_disposal_gains"):
                                 saveSet["non_current_asset_disposal_gains"] = non_current_asset_disposal_gains
 
-                            if non_operating_expenses != currDataSet.get("non_operating_expenses") and non_operating_expenses:
+                            if non_operating_expenses != currDataSet.get("non_operating_expenses"):
                                 saveSet["non_operating_expenses"] = non_operating_expenses
 
-                            if non_current_asset_disposal_losses != currDataSet.get("non_current_asset_disposal_losses") and non_current_asset_disposal_losses:
+                            if non_current_asset_disposal_losses != currDataSet.get("non_current_asset_disposal_losses"):
                                 saveSet["non_current_asset_disposal_losses"] = non_current_asset_disposal_losses
 
-                            if total_profit != currDataSet.get("total_profit") and total_profit:
+                            if total_profit != currDataSet.get("total_profit"):
                                 saveSet["total_profit"] = total_profit
 
-                            if income_tax_expense != currDataSet.get("income_tax_expense") and income_tax_expense:
+                            if income_tax_expense != currDataSet.get("income_tax_expense"):
                                 saveSet["income_tax_expense"] = income_tax_expense
 
-                            if unrecognized_investment_losses != currDataSet.get("unrecognized_investment_losses") and unrecognized_investment_losses:
+                            if unrecognized_investment_losses != currDataSet.get("unrecognized_investment_losses"):
                                 saveSet["unrecognized_investment_losses"] = unrecognized_investment_losses
 
-                            if net_profit != currDataSet.get("net_profit") and net_profit:
+                            if net_profit != currDataSet.get("net_profit"):
                                 saveSet["net_profit"] = net_profit
 
-                            if net_profit_from_continuing_operations != currDataSet.get("net_profit_from_continuing_operations") and net_profit_from_continuing_operations:
+                            if net_profit_from_continuing_operations != currDataSet.get("net_profit_from_continuing_operations"):
                                 saveSet["net_profit_from_continuing_operations"] = net_profit_from_continuing_operations
 
-                            if net_profit_from_discontinued_operations != currDataSet.get("net_profit_from_discontinued_operations") and net_profit_from_discontinued_operations:
+                            if net_profit_from_discontinued_operations != currDataSet.get("net_profit_from_discontinued_operations"):
                                 saveSet["net_profit_from_discontinued_operations"] = net_profit_from_discontinued_operations
 
-                            if net_profit_attributable_to_parent_company != currDataSet.get("net_profit_attributable_to_parent_company") and net_profit_attributable_to_parent_company:
+                            if net_profit_attributable_to_parent_company != currDataSet.get("net_profit_attributable_to_parent_company"):
                                 saveSet["net_profit_attributable_to_parent_company"] = net_profit_attributable_to_parent_company
 
-                            if net_profit_of_acquiree_before_merger != currDataSet.get("net_profit_of_acquiree_before_merger") and net_profit_of_acquiree_before_merger:
+                            if net_profit_of_acquiree_before_merger != currDataSet.get("net_profit_of_acquiree_before_merger"):
                                 saveSet["net_profit_of_acquiree_before_merger"] = net_profit_of_acquiree_before_merger
 
-                            if minority_interests_profit_loss != currDataSet.get("minority_interests_profit_loss") and minority_interests_profit_loss:
+                            if minority_interests_profit_loss != currDataSet.get("minority_interests_profit_loss"):
                                 saveSet["minority_interests_profit_loss"] = minority_interests_profit_loss
 
-                            if other_comprehensive_income != currDataSet.get("other_comprehensive_income") and other_comprehensive_income:
+                            if other_comprehensive_income != currDataSet.get("other_comprehensive_income"):
                                 saveSet["other_comprehensive_income"] = other_comprehensive_income
 
-                            if other_comprehensive_income_attributable_to_parent != currDataSet.get("other_comprehensive_income_attributable_to_parent") and other_comprehensive_income_attributable_to_parent:
+                            if other_comprehensive_income_attributable_to_parent != currDataSet.get("other_comprehensive_income_attributable_to_parent"):
                                 saveSet["other_comprehensive_income_attributable_to_parent"] = other_comprehensive_income_attributable_to_parent
 
-                            if oci_not_reclassified_to_profit_loss != currDataSet.get("oci_not_reclassified_to_profit_loss") and oci_not_reclassified_to_profit_loss:
+                            if oci_not_reclassified_to_profit_loss != currDataSet.get("oci_not_reclassified_to_profit_loss"):
                                 saveSet["oci_not_reclassified_to_profit_loss"] = oci_not_reclassified_to_profit_loss
 
-                            if remeasurement_of_defined_benefit_plans != currDataSet.get("remeasurement_of_defined_benefit_plans") and remeasurement_of_defined_benefit_plans:
+                            if remeasurement_of_defined_benefit_plans != currDataSet.get("remeasurement_of_defined_benefit_plans"):
                                 saveSet["remeasurement_of_defined_benefit_plans"] = remeasurement_of_defined_benefit_plans
 
-                            if oci_under_equity_method_not_reclassified != currDataSet.get("oci_under_equity_method_not_reclassified") and oci_under_equity_method_not_reclassified:
+                            if oci_under_equity_method_not_reclassified != currDataSet.get("oci_under_equity_method_not_reclassified"):
                                 saveSet["oci_under_equity_method_not_reclassified"] = oci_under_equity_method_not_reclassified
 
-                            if fair_value_change_of_other_equity_instruments != currDataSet.get("fair_value_change_of_other_equity_instruments") and fair_value_change_of_other_equity_instruments:
+                            if fair_value_change_of_other_equity_instruments != currDataSet.get("fair_value_change_of_other_equity_instruments"):
                                 saveSet["fair_value_change_of_other_equity_instruments"] = fair_value_change_of_other_equity_instruments
 
-                            if fair_value_change_of_own_credit_risk != currDataSet.get("fair_value_change_of_own_credit_risk") and fair_value_change_of_own_credit_risk:
+                            if fair_value_change_of_own_credit_risk != currDataSet.get("fair_value_change_of_own_credit_risk"):
                                 saveSet["fair_value_change_of_own_credit_risk"] = fair_value_change_of_own_credit_risk
 
-                            if oci_reclassified_to_profit_loss != currDataSet.get("oci_reclassified_to_profit_loss") and oci_reclassified_to_profit_loss:
+                            if oci_reclassified_to_profit_loss != currDataSet.get("oci_reclassified_to_profit_loss"):
                                 saveSet["oci_reclassified_to_profit_loss"] = oci_reclassified_to_profit_loss
 
-                            if oci_under_equity_method_reclassified != currDataSet.get("oci_under_equity_method_reclassified") and oci_under_equity_method_reclassified:
+                            if oci_under_equity_method_reclassified != currDataSet.get("oci_under_equity_method_reclassified"):
                                 saveSet["oci_under_equity_method_reclassified"] = oci_under_equity_method_reclassified
 
-                            if fair_value_change_of_afs_financial_assets != currDataSet.get("fair_value_change_of_afs_financial_assets") and fair_value_change_of_afs_financial_assets:
+                            if fair_value_change_of_afs_financial_assets != currDataSet.get("fair_value_change_of_afs_financial_assets"):
                                 saveSet["fair_value_change_of_afs_financial_assets"] = fair_value_change_of_afs_financial_assets
 
-                            if fair_value_change_of_other_debt_investments != currDataSet.get("fair_value_change_of_other_debt_investments") and fair_value_change_of_other_debt_investments:
+                            if fair_value_change_of_other_debt_investments != currDataSet.get("fair_value_change_of_other_debt_investments"):
                                 saveSet["fair_value_change_of_other_debt_investments"] = fair_value_change_of_other_debt_investments
 
-                            if financial_assets_reclassified_to_oci != currDataSet.get("financial_assets_reclassified_to_oci") and financial_assets_reclassified_to_oci:
+                            if financial_assets_reclassified_to_oci != currDataSet.get("financial_assets_reclassified_to_oci"):
                                 saveSet["financial_assets_reclassified_to_oci"] = financial_assets_reclassified_to_oci
 
-                            if credit_impairment_of_other_debt_investments != currDataSet.get("credit_impairment_of_other_debt_investments") and credit_impairment_of_other_debt_investments:
+                            if credit_impairment_of_other_debt_investments != currDataSet.get("credit_impairment_of_other_debt_investments"):
                                 saveSet["credit_impairment_of_other_debt_investments"] = credit_impairment_of_other_debt_investments
 
-                            if htm_reclassified_to_afs_gains_losses != currDataSet.get("htm_reclassified_to_afs_gains_losses") and htm_reclassified_to_afs_gains_losses:
+                            if htm_reclassified_to_afs_gains_losses != currDataSet.get("htm_reclassified_to_afs_gains_losses"):
                                 saveSet["htm_reclassified_to_afs_gains_losses"] = htm_reclassified_to_afs_gains_losses
 
-                            if cash_flow_hedge_reserve != currDataSet.get("cash_flow_hedge_reserve") and cash_flow_hedge_reserve:
+                            if cash_flow_hedge_reserve != currDataSet.get("cash_flow_hedge_reserve"):
                                 saveSet["cash_flow_hedge_reserve"] = cash_flow_hedge_reserve
 
-                            if effective_portion_of_cash_flow_hedge != currDataSet.get("effective_portion_of_cash_flow_hedge") and effective_portion_of_cash_flow_hedge:
+                            if effective_portion_of_cash_flow_hedge != currDataSet.get("effective_portion_of_cash_flow_hedge"):
                                 saveSet["effective_portion_of_cash_flow_hedge"] = effective_portion_of_cash_flow_hedge
 
-                            if foreign_currency_translation_difference != currDataSet.get("foreign_currency_translation_difference") and foreign_currency_translation_difference:
+                            if foreign_currency_translation_difference != currDataSet.get("foreign_currency_translation_difference"):
                                 saveSet["foreign_currency_translation_difference"] = foreign_currency_translation_difference
 
-                            if other != currDataSet.get("other") and other:
+                            if other != currDataSet.get("other"):
                                 saveSet["other"] = other
 
-                            if other_comprehensive_income_attributable_to_minority != currDataSet.get("other_comprehensive_income_attributable_to_minority") and other_comprehensive_income_attributable_to_minority:
+                            if other_comprehensive_income_attributable_to_minority != currDataSet.get("other_comprehensive_income_attributable_to_minority"):
                                 saveSet["other_comprehensive_income_attributable_to_minority"] = other_comprehensive_income_attributable_to_minority
 
-                            if total_comprehensive_income != currDataSet.get("total_comprehensive_income") and total_comprehensive_income:
+                            if total_comprehensive_income != currDataSet.get("total_comprehensive_income"):
                                 saveSet["total_comprehensive_income"] = total_comprehensive_income
 
-                            if total_comprehensive_income_attributable_to_parent != currDataSet.get("total_comprehensive_income_attributable_to_parent") and total_comprehensive_income_attributable_to_parent:
+                            if total_comprehensive_income_attributable_to_parent != currDataSet.get("total_comprehensive_income_attributable_to_parent"):
                                 saveSet["total_comprehensive_income_attributable_to_parent"] = total_comprehensive_income_attributable_to_parent
 
-                            if total_comprehensive_income_attributable_to_minority != currDataSet.get("total_comprehensive_income_attributable_to_minority") and total_comprehensive_income_attributable_to_minority:
+                            if total_comprehensive_income_attributable_to_minority != currDataSet.get("total_comprehensive_income_attributable_to_minority"):
                                 saveSet["total_comprehensive_income_attributable_to_minority"] = total_comprehensive_income_attributable_to_minority
 
-                            if basic_earnings_per_share != currDataSet.get("basic_earnings_per_share") and basic_earnings_per_share:
+                            if basic_earnings_per_share != currDataSet.get("basic_earnings_per_share"):
                                 saveSet["basic_earnings_per_share"] = basic_earnings_per_share
 
-                            if diluted_earnings_per_share != currDataSet.get("diluted_earnings_per_share") and diluted_earnings_per_share:
+                            if diluted_earnings_per_share != currDataSet.get("diluted_earnings_per_share"):
                                 saveSet["diluted_earnings_per_share"] = diluted_earnings_per_share
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -9336,7 +9555,7 @@ def funcIndicatorModify(CMD,dataSet,sessionIDSet):
                             if report_date != currDataSet.get("report_date") and report_date:
                                 saveSet["report_date"] = report_date
 
-                            if median_value != currDataSet.get("median_value") and median_value:
+                            if median_value != currDataSet.get("median_value"):
                                 saveSet["median_value"] = median_value
 
                             if cache_version != currDataSet.get("cache_version") and cache_version:
@@ -9823,16 +10042,16 @@ def funcUserStockListModify(CMD,dataSet,sessionIDSet):
                             if stock_name != currDataSet.get("stock_name") and stock_name:
                                 saveSet["stock_name"] = stock_name
 
-                            if initial_weight != currDataSet.get("initial_weight") and initial_weight:
+                            if initial_weight != currDataSet.get("initial_weight"):
                                 saveSet["initial_weight"] = initial_weight
 
-                            if current_weight != currDataSet.get("current_weight") and current_weight:
+                            if current_weight != currDataSet.get("current_weight"):
                                 saveSet["current_weight"] = current_weight
 
-                            if initial_cap != currDataSet.get("initial_cap") and initial_cap:
+                            if initial_cap != currDataSet.get("initial_cap"):
                                 saveSet["initial_cap"] = initial_cap
 
-                            if current_cap != currDataSet.get("current_cap") and current_cap:
+                            if current_cap != currDataSet.get("current_cap"):
                                 saveSet["current_cap"] = current_cap
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -9934,10 +10153,11 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                 #获取查询输入参数
                 id = dataSet.get("id", "")
 
+                userID = loginID
                 if comFC.chkIsManager(roleName):
                     userID = dataSet.get("userID","")
-                else:
-                    userID = loginID
+                    if not userID:
+                        userID = loginID
 
                 symbol = dataSet.get("symbol","")
                 if symbol:
@@ -10385,7 +10605,7 @@ def funcDataCheckLogModify(CMD,dataSet,sessionIDSet):
                             if error_desc != currDataSet.get("error_desc") and error_desc:
                                 saveSet["error_desc"] = error_desc
 
-                            if proc_num != currDataSet.get("proc_num") and proc_num:
+                            if proc_num != currDataSet.get("proc_num"):
                                 saveSet["proc_num"] = proc_num
 
                             if label1 != currDataSet.get("label1") and label1:
@@ -10966,7 +11186,8 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
                 #获取查询输入参数
                 id = dataSet.get("id", "")
 
-                #houseID = dataSet.get("houseID", "")
+                tradeDay = dataSet.get("tradeDay", "")
+
                 beginDate = dataSet.get("beginDate", "")
                 if not beginDate:
                     beginDate = dataSet.get("start_date")
@@ -10992,6 +11213,8 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
                     indexKeyDataSet = {} #查询生成index的因素
                     if id:
                         indexKeyDataSet["id"] = id
+                    if tradeDay:
+                        indexKeyDataSet["tradeDay"] = tradeDay
                     if beginDate:
                         indexKeyDataSet["beginDate"] = beginDate
                     if endDate:
@@ -11027,7 +11250,7 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
                                 currDataList = comMysql.query_trade_day_record(tableName,id,mode = mode)
                             else:
                                 tableName = comMysql.tablename_convertor_trade_day_record()
-                                currDataList = comMysql.query_trade_day_record(tableName,beginDate=beginDate,endDate=endDate,mode = mode,limitNum = limitNum)
+                                currDataList = comMysql.query_trade_day_record(tableName,tradeDay=tradeDay,beginDate=beginDate,endDate=endDate,mode = mode,limitNum = limitNum)
 
                         dataList = []
 
@@ -11104,6 +11327,727 @@ def funcTradeDayQry(CMD,dataSet,sessionIDSet):
     return result
 
 
+#Technical Signal增加代码
+def funcTechnicalSignalAdd(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+                if dataValidFlag:
+                    saveSet = {}
+                    saveSet["stock_code"] = dataSet.get("stock_code", "") 
+                    saveSet["date"] = dataSet.get("date", "") 
+                    saveSet["action"] = dataSet.get("action", "") 
+                    saveSet["adjust"] = dataSet.get("adjust", "") 
+                    saveSet["period"] = dataSet.get("period", "") 
+                    saveSet["indicator"] = dataSet.get("indicator", "") 
+                    saveSet["subtype"] = dataSet.get("subtype", "") 
+                    saveSet["description"] = dataSet.get("description", "") 
+                    saveSet["description2"] = dataSet.get("description2", "") 
+                    saveSet["market_trend"] = dataSet.get("market_trend", "") 
+                    saveSet["market_status"] = dataSet.get("market_status", "") 
+                    calc_result = dataSet.get("calc_result", {}) 
+                    try:
+                        calc_result = misc.jsonDumps(calc_result)
+                    except:
+                        calc_result = misc.jsonDumps({})
+                    calc_result = calc_result[0:5900]
+                    saveSet["calc_result"] = calc_result 
+                    saveSet["readFlag"] = dataSet.get("readFlag", "") 
+                    saveSet["label1"] = dataSet.get("label1", "") 
+                    saveSet["label2"] = dataSet.get("label2", "") 
+                    saveSet["label3"] = dataSet.get("label3", "") 
+                    saveSet["memo"] = dataSet.get("memo", "") 
+                    saveSet["dispFlag"] = dataSet.get("dispFlag", "") 
+                    saveSet["delFlag"] = dataSet.get("delFlag", "0") 
+                    saveSet["regID"] = loginID
+                    saveSet["regYMDHMS"] = misc.getTime()
+
+                    tableName = comMysql.tablename_convertor_technical_signal()
+                    recID = comMysql.insert_technical_signal(tableName,saveSet)
+                    rtnData["recID"] = str(recID)
+
+                    if recID <= 0:
+                        #记录添加失败
+                        errCode = "CG"
+                        _LOG.warning(f"rtn:{recID},saveSet:{saveSet}")
+                    else:
+                        if _DEBUG:
+                            pass
+                            _LOG.info(f"D: recID:{recID}")
+
+                    result = rtnData
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#Technical Signal删除代码
+def funcTechnicalSignalDel(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+            #权限检查
+
+            if errCode == "B0": #
+                id = dataSet.get("id", "")
+                tableName = comMysql.tablename_convertor_technical_signal()
+                currDataList = comMysql.query_technical_signal(tableName,id)
+                if len(currDataList) == 1:
+                    saveSet = {}
+                    saveSet["modifyID"] = loginID
+                    saveSet["modifyYMDHMS"] = misc.getTime()
+                    #saveSet["delFlag"] = "1"
+
+                    rtn = comMysql.delete_technical_signal(tableName,id)
+                    rtnData["rtn"] = str(rtn)
+
+                    if _DEBUG:
+                        _LOG.info(f"D: rtn:{rtn}")
+
+                    result = rtnData
+
+                else:
+                    errCode = "CB"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#Technical Signal修改代码
+def funcTechnicalSignalModify(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查/功能检测
+
+            if errCode == "B0": #
+                #data validation check
+                dataValidFlag = True
+
+                stock_code = dataSet.get("stock_code") 
+                date = dataSet.get("date") 
+                action = dataSet.get("action") 
+                adjust = dataSet.get("adjust") 
+                period = dataSet.get("period") 
+                indicator = dataSet.get("indicator") 
+                subtype = dataSet.get("subtype") 
+                description = dataSet.get("description") 
+                description2 = dataSet.get("description2") 
+                market_trend = dataSet.get("market_trend") 
+                market_status = dataSet.get("market_status") 
+                calc_result = dataSet.get("calc_result", {}) 
+                try:
+                    calc_result = misc.jsonDumps(calc_result)
+                except:
+                    calc_result = misc.jsonDumps({})
+                calc_result = calc_result[0:5900]
+                readFlag = dataSet.get("readFlag") 
+                label1 = dataSet.get("label1") 
+                label2 = dataSet.get("label2") 
+                label3 = dataSet.get("label3") 
+                memo = dataSet.get("memo") 
+                dispFlag = dataSet.get("dispFlag") 
+                delFlag = dataSet.get("delFlag") 
+                #data valid 检查
+
+                if dataValidFlag:
+                    #当前记录获取
+                    recID = dataSet.get("id", "")
+
+                    tableName = comMysql.tablename_convertor_technical_signal()
+                    currDataList = comMysql.query_technical_signal(tableName,recID)
+
+                    if len(currDataList) == 1:
+                        currDataSet = currDataList[0]
+
+                        #权限或其他检查
+                        if errCode == "B0": #
+
+                            saveSet = {}
+
+                            if stock_code != currDataSet.get("stock_code") and stock_code:
+                                saveSet["stock_code"] = stock_code
+
+                            if date != currDataSet.get("date") and date:
+                                saveSet["date"] = date
+
+                            if action != currDataSet.get("action") and action:
+                                saveSet["action"] = action
+
+                            if adjust != currDataSet.get("adjust") and adjust:
+                                saveSet["adjust"] = adjust
+
+                            if period != currDataSet.get("period") and period:
+                                saveSet["period"] = period
+
+                            if indicator != currDataSet.get("indicator") and indicator:
+                                saveSet["indicator"] = indicator
+
+                            if subtype != currDataSet.get("subtype") and subtype:
+                                saveSet["subtype"] = subtype
+
+                            if description != currDataSet.get("description") and description:
+                                saveSet["description"] = description
+
+                            if description2 != currDataSet.get("description2") and description2:
+                                saveSet["description2"] = description2
+
+                            if market_trend != currDataSet.get("market_trend") and market_trend:
+                                saveSet["market_trend"] = market_trend
+
+                            if market_status != currDataSet.get("market_status") and market_status:
+                                saveSet["market_status"] = market_status
+
+                            if calc_result != currDataSet.get("calc_result"):
+                                saveSet["calc_result"] = calc_result
+
+                            if readFlag != currDataSet.get("readFlag") and readFlag:
+                                saveSet["readFlag"] = readFlag
+
+                            if label1 != currDataSet.get("label1") and label1:
+                                saveSet["label1"] = label1
+
+                            if label2 != currDataSet.get("label2") and label2:
+                                saveSet["label2"] = label2
+
+                            if label3 != currDataSet.get("label3") and label3:
+                                saveSet["label3"] = label3
+
+                            if memo != currDataSet.get("memo") and memo:
+                                saveSet["memo"] = memo
+
+                            if dispFlag != currDataSet.get("dispFlag") and dispFlag:
+                                saveSet["dispFlag"] = dispFlag
+
+                            if delFlag != currDataSet.get("delFlag") and delFlag:
+                                saveSet["delFlag"] = delFlag
+
+                            if saveSet:
+                                #saveSet["delFlag"] = "0"
+                                saveSet["modifyID"] = loginID
+                                saveSet["modifyYMDHMS"] = misc.getTime()
+
+                                #保存数据
+                                tableName = comMysql.tablename_convertor_technical_signal()
+                                rtn = comMysql.update_technical_signal(tableName,recID,saveSet)
+                                rtnData["rtn"] = str(rtn)
+
+                                if rtn < 0:
+                                    _LOG.warning(f"D: rtn:{rtn},saveSet:{saveSet}")
+                                else:
+                                    if _DEBUG:
+                                        pass
+                                        _LOG.info(f"D: rtn:{rtn}")
+
+                                result = rtnData
+
+                        else:
+                            #BT
+                            errCode = "BT"
+
+                    else:
+                        #CB
+                        errCode = "CB"
+
+                else:
+                    #data invalid
+                    errCode = "BA"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#Technical Signal查询代码
+def funcTechnicalSignalQry(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+                #获取查询输入参数
+                id = dataSet.get("id", "")
+
+                symbol = dataSet.get("symbol", "")
+                if symbol:
+                    stock_code = symbol
+                else:
+                    stock_code = dataSet.get("stock_code","")
+                
+                action = dataSet.get("action", "")
+
+                date = dataSet.get("date", "")
+                start_date = dataSet.get("start_date", "")
+                end_date = dataSet.get("end_date", "")
+
+                indicator = dataSet.get("indicator", "")
+                adjust = dataSet.get("adjust", "")
+                period = dataSet.get("period", "")
+
+                readFlag = dataSet.get("readFlag","")
+
+                forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
+
+                searchOption = dataSet.get("searchOption")
+
+                mode = dataSet.get("mode", "full")
+
+                #limitNum = dataSet.get("limitNum",0)
+
+                #权限检查/功能检测
+
+                rightCheckFlag = True
+
+                if rightCheckFlag:
+
+                    #生成indexKey
+                    indexKeyDataSet = {} #查询生成index的因素
+                    if id:
+                        indexKeyDataSet["id"] = id
+                    if stock_code:
+                        indexKeyDataSet["stock_code"] = stock_code
+                    if action:
+                        indexKeyDataSet["action"] = action
+                    if date:
+                        indexKeyDataSet["date"] = date
+                    if start_date:
+                        indexKeyDataSet["start_date"] = start_date
+                    if end_date:
+                        indexKeyDataSet["end_date"] = end_date
+                    if indicator:
+                        indexKeyDataSet["indicator"] = indicator
+                    if adjust:
+                        indexKeyDataSet["adjust"] = adjust
+                    if period:
+                        indexKeyDataSet["period"] = period
+                    if readFlag:
+                        indexKeyDataSet["readFlag"] = readFlag
+                    if searchOption:
+                        indexKeyDataSet["searchOption"] = searchOption
+                    if mode:
+                        indexKeyDataSet["mode"] = mode
+
+                    #if limitNum:
+                        #indexKeyDataSet["limitNum"] = limitNum
+
+                    sessionID = sessionIDSet.get("sessionID", "")
+                    indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
+                    beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
+                    endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
+
+                    #判断数据是否在缓冲区:
+                    if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+
+                        if searchOption:
+                            currDataList = []
+                            tableName = comMysql.tablename_convertor_technical_signal()
+                            allDataList = comMysql.query_technical_signal(tableName,mode = mode)
+                            allowList = ["description", "label"] #筛选字段
+                            serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
+                            if serachResultSet["rtn"] == "B0":
+                                currDataList = serachResultSet.get("data", [])
+                        else:
+                            if id:
+                                tableName = comMysql.tablename_convertor_technical_signal()
+                                currDataList = comMysql.query_technical_signal(tableName,id,mode = mode)
+                            else:
+                                tableName = comMysql.tablename_convertor_technical_signal()
+                                currDataList = comMysql.query_technical_signal(tableName,stock_code=stock_code,action = action,
+                                                        date=date,start_date = start_date,end_date = end_date,indicator = indicator,
+                                                        adjust = adjust,period = period,readFlag = readFlag)
+
+                        dataList = []
+
+                        for currDataSet in currDataList:
+                            aSet = {}
+
+                            #需要把文件转移到public domain
+                            #appendixFileID00 =  currDataSet.get("appendixFileID00", "")
+                            #appendixFileID00 = getTempLocation(appendixFileID00, privateFlag = True)
+
+                            #if mode == "full":
+                                #aSet["houseID"] = currDataSet.get("houseID", "")
+
+                            aSet["id"] = currDataSet.get("id","")
+                            aSet["stock_code"] = currDataSet.get("stock_code","")
+                            aSet["date"] = currDataSet.get("date","")
+                            aSet["action"] = currDataSet.get("action","")
+                            aSet["adjust"] = currDataSet.get("adjust","")
+                            aSet["period"] = currDataSet.get("period","")
+                            aSet["indicator"] = currDataSet.get("indicator","")
+                            aSet["subtype"] = currDataSet.get("subtype","")
+                            aSet["description"] = currDataSet.get("description","")
+                            aSet["description2"] = currDataSet.get("description2","")
+                            aSet["market_trend"] = currDataSet.get("market_trend","")
+                            aSet["market_status"] = currDataSet.get("market_status","")
+                            calc_result = currDataSet.get("calc_result","")
+                            try:
+                                calc_result = misc.jsonLoads(calc_result)
+                            except:
+                                calc_result = {}
+                            aSet["calc_result"] = calc_result
+                            aSet["readFlag"] = currDataSet.get("readFlag","")
+                            aSet["label1"] = currDataSet.get("label1","")
+                            aSet["label2"] = currDataSet.get("label2","")
+                            aSet["label3"] = currDataSet.get("label3","")
+                            aSet["memo"] = currDataSet.get("memo","")
+                            aSet["regID"] = currDataSet.get("regID","")
+                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                            aSet["modifyID"] = currDataSet.get("modifyID","")
+                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                            dataList.append(aSet)
+
+                        #临时缓存机制,改进型, 2023/10/16
+                        indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+
+                    rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
+
+                    #rtnData["limitNum"] = limitNum
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
+#User Technical Signal查询代码
+def funcUserTechnicalSignalQry(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "applicationMsgKey"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+                #获取查询输入参数
+                symbol = dataSet.get("symbol", "")
+                if symbol:
+                    stock_code = symbol
+                else:
+                    stock_code = dataSet.get("stock_code","")
+                
+                action = dataSet.get("action", "")
+
+                date = dataSet.get("date", "")
+                start_date = dataSet.get("start_date", "")
+                end_date = dataSet.get("end_date", "")
+
+                indicator = dataSet.get("indicator", "")
+                adjust = dataSet.get("adjust", "")
+                period = dataSet.get("period", "")
+
+                readFlag = dataSet.get("readFlag","")
+
+                forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
+
+                searchOption = dataSet.get("searchOption")
+
+                mode = dataSet.get("mode", "full")
+
+                limitNum = dataSet.get("limitNum",0)
+
+                #权限检查/功能检测
+                userID = loginID
+                if comFC.chkIsManager(roleName):
+                    userID = dataSet.get("userID","")
+                    if not userID:
+                        userID = loginID
+
+                rightCheckFlag = True
+
+                if rightCheckFlag:
+
+                    #生成indexKey
+                    indexKeyDataSet = {} #查询生成index的因素
+                    if stock_code:
+                        indexKeyDataSet["stock_code"] = stock_code
+                    if action:
+                        indexKeyDataSet["action"] = action
+                    if userID:
+                        indexKeyDataSet["userID"] = userID
+                    if date:
+                        indexKeyDataSet["date"] = date
+                    if start_date:
+                        indexKeyDataSet["start_date"] = start_date
+                    if end_date:
+                        indexKeyDataSet["end_date"] = end_date
+                    if indicator:
+                        indexKeyDataSet["indicator"] = indicator
+                    if adjust:
+                        indexKeyDataSet["adjust"] = adjust
+                    if period:
+                        indexKeyDataSet["period"] = period
+                    if readFlag:
+                        indexKeyDataSet["readFlag"] = readFlag
+                    if searchOption:
+                        indexKeyDataSet["searchOption"] = searchOption
+                    if mode:
+                        indexKeyDataSet["mode"] = mode
+
+                    if limitNum:
+                        indexKeyDataSet["limitNum"] = limitNum
+
+                    sessionID = sessionIDSet.get("sessionID", "")
+                    indexKey = genBufferIndexKey(CMD, sessionID, indexKeyDataSet) 
+                    beginNum = int(dataSet.get("beginNum", comGD._DEF_BUFFER_DATA_BEGIN_NUM)) 
+                    endNum = int(dataSet.get("endNum", comGD._DEF_BUFFER_DATA_END_NUM)) 
+
+                    #判断数据是否在缓冲区:
+                    if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
+
+                        if searchOption:
+                            currDataList = []
+                            allDataList = comMysql.query_user_technical_signal()
+                            allowList = ["description", "label"] #筛选字段
+                            serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
+                            if serachResultSet["rtn"] == "B0":
+                                currDataList = serachResultSet.get("data", [])
+                        else:
+                            currDataList = comMysql.query_user_technical_signal(stock_code=stock_code,action = action,userID=userID,
+                                                    date=date,start_date = start_date,end_date = end_date,indicator = indicator,
+                                                    adjust = adjust,period = period,readFlag = readFlag,limitNum = limitNum)
+
+                        dataList = []
+
+                        for currDataSet in currDataList:
+                            aSet = {}
+
+                            #需要把文件转移到public domain
+                            #appendixFileID00 =  currDataSet.get("appendixFileID00", "")
+                            #appendixFileID00 = getTempLocation(appendixFileID00, privateFlag = True)
+
+                            #if mode == "full":
+                                #aSet["houseID"] = currDataSet.get("houseID", "")
+
+                            aSet["id"] = currDataSet.get("id","")
+                            aSet["stock_code"] = currDataSet.get("stock_code","")
+                            aSet["date"] = currDataSet.get("date","")
+                            aSet["action"] = currDataSet.get("action","")
+                            aSet["adjust"] = currDataSet.get("adjust","")
+                            aSet["period"] = currDataSet.get("period","")
+                            aSet["indicator"] = currDataSet.get("indicator","")
+                            aSet["subtype"] = currDataSet.get("subtype","")
+                            aSet["description"] = currDataSet.get("description","")
+                            aSet["description2"] = currDataSet.get("description2","")
+                            aSet["market_trend"] = currDataSet.get("market_trend","")
+                            aSet["market_status"] = currDataSet.get("market_status","")
+                            calc_result = currDataSet.get("calc_result","")
+                            try:
+                                calc_result = misc.jsonLoads(calc_result)
+                            except:
+                                calc_result = {}
+                            aSet["calc_result"] = calc_result
+                            aSet["readFlag"] = currDataSet.get("readFlag","")
+                            aSet["label1"] = currDataSet.get("label1","")
+                            aSet["label2"] = currDataSet.get("label2","")
+                            aSet["label3"] = currDataSet.get("label3","")
+                            aSet["memo"] = currDataSet.get("memo","")
+                            aSet["regID"] = currDataSet.get("regID","")
+                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                            aSet["modifyID"] = currDataSet.get("modifyID","")
+                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                            dataList.append(aSet)
+
+                        #临时缓存机制,改进型, 2023/10/16
+                        indexKey = putQuery2Buffer(indexKey, dataList) #存放数据到临时缓冲区去
+
+                    rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
+
+                    #rtnData["limitNum"] = limitNum
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
+
+
 #特定表和特定值的, 最大最小值查询
 def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
     result = {}
@@ -11130,9 +12074,30 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
 
             if errCode == "B0": #
                 #获取查询输入参数
+                stock_code = dataSet.get("stock_code", "")
+                if stock_code:
+                    symbol = stock_code
+                else:
+                    symbol = dataSet.get("symbol")
+                #直接给出表名
                 tableName = dataSet.get("tableName", "")
                 if not tableName:
-                    tableName = "stock_history_data_day"
+                    #间接获取表名
+                    dataType = dataSet.get("dataType", "")
+                    period = dataSet.get("period", "day")
+                    adjust = dataSet.get("adjust", "")
+                    indicator = dataSet.get("indicator", "")
+                    if dataType == "industry":
+                        tableName = comMysql.tablename_convertor_industry_history_data(period,adjust)
+                    elif dataType == "indicator":
+                        tableName = comMysql.tablename_convertor_technical_indicators(period,adjust)
+                    elif dataType == "signal":
+                        tableName = comMysql.tablename_convertor_technical_signal()
+                        pass
+                    else:
+                        #默认是股票数据
+                        tableName = comMysql.tablename_convertor_stock_history_data(period,adjust)
+
                 columnName = dataSet.get("columnName", "")
                 if not columnName:
                     columnName = "date"
@@ -11145,14 +12110,18 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
                     "stock_history_data_month","stock_history_data_month_hfq","stock_history_data_month_qfq",
                     "technical_indicators_day","technical_indicators_day_hfq","technical_indicators_day_qfq",
                     "technical_indicators_week","technical_indicators_week_hfq","technical_indicators_week_qfq",
-                    "technical_indicators_month","technical_indicators_month_hfq","technical_indicators_month_qfq",] and \
+                    "technical_indicators_month","technical_indicators_month_hfq","technical_indicators_month_qfq",
+                    "technical_signal"] and \
                     columnName in ["date","trade_date"]:
                     dataValidFlag = True
                 else:                   
                     dataValidFlag = False
-
+                
                 if dataValidFlag:
-                    currDataSet = comMysql.query_first_last_data(tableName,columnName)
+                    if tableName in ["technical_signal"]:
+                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,symbol=symbol,period=period,adjust=adjust,indicator=indicator)
+                    else:
+                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,symbol=symbol)
                     rtnData["data"] = currDataSet
 
                     result = rtnData
@@ -11270,6 +12239,8 @@ urlPathMap = {
     "technicalindicatorsmodify":funcTechnicalIndicatorsModify,
     "technicalindicatorsqry":funcTechnicalIndicatorsQry,
 
+    "historytechnicalindicatorqry":funcHistoryTechnicalIndicatorQry,
+
     "stockdividendadd":funcStockDividendAdd,
     "stockdividenddel":funcStockDividendDel,
     "stockdividendmodify":funcStockDividendModify,
@@ -11315,6 +12286,12 @@ urlPathMap = {
     "tradedaydel":funcTradeDayDel,
     "tradedaymodify":funcTradeDayModify,
     "tradedayqry":funcTradeDayQry,
+
+    "technicalsignaladd":funcTechnicalSignalAdd,
+    "technicalsignaldel":funcTechnicalSignalDel,
+    "technicalsignalmodify":funcTechnicalSignalModify,
+    "technicalsignalqry":funcTechnicalSignalQry,
+    "usertechnicalsignalqry":funcUserTechnicalSignalQry,
 
     "maxmindataqry":funcMaxMinDataQry,
 

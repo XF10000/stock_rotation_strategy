@@ -7,7 +7,7 @@
 #Date: 2019-08-02
 #Description:   这个应用的通用函数
 
-_VERSION="20260315"
+_VERSION="20260325"
 
 
 import os
@@ -1724,6 +1724,7 @@ def isPublicHoliday(YMD):
             holidayInfo = getPublicHolidayInfo(YMD)
             if holidayInfo:
                 saveData["data"][YMD] = holidayInfo
+                result = holidayInfo.get("isHoliday")
                 saveFlag = True
 
         if saveFlag:

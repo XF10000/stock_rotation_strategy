@@ -12,9 +12,12 @@
 # 1. 所有函数均为公开方法，无需添加下划线前缀
 # 2. 所有函数均为文档字符串注释，方便查看函数说明
 
-__VERSION="20260314"
+__VERSION="20260324"
 
 import os
+import sys
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parentdir)
 
 import numpy as np
 import pandas as pd
@@ -575,7 +578,7 @@ class StockTI:
         try:
             # 计算各指标所需的最小周期
             min_periods = {
-                'ma': 20,
+                'ma': 60,
                 'macd': 26,
                 'boll': 20,
                 'ene': 14,
@@ -606,9 +609,13 @@ class StockTI:
             ma5Arr = self.MA(closeArr, 5)
             ma10Arr = self.MA(closeArr, 10)
             ma20Arr = self.MA(closeArr, 20)
+            ma60Arr = self.MA(closeArr, 60)
 
             # 计算MACD
             difArr, deaArr, macdArr = self.MACD(closeArr)
+
+            # 计算MACD-LONG
+            difLongArr, deaLongArr, macdLongArr = self.MACD(closeArr, 19,39,9)
 
             # 计算BOLL
             bollUpperArr, bollMidArr, bollLowerArr = self.BOLL(closeArr)
@@ -662,10 +669,15 @@ class StockTI:
                     "ma_5": round(float(ma5Arr[i]),2),
                     "ma_10": round(float(ma10Arr[i]),2),
                     "ma_20": round(float(ma20Arr[i]),2),
+                    "ma_60": round(float(ma60Arr[i]),2),
 
                     "macd_line": round(float(difArr[i]),2),
                     "macd_signal": round(float(deaArr[i]),2),
                     "macd_histogram": round(float(macdArr[i]),2),
+
+                    "macd_line_long": round(float(difLongArr[i]),2),
+                    "macd_signal_long": round(float(deaLongArr[i]),2),
+                    "macd_histogram_long": round(float(macdLongArr[i]),2),
 
                     "boll_upper": round(float(bollUpperArr[i]),2),
                     "boll_mid": round(float(bollMidArr[i]),2),

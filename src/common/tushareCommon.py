@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260218"
+_VERSION = "20260331"
 
 import os
 import sys
@@ -51,6 +51,8 @@ def readTushareTokenFromEnv():
 TOKEN = readTushareTokenFromEnv()  # 请替换为您的 Tushare token
 ts.set_token(TOKEN)
 tusharePro = ts.pro_api()
+
+TUSHARE_TIME_LIMIT = 0.125 # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
 
 #common functions begin
 '''
@@ -121,6 +123,8 @@ def getStockMarketSummary(YMD=""):
             'sz_index': sz_index.to_dict('records') if not sz_index.empty else []
         }
 
+        misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
+
     except Exception as e:
         errMsg = f"errMsg:{str(e)}"
         print(f"{errMsg}, {traceback.format_exc()}")
@@ -137,6 +141,34 @@ def getStockList():
                           'area': 'area', 'industry': 'industry', 'list_date': 'ipo_date',
                           'market': 'market'}, inplace=True)
         result = df.to_dict(orient='records')
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        result = None
+    return result
+
+
+#获取所有股票的日k线数据,默认当前日期
+def getStockDailyData(YMD=""):
+    result = []
+    try:
+        if not YMD:
+            YMD = misc.getTime()[0:8]
+        # 获取所有股票的日k线数据
+        df = tusharePro.daily(trade_date=YMD)
+        stockDataList = df.to_dict(orient='records')
+        for stockData in stockDataList:
+            stockData['symbol'] = symbolWithMarket2symbole(stockData['ts_code'])
+            stockData['stock_code'] = stockData['symbol']
+            stockData['date'] = stockData['trade_date']
+            stockData['prev_close'] = stockData['pre_close']
+            stockData['pct_change'] = stockData['pct_chg']
+            stockData['volume'] = int(stockData['vol']*100)
+            stockData['datetime'] = "15:30:00" # 15:30:00 为交易收盘时间, 为了兼容sino数据
+            result.append(stockData)
+
+        misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
+
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
@@ -230,6 +262,9 @@ def getStockIndividualInfo(symbol):
         df = tusharePro.stock_company(ts_code=ts_code)
         if not df.empty:
             result = df
+
+        misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
+
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
@@ -250,11 +285,13 @@ def swGetIndustryList():
             # 获取行业成分股数量
             try:
                 cons = tusharePro.index_member(index_code=row['industry_code'])
+                misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
                 industryInfo['num_of_constituents'] = len(cons)
             except:
                 industryInfo['num_of_constituents'] = 0
             
             result.append(industryInfo)
+
             
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
@@ -340,6 +377,7 @@ def swGetIndexHistory(index_symbol, period="week", start_date="20200101"):
         indexHistory = tusharePro.index_daily(ts_code=index_symbol, 
                                       start_date=start_date,
                                       end_date=misc.getTime()[:8])
+        misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
         
         if not indexHistory.empty:
             indexHistory.rename(columns={'trade_date': 'date', 'ts_code': 'symbol',
@@ -402,6 +440,7 @@ def emGetIndustryList():
             # 获取板块成分股数量
             try:
                 cons = tusharePro.concept_detail(id=row['industry_code'])
+                misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
                 industryInfo['num_of_constituents'] = len(cons)
             except:
                 industryInfo['num_of_constituents'] = 0
@@ -483,6 +522,9 @@ def getStockBidAskData(symbol):
         market_info = identifyMarket(symbol)
         ts_code = market_info.get('ts_code', symbol)
         result = tusharePro.daily(ts_code=ts_code, start_date=misc.getTime()[:8], end_date=misc.getTime()[:8])
+
+        misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
+
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
@@ -495,84 +537,82 @@ def getStockBidAskData(symbol):
 获取历史数据
 symbol = "601088" #股票代码
 startDate = "20240101" endDate = "20240102", YMD格式
-period = "daily", "weekly", "monthly" #日k线、周k线、月k线
+period = "day", "week", "month" #日k线、周k线、月k线
 adjust = "qfq","hfq","" #前复权、后复权、不复权
 '''
-def gmGetHistroryData(symbol, startDate, endDate, period="daily", adjust=""):
+def getHistroryData(symbol, startDate, endDate, period="day", adjust=""):
     result = []
-    try:
-        if len(startDate) == 10:
-            startDate = startDate[:4] + startDate[5:7] + startDate[8:10]
-        if len(endDate) == 10:
-            endDate = endDate[:4] + endDate[5:7] + endDate[8:10]
-        
-        market_info = identifyMarket(symbol)
-        ts_code = market_info.get('ts_code', symbol)
-        
-        # 获取日线数据
-        df = tusharePro.daily(ts_code=ts_code, start_date=startDate, end_date=endDate)
-        
-        if not df.empty:
-            df.rename(columns={'trade_date': 'date', 'ts_code': 'ts_code',
-                             'open': 'open', 'close': 'close','pre_close':'prev_close',
-                             'high': 'high', 'low': 'low',
-                             'vol': 'volume', 'amount': 'amount',
-                             'pct_chg': 'pct_change', 'change': 'change'}, inplace=True)
-            
-            # 转换为周线或月线
+    try:      
+        if adjust:
+            result = None
+        else:
+            # 同一period格式转换
+            if period in ["daily"]:
+                period = "day"
             if period in ["weekly", "monthly"]:
-                df['date'] = pd.to_datetime(df['date'])
-                df.set_index('date', inplace=True)
-                
-                if period == "weekly":
-                    resampled = df.resample('W-FRI').agg({
-                        'open': 'first',
-                        'high': 'max',
-                        'low': 'min',
-                        'close': 'last',
-                        'volume': 'sum',
-                        'amount': 'sum',
-                        'pct_change': 'last',
-                        'change': 'last',
-                        'symbol': 'last'
-                    })
-                else:  # monthly
-                    resampled = df.resample('M').agg({
-                        'open': 'first',
-                        'high': 'max',
-                        'low': 'min',
-                        'close': 'last',
-                        'volume': 'sum',
-                        'amount': 'sum',
-                        'pct_change': 'last',
-                        'change': 'last',
-                        'symbol': 'last'
-                    })
-                
-                df = resampled.reset_index()
-            # 转换日期格式为YYYY-MM-DD
-            df['date'] = df['date'].str[:4] + '-' + df['date'].str[4:6] + '-' + df['date'].str[6:8]
-            # 转换为symbol格式
-            df['symbol'] = df['ts_code'].str.split('.').str[0]
-            result = df.to_dict(orient='records')
+                period = period[:-2]
             
+            if len(startDate) == 10:
+                startDate = startDate[:4] + startDate[5:7] + startDate[8:10]
+            if len(endDate) == 10:
+                endDate = endDate[:4] + endDate[5:7] + endDate[8:10]
+            
+            market_info = identifyMarket(symbol)
+            ts_code = market_info.get('ts_code', symbol)
+            
+            # 获取日线数据
+            df = tusharePro.daily(ts_code=ts_code, start_date=startDate, end_date=endDate)
+            
+            if not df.empty:
+                df.rename(columns={'trade_date': 'date', 'ts_code': 'ts_code',
+                                'open': 'open', 'close': 'close','pre_close':'prev_close',
+                                'high': 'high', 'low': 'low',
+                                'vol': 'volume', 'amount': 'amount',
+                                'pct_chg': 'pct_change', 'change': 'change'}, inplace=True)
+                
+                # 转换为周线或月线
+                if period in ["week", "month"]:
+                    df['date'] = pd.to_datetime(df['date'])
+                    df.set_index('date', inplace=True)
+                    
+                    if period == "week":
+                        resampled = df.resample('W-FRI').agg({
+                            'open': 'first',
+                            'high': 'max',
+                            'low': 'min',
+                            'close': 'last',
+                            'volume': 'sum',
+                            'amount': 'sum',
+                            'pct_change': 'last',
+                            'change': 'last',
+                            'symbol': 'last'
+                        })
+                    else:  # month
+                        resampled = df.resample('M').agg({
+                            'open': 'first',
+                            'high': 'max',
+                            'low': 'min',
+                            'close': 'last',
+                            'volume': 'sum',
+                            'amount': 'sum',
+                            'pct_change': 'last',
+                            'change': 'last',
+                            'symbol': 'last'
+                        })
+                    
+                    df = resampled.reset_index()
+                # 转换日期格式为YYYY-MM-DD
+                df['date'] = df['date'].str[:4] + '-' + df['date'].str[4:6] + '-' + df['date'].str[6:8]
+                # 转换为symbol格式
+                df['symbol'] = df['ts_code'].str.split('.').str[0]
+                result = df.to_dict(orient='records')
+        misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
         result = None
     return result
 
-
-#腾讯历史数据（使用Tushare替代）
-def txGetHistroryData(symbol, startDate, endDate, period="daily", adjust=""):
-    # 使用gmGetHistroryData替代
-    return gmGetHistroryData(symbol, startDate, endDate, period, adjust)
-
-
-#新浪历史数据（使用Tushare替代）
-def sinoGetHistroryData(symbol, startDate, endDate, period="daily", adjust=""):
-    # 使用gmGetHistroryData替代
-    return gmGetHistroryData(symbol, startDate, endDate, period, adjust)
 
 
 '''
@@ -592,7 +632,6 @@ def getHistoryMinData(symbol, startYMDHMS, endYMDHMS, period="1", adjust=""):
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
     return result
-
 
 '''
 日内分时数据

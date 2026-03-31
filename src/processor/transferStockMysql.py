@@ -7,7 +7,7 @@
 #Date: 2022-08-29
 #Description:   服务器侧数据存储Mysql部分
 
-_VERSION = "20260315"
+_VERSION = "20260331"
 
 _DEBUG=True
 
@@ -52,7 +52,7 @@ from config import basicSettings as settings
 _processorPID = os.getpid()
 
 if "_LOG" not in dir() or not _LOG:
-    _LOG = misc.setLogNew("TRANS", comGD._DEF_LOG_TRANS_MYSQL_LOG)
+    _LOG = misc.setLogNew("STOCK", comGD._DEF_LOG_TRANS_MYSQL_LOG)
 
 systemVersion = str(sys.version_info.major) + "." + str(sys.version_info.minor ) + "." + str(sys.version_info.micro )
 _LOG.info(f"PID:{_processorPID}, python version:{systemVersion}, main code version:{_VERSION}")
@@ -407,6 +407,10 @@ def writeUser2UserBasic(dataSet,operatorLoginID):
 
         #extend items begin
         extSessionID = dataSet.get("extSessionID") 
+        try:
+            extCapital = float(dataSet.get("extCapital")) 
+        except:
+            extCapital = 0.0 
         extStartYMDHMS = dataSet.get("extStartYMDHMS") 
         extLeaveYMDHMS = dataSet.get("extLeaveYMDHMS") 
         extJobPosition = dataSet.get("extJobPosition") 
@@ -490,6 +494,9 @@ def writeUser2UserBasic(dataSet,operatorLoginID):
             #extend items begin
             if extSessionID != currDataSet.get("extSessionID") and extSessionID:
                 saveSet["extSessionID"] = extSessionID
+            
+            if extCapital != currDataSet.get("extCapital"):
+                saveSet["extCapital"] = extCapital
 
             if extStartYMDHMS != currDataSet.get("extStartYMDHMS") and extStartYMDHMS:
                 saveSet["extStartYMDHMS"] = extStartYMDHMS
@@ -573,6 +580,7 @@ def writeUser2UserBasic(dataSet,operatorLoginID):
     
             #extend items begin
             saveSet["extSessionID"] = extSessionID
+            saveSet["extCapital"] = extCapital
             saveSet["extStartYMDHMS"] = extStartYMDHMS
             saveSet["extLeaveYMDHMS"] = extLeaveYMDHMS
             saveSet["extJobPosition"] = extJobPosition

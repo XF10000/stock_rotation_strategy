@@ -7,7 +7,7 @@
 #Date: 2020-8-5
 #Description:  生成标准的mysqlCommon 和RESTful 接口所用的增删改查
 
-_VERSION = "20260310"
+_VERSION = "20260324"
 
 _DEBUG=True
 #auto_increment_default_value = 10000
@@ -36,6 +36,8 @@ MYSQL_REG_KEYS_LIST = ["regID","regYMDHMS"]
 MYSQL_MODIFY_KEYS_LIST = ["modifyID","modifyYMDHMS"]
 MYSQL_FIELD_SPECIAL_KEYS_LIST = MYSQL_REG_KEYS_LIST + MYSQL_MODIFY_KEYS_LIST
 DELETE_FLAG_KEYS_LIST = ["delFlag"]
+
+mysql_numric_type_list = ["INT", "BIGINT", "SMALLINT", "TINYINT", "FLOAT", "DOUBLE", "DECIMAL"]
 
 mysql_reserved_words = [
     "ACCESSIBLE", "ACCOUNT", "ACTION", "ADD", "ADMIN", "AFTER", "AGAINST", 
@@ -154,6 +156,8 @@ mysql_reserved_words = [
     "WRITE", "X509", "XA", "XID", "XML", "XOR", "YEAR", "YEAR_MONTH", 
     "ZEROFILL", "ZONE"
 ]
+
+
 #common data end
 
 def decodeDataType(typeString):
@@ -735,35 +739,25 @@ def genUpdateCode(tableName, dataStructure):
             if isPrimaryKey: #prirmary key 数据不需要修改
                 continue
 
-            tempString = TS + TS + '{0} = dataSet.get("{0}") '.format(fieldName)
-            aList.append(tempString)
-            tempString = TS + TS + 'if {0}:'.format(fieldName)
-            aList.append(tempString)
-
-            if dataType in ["INT"]:
-                tempString = TS + TS + TS + 'try:'
+            if dataType in mysql_numric_type_list:
+                if dataType in ["DECIMAL"]:
+                    dataType = "DOUBLE" #按照double类型处理
+                dataTypeLower = dataType.lower()
+                tempString = TS + TS + 'try:'
                 aList.append(tempString)
-                tempString = TS + TS + TS + TS + '{0} = int(dataSet.get("{0}")) '.format(fieldName)
+                tempString = TS + TS + TS + '{0} = {1}(dataSet.get("{0}")) '.format(fieldName,dataTypeLower)
                 aList.append(tempString)
-                tempString = TS + TS + TS + TS + 'saveSet["{0}"] = {0}'.format(fieldName)
+                tempString = TS + TS + TS + 'saveSet["{0}"] = {0}'.format(fieldName)
                 aList.append(tempString)
-                tempString = TS + TS + TS + 'except:'
+                tempString = TS + TS + 'except:'
                 aList.append(tempString)
-                tempString = TS + TS + TS + TS + 'pass'.format(fieldName)
-                aList.append(tempString)
-            elif dataType in ["FLOAT"]:
-                aList.append("")
-                tempString = TS + TS + TS + 'try:'
-                aList.append(tempString)
-                tempString = TS + TS + TS + TS + '{0} = float(dataSet.get("{0}")) '.format(fieldName)
-                aList.append(tempString)
-                tempString = TS + TS + TS + TS + 'saveSet["{0}"] = {0}'.format(fieldName)
-                aList.append(tempString)
-                tempString = TS + TS + TS + 'except:'
-                aList.append(tempString)
-                tempString = TS + TS + TS + TS + 'pass'.format(fieldName)
+                tempString = TS + TS + TS + 'pass'.format(fieldName)
                 aList.append(tempString)
             else: #char type
+                tempString = TS + TS + '{0} = dataSet.get("{0}") '.format(fieldName)
+                aList.append(tempString)
+                tempString = TS + TS + 'if {0}:'.format(fieldName)
+                aList.append(tempString)
                 tempString = TS + TS + TS + 'saveSet["{0}"] = {0}'.format(fieldName)
                 aList.append(tempString)
 
@@ -1376,7 +1370,10 @@ def genCmdUpdateCode(tableName, dataStructure):
                 continue 
             if fieldName in MYSQL_FIELD_SPECIAL_KEYS_LIST:
                 continue
-            tempString = TS7 + 'if {0} != currDataSet.get("{0}") and {0}:'.format(fieldName)
+            if dataType in mysql_numric_type_list:
+                tempString = TS7 + 'if {0} != currDataSet.get("{0}"):'.format(fieldName)
+            else:
+                tempString = TS7 + 'if {0} != currDataSet.get("{0}") and {0}:'.format(fieldName)
             aList.append(tempString)
             tempString = TS8 + 'saveSet["{0}"] = {0}'.format(fieldName)
             aList.append(tempString)
