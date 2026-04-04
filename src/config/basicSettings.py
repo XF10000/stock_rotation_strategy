@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260331"
+_VERSION="20260404"
 
 
 import os
@@ -302,20 +302,23 @@ ROLE_CMD_LIST =\
     "gethomepagedata",
     #stock related begin
     "genusersessionid",
-    "stockinfoqry",
-    "technicalsignalqry",
-    "usertechnicalsignalqry",
-    "industryinfoqry",
+    "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
+    "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryqry",
     "technicalindicatorsqry",
     "historytechnicalindicatorqry",
+    "technicalsignalqry",
+    "usertechnicalsignalqry",
     "stockdividendqry",
     "industryhistoryqry",
     "balancesheetqry",
     "incomestatementsqry",
     "cashflowqry",
     "indicatorqry",
-    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry",
+    "userstocklistadd","userstocklistdel","userstocklistmodify","userstocklistqry","getuniqueuserstocklist",
+    "datachecklogadd","datachecklogqry",
+    "tradedayqry",
+    "maxmindataqry",
     #stock related end
     ], 
 "customer":[

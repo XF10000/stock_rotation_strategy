@@ -13,7 +13,7 @@
 # 3. 其他接口
 
 
-_VERSION="20260331"
+_VERSION="20260404"
 
 
 import os
@@ -1047,12 +1047,12 @@ class StockServer:
         return result
 
     #获取股票历史数据, date 格式 YYYYMMDD
-    def queryStockData(self,symbol,startDate="",endDate="",period="day",adjust="",limitNum=0):
+    def queryStockData(self,symbol="",date="",startDate="",endDate="",period="day",adjust="",limitNum=0):
         result = []
         try:
             if (startDate < endDate) or (startDate=="") or (endDate==""):
                 cmd = "stockhistoryqry"
-                querySet = {"symbol":symbol,"start_date":startDate,"end_date":endDate,"period":period,"adjust":adjust,"limitNum":limitNum}
+                querySet = {"symbol":symbol,"date":date,"start_date":startDate,"end_date":endDate,"period":period,"adjust":adjust,"limitNum":limitNum}
                 rtnData = self.query(cmd,querySet)
                 if rtnData and "data" in rtnData:
                     data = rtnData["data"]
@@ -1100,7 +1100,7 @@ class StockServer:
 
     #修改股票数据
     def modifyStockInfo(self,symbol,dataSet):
-        result = 0
+        result = -1
         try:
             cmd = "stockinfomodify"
             querySet = dataSet
@@ -1243,11 +1243,11 @@ class StockServer:
 
 
     #查询行业数据
-    def readIndustryInfo(self,industryCode=""):
+    def readIndustryInfo(self,industryCode="",industryName=""):
         result = {}
         try:
             cmd = "industryinfoqry"
-            querySet = {}
+            querySet = {"industry_code":industryCode,"industry_name":industryName}
             rtnData = self.query(cmd,querySet)
             if rtnData and "data" in rtnData:
                 data = rtnData["data"]
@@ -1263,11 +1263,11 @@ class StockServer:
         return result
 
     #获取某个指标的最大最小值(dataType="indicator","signal","industry","stock")
-    def getMaxMinData(self,dataType,columnName="date",period="day",adjust="",indicator=""):
+    def getMaxMinData(self,dataType,columnName="date",period="day",adjust="",indicator="",symbol=""):
         result = {}
         try:
             cmd = "maxmindataqry"
-            querySet = {"dataType":dataType,"columnName":columnName,"period":period,"adjust":adjust,"indicator":indicator}    
+            querySet = {"dataType":dataType,"columnName":columnName,"period":period,"adjust":adjust,"indicator":indicator,"symbol":symbol}    
             rtnData = self.query(cmd,querySet)
             if rtnData and "data" in rtnData:
                 data = rtnData["data"]

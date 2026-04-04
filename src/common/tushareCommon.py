@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260331"
+_VERSION = "20260403"
 
 import os
 import sys
@@ -141,6 +141,7 @@ def getStockList():
                           'area': 'area', 'industry': 'industry', 'list_date': 'ipo_date',
                           'market': 'market'}, inplace=True)
         result = df.to_dict(orient='records')
+        misc.time.sleep(TUSHARE_TIME_LIMIT*10) # 避免对Tushare API的频繁请求, tushare 限制一分钟50次
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"
@@ -156,14 +157,18 @@ def getStockDailyData(YMD=""):
             YMD = misc.getTime()[0:8]
         # 获取所有股票的日k线数据
         df = tusharePro.daily(trade_date=YMD)
+        # 转换日期格式为YYYY-MM-DD
+        df['date'] = df['trade_date'].str[:4] + '-' + df['trade_date'].str[4:6] + '-' + df['trade_date'].str[6:8]
         stockDataList = df.to_dict(orient='records')
         for stockData in stockDataList:
             stockData['symbol'] = symbolWithMarket2symbole(stockData['ts_code'])
             stockData['stock_code'] = stockData['symbol']
-            stockData['date'] = stockData['trade_date']
+            stockData['date'] = stockData['date']
             stockData['prev_close'] = stockData['pre_close']
             stockData['pct_change'] = stockData['pct_chg']
-            stockData['volume'] = int(stockData['vol']*100)
+            stockData['price_change'] = stockData['change']
+            stockData['volume'] = int(stockData['vol'] * 100)
+            stockData['amount'] = stockData['amount'] * 1000 #tushare数据是千元，转换为元
             stockData['datetime'] = "15:30:00" # 15:30:00 为交易收盘时间, 为了兼容sino数据
             result.append(stockData)
 
@@ -383,7 +388,9 @@ def swGetIndexHistory(index_symbol, period="week", start_date="20200101"):
             indexHistory.rename(columns={'trade_date': 'date', 'ts_code': 'symbol',
                                        'open': 'open', 'close': 'close',
                                        'high': 'high', 'low': 'low',
-                                       'vol': 'volume', 'amount': 'amount'}, inplace=True)
+                                       'amount': 'amount'}, inplace=True)
+            indexHistory['volume'] = int(indexHistory['vol'].astype(float) * 100) #tushare数据是手，转换为股数
+            indexHistory['amount'] = indexHistory['amount'].astype(float) * 1000 #tushare数据是千元，转换为元
             
             # 转换为周线或月线
             if period in ["week", "month"]:
@@ -425,92 +432,6 @@ def swGetIndexHistory(index_symbol, period="week", start_date="20200101"):
         errMsg = f"{e},{traceMsg}"
     return result
 
-
-#获取东方财富行业数据（Tushare使用概念板块）
-def emGetIndustryList():
-    result = []
-    try:
-        # 获取概念板块列表
-        concept_list = tusharePro.concept()
-        concept_list.rename(columns={'code': 'industry_code', 'name': 'industry_name',
-                                   'src': 'source'}, inplace=True)
-        
-        for _, row in concept_list.iterrows():
-            industryInfo = row.to_dict()
-            # 获取板块成分股数量
-            try:
-                cons = tusharePro.concept_detail(id=row['industry_code'])
-                misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
-                industryInfo['num_of_constituents'] = len(cons)
-            except:
-                industryInfo['num_of_constituents'] = 0
-            
-            result.append(industryInfo)
-            
-    except Exception as e:
-        traceMsg = traceback.format_exc().strip("")
-        errMsg = f"{e},{traceMsg}"
-    return result
-
-
-#获取概念板块包含的股票
-def emGetIndustryConstituents(industry_code):
-    result = []
-    try:
-        cons_df = tusharePro.concept_detail(id=industry_code)
-        if not cons_df.empty:
-            cons_df.rename(columns={'id': 'industry_code', 'ts_code': 'symbol',
-                                  'name': 'stock_name', 'concept_name': 'industry_name'}, inplace=True)
-            result = cons_df.to_dict(orient='records')
-    except Exception as e:
-        traceMsg = traceback.format_exc().strip("")
-        errMsg = f"{e},{traceMsg}"
-    return result
-
-
-#获取概念板块股票信息数据
-def emGetStockInfoData():
-    result = {}
-    try:
-        # 获取概念板块数据
-        industryList = emGetIndustryList()
-        for industryInfo in industryList:
-            industry_code = industryInfo["industry_code"]
-            
-            # 获取板块包含的股票
-            stockList = emGetIndustryConstituents(industry_code)
-            
-            for stockInfo in stockList:
-                item = {}
-                symbol = stockInfo["symbol"]
-                
-                # 提取纯数字代码
-                if '.' in symbol:
-                    symbol_num = symbol.split('.')[0]
-                else:
-                    symbol_num = symbol
-
-                # 股票信息
-                item["symbol"] = symbol_num
-                item["ts_code"] = symbol
-                item["stock_name"] = stockInfo["stock_name"]
-
-                # 行业信息
-                item["industry_name_em"] = industryInfo["industry_name"]
-                item["industry_code_em"] = industry_code
-                item["industry_type_em"] = "概念板块"
-
-                # 时间信息
-                item["YMDMHS"] = misc.getTime()
-                
-                result[symbol_num] = item
-                
-    except Exception as e:
-        traceMsg = traceback.format_exc().strip("")
-        errMsg = f"{e},{traceMsg}"
-    return result
-
-
 #common functions end
 
 #realtime data begin
@@ -521,7 +442,15 @@ def getStockBidAskData(symbol):
         # 这里使用日线数据替代
         market_info = identifyMarket(symbol)
         ts_code = market_info.get('ts_code', symbol)
-        result = tusharePro.daily(ts_code=ts_code, start_date=misc.getTime()[:8], end_date=misc.getTime()[:8])
+        df = tusharePro.daily(ts_code=ts_code, start_date=misc.getTime()[:8], end_date=misc.getTime()[:8])
+        if not df.empty:
+            df.rename(columns={'trade_date': 'date', 'ts_code': 'ts_code',
+                            'open': 'open', 'close': 'close','pre_close':'prev_close',
+                            'high': 'high', 'low': 'low','amount': 'amount',
+                            'pct_chg': 'pct_change', 'change': 'change'}, inplace=True)
+            df["volume"] = int(df["vol"].astype(float) * 100) #tushare数据是手，转换为股数
+            df["amount"] = df["amount"].astype(float) * 1000 #tushare数据是千元，转换为元
+
 
         misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
 
@@ -566,9 +495,10 @@ def getHistroryData(symbol, startDate, endDate, period="day", adjust=""):
             if not df.empty:
                 df.rename(columns={'trade_date': 'date', 'ts_code': 'ts_code',
                                 'open': 'open', 'close': 'close','pre_close':'prev_close',
-                                'high': 'high', 'low': 'low',
-                                'vol': 'volume', 'amount': 'amount',
+                                'high': 'high', 'low': 'low','amount': 'amount',
                                 'pct_chg': 'pct_change', 'change': 'change'}, inplace=True)
+                df["volume"] = int(df["vol"].astype(float) * 100) #tushare数据是手，转换为股数
+                df["amount"] = df["amount"].astype(float) * 1000 #tushare数据是千元，转换为元
                 
                 # 转换为周线或月线
                 if period in ["week", "month"]:
@@ -718,6 +648,9 @@ def getDividendDetails(symbol, indicator="", date=""):
 def test():
     # 测试各个函数
     print("测试开始...")
+    YMD = misc.getTime()[0:8]
+    YMD = misc.getPassday(2)
+    dataList = getStockDailyData(YMD)
     
     # 设置测试参数
     test_symbol = "601088"
@@ -725,13 +658,13 @@ def test():
     end_date = "2024-01-31"
     
     # # 测试股票列表
-    # print("1. 测试股票列表...")
+    print("1. 测试股票列表...")
     # stock_list = getStockList()
     # print(f"获取到 {len(stock_list)} 只股票")
     
     # 测试历史数据
     # print("2. 测试历史数据...")
-    # hist_data = gmGetHistroryData(test_symbol, start_date, end_date, period="daily")
+    hist_data = getHistroryData(test_symbol, start_date, end_date, period="daily")
     # print(f"获取到 {len(hist_data)} 条历史数据")
     
     # 测试行业数据

@@ -110,10 +110,26 @@ def calcTechnicalSignals():
                 #不更新现金(特殊类型)
                 continue
             for period in ["day","week"]: #不计算月数据,只计算日数据和周数据
-                for adjust in ["","hfq","qfq"]:
+                for adjust in [""]:
                     techSignal = calcOneTechnicalSignal(symbol,period,adjust)
                     pass
             
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+def testGetTechnicalSignal():
+    result = {}
+    try:
+        symbolList = ["601318","300487","300498","300596"]
+        for symbol in symbolList:
+            techSignal = ylwzStockServer.readUserTechnicalSignal(symbol)
+            for signal in techSignal:
+                period = signal["period"]
+                if period == "day":
+                    print(signal["date"],signal["stock_name"],signal["action_cn"],signal["indicator"],signal["period"],signal["description"])
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -124,7 +140,7 @@ def calcTechnicalSignals():
 def regularDataUpdater():
     result = {}
     try:
-
+        # testGetTechnicalSignal()
         _LOG.info(f"I: 计算技术指标信号 ... ")
         rtn = calcTechnicalSignals()
         _LOG.info(f"I: 计算技术指标信号 ...结束 ")

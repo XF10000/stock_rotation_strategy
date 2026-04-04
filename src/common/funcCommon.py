@@ -1688,7 +1688,7 @@ def genExtSessionID():
     result = ""
     try:
         currUUID = str(uuid.uuid4()).replace("-","") 
-        result = "YLWZ_" + currUUID
+        result = "ylwz_" + currUUID
     except:
         pass
     return result

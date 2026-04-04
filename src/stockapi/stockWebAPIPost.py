@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260329"
+_VERSION="20260404"
 
 
 import os
@@ -2888,6 +2888,111 @@ def funcGetOmcInfo(CMD,dataSet,sessionIDSet):
 
 
 #stock related begin
+#生成用户会话ID
+def funcGenUserSessionID(CMD, dataSet, sessionIDSet):
+    result = {}
+    errCode = "B0"
+    # rtnCMD = CMD[0:2]+errCode
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+    msgData = {}
+
+    try:
+        
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+
+        openID = sessionIDSet.get("openID", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+        sessionID = dataSet.get("sessionID")
+        roleName = sessionIDSet.get("roleName")
+
+        msgKey = "account"
+        url = ACCOUNT_SERVICE_URL
+        headers = {'content-type': 'application/json'}
+
+        #首先获取用户信息, 从 mysql 中获取用户信息
+        userInfo = getUserInfoMysql(tempUserID)
+        if userInfo:
+            loginID = userInfo.get("loginID","")
+            currExtSessionID = userInfo.get("extSessionID","")
+
+            #删除原来的会话ID
+            if currExtSessionID:
+                comDB.delUserSession(currExtSessionID)
+
+            #生成新的会话ID
+            requestData = {}
+            requestData["CMD"] = "A2A0" #只能修改自己
+            requestData["sessionID"] = sessionID #会话ID
+            requestData["loginID"] = loginID #需要修改的人员的ID
+            
+            #生成扩展会话ID
+            extSessionID = comFC.genExtSessionID()
+            requestData["extSessionID"] = extSessionID
+
+            if errCode == "B0":
+                try:
+                    payload = misc.jsonDumps(requestData)
+                    r = requests.post(url, data = payload, headers = headers)
+
+                    if r.status_code == 200:
+                        rtnData = misc.jsonLoads(r.text)
+                        msgData = rtnData.get("MSG",{})
+                        errCode = msgData.get("errCode","B0")
+
+                        #保存数据到mysql
+                        saveSet = {}
+                        saveSet["data"] = dataSet
+                        saveSet["rtnData"] = rtnData
+                        saveSet["CMD"] = CMD
+
+                        saveSet["loginID"] = tempUserID #操作人员的loginID
+
+                        rtn = comDB.putMsg2Queue(comGD._DEF_STOCK_MYSQL_TITLE,saveSet)
+                        if _DEBUG:
+                            _LOG.info(f"D: DEBUG,rtn:{rtn},saveSet:{saveSet}")
+
+                        #更新用户会话ID, redis
+                        saveSet = {}
+                        saveSet["loginID"] = loginID
+                        saveSet["roleName"] = roleName
+                        # saveSet["ruleInfo"] = "{}"
+                        saveSet["mobileValidation"] = userInfo.get("mobileValidation","")
+                        saveSet["PIDValidation"] = userInfo.get("PIDValidation","")
+                        saveSet["activeFlag"] = userInfo.get("activeFlag","")
+                        rtn = comDB.setSessionInfo(extSessionID,saveSet,0)
+
+                        rtnData["extSessionID"] = extSessionID
+
+                        if _DEBUG:
+                            _LOG.info(f"D: DEBUG,rtn:{rtn},saveSet:{saveSet}")
+
+                    else:
+                        errCode = "CI"
+                except:
+                    pass
+        else:
+            errCode = "B8"
+
+        result = rtnData
+
+        rtnSet = comFC.rtnMSG(errCode, rtnField, lang,msgKey)
+        msgData = rtnSet["MSG"]
+        result["CMD"] = CMD
+        result["msgKey"] = msgKey
+        result["MSG"] = msgData
+        result["errCode"] = errCode
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERROR", "ERR_GENERAL")
+        result = rtnSet  
+       
+    return result
+
 
 #行业信息增加代码
 def funcIndustryInfoAdd(CMD,dataSet,sessionIDSet):
@@ -3457,6 +3562,8 @@ def funcStockInfoAdd(CMD,dataSet,sessionIDSet):
                     saveSet["industry_name"] = dataSet.get("industry_name", "") 
                     saveSet["industry_name_sw"] = dataSet.get("industry_name_sw", "") 
                     saveSet["industry_name_em"] = dataSet.get("industry_name_em", "") 
+                    saveSet["area"] = dataSet.get("area", "") 
+                    saveSet["market"] = dataSet.get("market", "") 
                     saveSet["ipo_date"] = dataSet.get("ipo_date", "") 
                     saveSet["label1"] = dataSet.get("label1", "") 
                     saveSet["label2"] = dataSet.get("label2", "") 
@@ -3600,9 +3707,11 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
             if errCode == "B0": #
                 #data validation check
                 dataValidFlag = True
-
-                id = dataSet.get("id") 
-                stock_code = dataSet.get("stock_code") 
+                symbol = dataSet.get("symbol")
+                if symbol:
+                    stock_code = symbol
+                else:
+                    stock_code = dataSet.get("stock_code") 
                 stock_name = dataSet.get("stock_name") 
                 total_shares_outstanding = dataSet.get("total_shares_outstanding") 
                 public_float = dataSet.get("public_float") 
@@ -3613,6 +3722,8 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
                 industry_name = dataSet.get("industry_name") 
                 industry_name_sw = dataSet.get("industry_name_sw") 
                 industry_name_em = dataSet.get("industry_name_em") 
+                area = dataSet.get("area") 
+                market = dataSet.get("market") 
                 ipo_date = dataSet.get("ipo_date") 
                 label1 = dataSet.get("label1") 
                 label2 = dataSet.get("label2") 
@@ -3625,9 +3736,11 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
                 if dataValidFlag:
                     #当前记录获取
                     recID = dataSet.get("id", "")
-
                     tableName = comMysql.tablename_convertor_stock_info()
-                    currDataList = comMysql.query_stock_info(tableName,recID)
+                    if recID:
+                        currDataList = comMysql.query_stock_info(tableName,id=recID)
+                    else:
+                        currDataList = comMysql.query_stock_info(tableName,stock_code=stock_code)
 
                     if len(currDataList) == 1:
                         currDataSet = currDataList[0]
@@ -3669,6 +3782,12 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
 
                             if industry_name_em != currDataSet.get("industry_name_em") and industry_name_em:
                                 saveSet["industry_name_em"] = industry_name_em
+
+                            if area != currDataSet.get("area") and area:
+                                saveSet["area"] = area
+
+                            if market != currDataSet.get("market") and market:
+                                saveSet["market"] = market
 
                             if ipo_date != currDataSet.get("ipo_date") and ipo_date:
                                 saveSet["ipo_date"] = ipo_date
@@ -3870,6 +3989,8 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                             aSet["industry_name"] = currDataSet.get("industry_name","")
                             aSet["industry_name_sw"] = currDataSet.get("industry_name_sw","")
                             aSet["industry_name_em"] = currDataSet.get("industry_name_em","")
+                            aSet["area"] = currDataSet.get("area","")
+                            aSet["market"] = currDataSet.get("market","")
                             aSet["ipo_date"] = currDataSet.get("ipo_date","")
                             aSet["label1"] = currDataSet.get("label1","")
                             aSet["label2"] = currDataSet.get("label2","")
@@ -9825,7 +9946,7 @@ def funcUserStockListAdd(CMD,dataSet,sessionIDSet):
                     saveSet["userID"] = userID
                     saveSet["username"] = dataSet.get("username", "") 
                     saveSet["user_plan"] = dataSet.get("user_plan", "default") 
-                    saveSet["plan_status"] = dataSet.get("plan_status", comGD._COSNT_YES) 
+                    saveSet["plan_status"] = dataSet.get("plan_status", comGD._CONST_YES) 
                     saveSet["history_update"] = dataSet.get("history_update", "") 
                     saveSet["history_start_date"] = dataSet.get("history_start_date", "") 
                     saveSet["history_end_date"] = dataSet.get("history_end_date", "") 
@@ -10164,6 +10285,8 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                     stock_code = symbol
                 else:
                     stock_code = dataSet.get("stock_code", "") 
+                
+                searchKey = dataSet.get("searchKey","")
 
                 user_plan = dataSet.get("user_plan","")
                 plan_status = dataSet.get("plan_status","")
@@ -10195,6 +10318,8 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                         indexKeyDataSet["stock_code"] = stock_code
                     if user_plan:
                         indexKeyDataSet["user_plan"] = user_plan
+                    if searchKey:
+                        indexKeyDataSet["searchKey"] = searchKey    
                     if plan_status:
                         indexKeyDataSet["plan_status"] = plan_status
                     if history_update:
@@ -10233,7 +10358,7 @@ def funcUserStockListQry(CMD,dataSet,sessionIDSet):
                                 currDataList = comMysql.query_user_stock_list(tableName,id,mode = mode,limitNum=limitNum)
                             else:
                                 tableName = comMysql.tablename_convertor_user_stock_list()
-                                currDataList = comMysql.query_user_stock_list(tableName,userID=userID,stock_code=stock_code,
+                                currDataList = comMysql.query_user_stock_list(tableName,userID=userID,stock_code=stock_code,searchKey=searchKey,
                                                     user_plan=user_plan,plan_status=plan_status,history_update=history_update,
                                                     history_start_date=history_start_date,history_end_date=history_end_date,
                                                     limitNum=limitNum)
@@ -11984,16 +12109,29 @@ def funcUserTechnicalSignalQry(CMD,dataSet,sessionIDSet):
                                 #aSet["houseID"] = currDataSet.get("houseID", "")
 
                             aSet["id"] = currDataSet.get("id","")
+                            aSet["userID"] = currDataSet.get("userID","")
+                            aSet["username"] = currDataSet.get("username","")
                             aSet["stock_code"] = currDataSet.get("stock_code","")
+                            aSet["stock_name"] = currDataSet.get("stock_name","")
                             aSet["date"] = currDataSet.get("date","")
-                            aSet["action"] = currDataSet.get("action","")
-                            aSet["adjust"] = currDataSet.get("adjust","")
-                            aSet["period"] = currDataSet.get("period","")
+                            action = currDataSet.get("action","")
+                            aSet["action"] = action
+                            action_cn = comGD._DEF_STOCK_ACTION_CN.get(action,action)
+                            aSet["action_cn"] = action_cn
+                            adjust = currDataSet.get("adjust","")
+                            aSet["adjust"] = adjust
+                            aSet["adjust_cn"] = comGD._DEF_STOCK_ADJUST_CN.get(adjust,adjust)
+                            period = currDataSet.get("period","")
+                            aSet["period"] = period
+                            aSet["period_cn"] = comGD._DEF_STOCK_PERIOD_CN.get(period,period)
                             aSet["indicator"] = currDataSet.get("indicator","")
                             aSet["subtype"] = currDataSet.get("subtype","")
                             aSet["description"] = currDataSet.get("description","")
                             aSet["description2"] = currDataSet.get("description2","")
-                            aSet["market_trend"] = currDataSet.get("market_trend","")
+                            market_trend = currDataSet.get("market_trend","")
+                            market_trend_cn = comGD._DEF_STOCK_SIGNAL_MARKET_TREND_CN.get(market_trend,market_trend)
+                            aSet["market_trend"] = market_trend
+                            aSet["market_trend_cn"] = market_trend_cn
                             aSet["market_status"] = currDataSet.get("market_status","")
                             calc_result = currDataSet.get("calc_result","")
                             try:
@@ -12074,11 +12212,11 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
 
             if errCode == "B0": #
                 #获取查询输入参数
-                stock_code = dataSet.get("stock_code", "")
-                if stock_code:
-                    symbol = stock_code
+                symbol = dataSet.get("symbol", "")
+                if symbol:
+                    stock_code = symbol
                 else:
-                    symbol = dataSet.get("symbol")
+                    stock_code = dataSet.get("stock_code")
                 #直接给出表名
                 tableName = dataSet.get("tableName", "")
                 if not tableName:
@@ -12119,9 +12257,9 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
                 
                 if dataValidFlag:
                     if tableName in ["technical_signal"]:
-                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,symbol=symbol,period=period,adjust=adjust,indicator=indicator)
+                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,stock_code=stock_code,period=period,adjust=adjust,indicator=indicator)
                     else:
-                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,symbol=symbol)
+                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,stock_code=stock_code)
                     rtnData["data"] = currDataSet
 
                     result = rtnData
@@ -12219,6 +12357,8 @@ urlPathMap = {
     "getomcinfo":funcGetOmcInfo,
 
     #stock related begin
+    "genusersessionid":funcGenUserSessionID,
+
     "industryinfoadd":funcIndustryInfoAdd,
     "industryinfodel":funcIndustryInfoDel,
     "industryinfomodify":funcIndustryInfoModify,

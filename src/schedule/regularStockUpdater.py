@@ -124,7 +124,7 @@ def compareStockDateWithTradeDate(stockHistoryDataList,tradeDateList):
 
 
 #把缺失的日期按照年, 分成多个日期列表
-def split2PhaseDateList(dateList):
+def split2PhaseDateList(dateList,symbol=""):
     fillDateList = []
     try:
         aList = []
@@ -141,10 +141,23 @@ def split2PhaseDateList(dateList):
                 aList = []
             aList.append(item)
         if aList:
+            addFlag = True
+            aList.sort()
             phaseStartDate = aList[0]
             phaseEndDate = aList[-1]
-            aSet = {"startDate":phaseStartDate, "endDate":phaseEndDate}
-            fillDateList.append(aSet)
+            combinationYMD = phaseStartDate.replace("-","") + "-" + phaseEndDate.replace("-","")
+            # 可能是股票停牌, 这个以后再考虑是否需要处理
+            # if combinationYMD in ["20250804-20250815","20220426-20220512","20211129-20211210"]:
+            #     #20250804-20250815,20220426-20220512 日期范围, 不更新,没有数据
+            #     addFlag = False
+            # elif phaseStartDate >= phaseEndDate:
+            #     addFlag = False
+            # else:
+            #     pass
+           
+            if addFlag:
+                aSet = {"startDate":phaseStartDate, "endDate":phaseEndDate}
+                fillDateList.append(aSet)
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -251,6 +264,11 @@ def modifyDataCheckLog(recID,logSet):
 def updateStockBasicInfo():
     result = 0
     try:
+        currWeekDay = misc.weekDay()
+        if currWeekDay.wday != 6: #0-4 周一到周五, 5-6 周六周日
+            return result
+
+        #只在周日检查股票基本信息是否存在
         misInfoSymbolList = []
         stockInfoDataList = ylwzStockServer.queryStockInfo()
         for stockInfo in stockInfoDataList:
@@ -258,8 +276,22 @@ def updateStockBasicInfo():
             stock_name = stockInfo.get("stock_name","")
             industry_code = stockInfo.get("industry_code","")
             industry_name = stockInfo.get("industry_name","")
+            if industry_name and not industry_code:
+                #有行业名称, 但是行业代码不存在, 从数据库查询
+                industryInfoSet = ylwzStockServer.readIndustryInfo(industryName=industry_name)
+                for industry_code, industryInfo in industryInfoSet.items():
+                    if industry_name == industryInfo.get("industry_name",""):
+                        #找到行业代码,修改股票基本信息
+                        saveSet = {}
+                        saveSet["industry_code"] = industry_code
+                        rtn = ylwzStockServer.modifyStockInfo(symbol,saveSet)
+                        if rtn == 0:
+                            result = 1
+                            _LOG.info(f"I: 股票基本信息更新, 股票代码:{symbol}, 行业代码:{industry_code}, 行业名称:{industry_name}")
+                        break
+
             #检查股票名称和行业代码是否存在
-            if not stock_name or not industry_code:
+            if not stock_name:
                 misInfoSymbolList.append(symbol)
         #如果有缺失的股票基本信息,则自动增加和更新
         if misInfoSymbolList:
@@ -363,7 +395,7 @@ def checkSingleStockExist(symbol,stock_name):
 def updateSingleStockCloseData(symbol,stockData,rightDate):
     result = 0
     try:
-        _LOG.info(f"I: 更新单只股票历史数据开始... 股票代码:{symbol}, 日期:{rightDate}")
+        _LOG.info(f"I: 更新单只股票当日数据开始... 股票代码:{symbol}, 日期:{rightDate}")
         # rightDate  = getRightStockDate()
         # #如果时间不是收盘时间,则不更新
         # if rightDate:
@@ -401,7 +433,7 @@ def updateSingleStockCloseData(symbol,stockData,rightDate):
 
             if uploadSuccess:
                 result += 1
-                _LOG.info(f"I: 更新单只股票历史数据完成... 股票代码:{symbol}")
+                _LOG.info(f"I: 更新单只股票当日数据完成... 股票代码:{symbol}")
 
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
@@ -958,13 +990,16 @@ def updateDayStockFullData(symbol,updateStartDate,updateEndDate,tradeDateList):
             stockHistoryDataList = ylwzStockServer.queryStockData(symbol, updateStartDate, updateEndDate,period=period,adjust=adjust)
             if not stockHistoryDataList:
                 _LOG.warning(f"W: 获取股票历史数据失败... 股票:{symbol},周期:{period},调整:{adjust}")
-                continue 
-            startDate = stockHistoryDataList[0].get("date")
-            endDate = stockHistoryDataList[-1].get("date")
-            newTradeDataList = getTradeDateList(startDate, endDate,tradeDateList)
+            # startDate = stockHistoryDataList[0].get("date")
+            # if startDate > updateStartDate: #如果股票历史数据开始日期大于更新开始日期, 则需要更新
+                # _LOG.info(f"I: - 股票代码:{symbol},现有数据开始日期:{startDate},晚于更新开始日期:{updateStartDate},需要更新股票开始日期")
+                # startDate = updateStartDate
+            # endDate = stockHistoryDataList[-1].get("date")
+            #tradeDataList 就应该是updateStartDate 到 updateEndDate 之间的交易日期列表
+            newTradeDataList = getTradeDateList(updateStartDate, updateEndDate,tradeDateList)
             compareDateList = compareStockDateWithTradeDate(stockHistoryDataList,newTradeDataList)
 
-            phaseDateList = split2PhaseDateList(compareDateList)
+            phaseDateList = split2PhaseDateList(compareDateList,symbol)
             if phaseDateList:
                 #有数据缺失, 则需要更新股票历史数据
                 for phaseData in phaseDateList:
@@ -972,9 +1007,9 @@ def updateDayStockFullData(symbol,updateStartDate,updateEndDate,tradeDateList):
                     phaseStartYMD = phaseStartDate.replace("-","")
                     phaseEndDate = phaseData.get("endDate")
                     phaseEndYMD = phaseEndDate.replace("-","")
-                    if phaseStartYMD >= phaseEndYMD:
-                        continue
-                
+                    # if phaseStartYMD >= phaseEndYMD:
+                    #     continue
+               
                     newStockDataList = comStock.getHistoryStockData(symbol, phaseStartYMD, phaseEndYMD,period=period,adjust=adjust)
 
                     if newStockDataList:
@@ -986,7 +1021,7 @@ def updateDayStockFullData(symbol,updateStartDate,updateEndDate,tradeDateList):
 
                         result = True
                     else:
-                        _LOG.warning(f"E: 更新股票日数据告警  - 股票代码:{symbol}, 日期类别:{period},调整方式:{adjust}, 开始日期:{phaseStartDate}, 结束日期:{phaseEndDate}, 无数据返回")
+                        _LOG.warning(f"W: 更新股票日数据告警  - 股票代码:{symbol}, 日期类别:{period},调整方式:{adjust}, 开始日期:{phaseStartDate}, 结束日期:{phaseEndDate}, 无数据返回")
 
         _LOG.info(f"I: 更新股票日数据  - 股票代码:{symbol}, 日数据更新完成")
 
@@ -1024,7 +1059,7 @@ def updateWeekStockFullData(symbol):
                     continue
                 #获取日数据
                 weekFirstDate = misc.YMD2HumanDate(weekFirstYMD)
-                weekLastDate = misc.humanDate2YMD(weekLastYMD)
+                weekLastDate = misc.YMD2HumanDate(weekLastYMD)
                 currDayData = ylwzStockServer.queryStockData(symbol, weekFirstDate, weekLastDate,period="day",adjust=adjust)
                 df = pd.DataFrame(currDayData)
                 df = comStock.convertDaily2Weekly(df)
@@ -1047,7 +1082,8 @@ def updateWeekStockFullData(symbol):
 
 
 #检查并更新股票历史数据
-def checkReadStockFullData(symbol,stockConfig, tradeDateList):
+# def checkReadStockFullData(symbol,stockConfig, tradeDateList):
+def checkReadStockFullData(symbol, tradeDateList):
     result = False
     try:
         #这个是默认的股票历史数据更新结束日期, 超过这个日期, 都是每天更新
@@ -1077,19 +1113,19 @@ def checkReadStockFullData(symbol,stockConfig, tradeDateList):
 
         updateDataFlag = updateDayStockFullData(symbol,updateStartDate,updateEndDate,tradeDateList)
 
-        if updateDataFlag:            
-            #更新股票配置
-            queryData = {}
-            queryData["id"] = stockConfig.get("id","")
-            queryData["history_update"] = comGD._CONST_YES
-            queryData["history_start_date"] = updateStartDate
-            queryData["history_end_date"] = updateEndDate
-            cmd = "userstocklistmodify"
-            rtnData = ylwzStockServer.query(cmd,stockConfig)
-            if rtnData and "data" in rtnData:
-                data = rtnData["data"]
-                if data.get("errCode") == "B0":
-                    result = True
+        # if updateDataFlag:            
+        #     #更新股票配置
+        #     queryData = {}
+        #     queryData["id"] = stockConfig.get("id","")
+        #     queryData["history_update"] = comGD._CONST_YES
+        #     queryData["history_start_date"] = updateStartDate
+        #     queryData["history_end_date"] = updateEndDate
+        #     cmd = "userstocklistmodify"
+        #     rtnData = ylwzStockServer.query(cmd,stockConfig)
+        #     if rtnData and "data" in rtnData:
+        #         data = rtnData["data"]
+        #         if data.get("errCode") == "B0":
+        #             result = True
 
         #周六或者周日,更新周数据
         updateDataFlag = updateWeekStockFullData(symbol)
@@ -1125,17 +1161,18 @@ def updateStockHistoryData(currYMD):
             for symbol in allUserStockList:
                 if symbol == comGD._DEF_STOCK_PORTFOLIO_CASH_NAME:
                     continue
-                #获取股票配置数据
-                stockConfigList = ylwzStockServer.readUserStockList(symbol)
-                if not stockConfigList:
-                    continue
-                stockConfig = stockConfigList[0]
-                rtn = checkReadStockFullData(symbol,stockConfig,tradeDateList)
+                # #获取股票配置数据
+                # stockConfigList = ylwzStockServer.readUserStockList(symbol=symbol)
+                # if not stockConfigList:
+                #     continue
+                # stockConfig = stockConfigList[0]
+                # rtn = checkReadStockFullData(symbol,stockConfig,tradeDateList)
+                rtn = checkReadStockFullData(symbol,tradeDateList)
                 if rtn:
-                    _LOG.info(f"  - 股票代码:{symbol}, 股票名称:{stockConfig['stock_name']}, 检查结果:存在")
+                    _LOG.info(f"  - 股票代码:{symbol}, 检查结果:存在")
                     result += 1
                 else:
-                    _LOG.info(f"  - 股票代码:{symbol}, 股票名称:{stockConfig['stock_name']}, 检查结果:不存在")
+                    _LOG.info(f"  - 股票代码:{symbol}, 检查结果:不存在")
 
             _LOG.info(f"I: 开始检查股票信息是否存在... 结束 ")
         pass
@@ -1171,7 +1208,7 @@ def uploadOneStockTechnicalSignal(symbol,techSignal,period,adjust):
             currIndicator = comTS.getIndicatorName(signalType)
             if not currIndicator:
                 continue
-            maxminData = ylwzStockServer.getMaxMinData(dataType,period=period,adjust=adjust,indicator=currIndicator)
+            maxminData = ylwzStockServer.getMaxMinData(dataType,period=period,adjust=adjust,indicator=currIndicator,symbol=symbol)
             # min_date = maxminData.get("min_data","")
             lastDate = maxminData.get("max_data","")
             if _DEBUG:
@@ -1273,7 +1310,7 @@ def regularDataUpdater():
         if rightDate:
             #更新交易日数据
             _LOG.info(f"I: 更新交易日数据 ...{rightDate}... ")
-            rtn = tradeDayDataUpdater(rightDate)
+            # rtn = tradeDayDataUpdater(rightDate)
             _LOG.info(f"I: 更新交易日数据 ...{rightDate}...结束 ")
 
         _LOG.info(f"I: 其他数据的计算和更新 ... ")

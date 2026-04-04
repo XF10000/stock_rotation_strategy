@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260331"
+_VERSION="20260404"
 
 #add src directory
 import os
@@ -2203,6 +2203,8 @@ def create_stock_info(tableName):
     "industry_name VARCHAR(48) COMMENT '行业名称',",
     "industry_name_sw VARCHAR(48) COMMENT '行业申银万国',",
     "industry_name_em VARCHAR(48) COMMENT '行业东方财富',",
+    "area VARCHAR(40) COMMENT '地点',",
+    "market VARCHAR(10) COMMENT '市场区域',",
     "ipo_date VARCHAR(10) COMMENT '上市时间',",
     "label1 VARCHAR(32) NULL,",
     "label2 VARCHAR(32) NULL,",
@@ -2308,6 +2310,10 @@ def insert_stock_info(tableName,dataSet):
 
         saveSet["industry_name_em"] = dataSet.get("industry_name_em", "") 
 
+        saveSet["area"] = dataSet.get("area", "") 
+
+        saveSet["market"] = dataSet.get("market", "") 
+
         saveSet["ipo_date"] = dataSet.get("ipo_date", "") 
 
         saveSet["label1"] = dataSet.get("label1", "") 
@@ -2396,6 +2402,14 @@ def update_stock_info(tableName,id,dataSet):
         industry_name_em = dataSet.get("industry_name_em") 
         if industry_name_em:
             saveSet["industry_name_em"] = industry_name_em
+
+        area = dataSet.get("area") 
+        if area:
+            saveSet["area"] = area
+
+        market = dataSet.get("market") 
+        if market:
+            saveSet["market"] = market
 
         ipo_date = dataSet.get("ipo_date") 
         if ipo_date:
@@ -2849,10 +2863,8 @@ def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",sta
     sqlStr = f"SELECT {columns} FROM {tableName}"
 
     try:
-
         try:
             id = int(id)
-
         except:
             id = 0
 
@@ -2891,7 +2903,7 @@ def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",sta
                     sqlStr += " WHERE date < %s"
                 valuesList.append(end_date)
 
-        sqlStr =  sqlStr + " ORDER BY date" 
+        sqlStr =  sqlStr + " ORDER BY date" # 按日期排序,从小到大排序
 
         if limitNum > 0:
             sqlStr += " LIMIT {0}".format(limitNum)
@@ -9005,7 +9017,7 @@ def update_user_stock_list(tableName,id,dataSet):
 
 
 #user_stock_list 查询记录
-def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", user_plan = "default" ,plan_status = "Y",history_update = "",
+def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", searchKey = "", user_plan = "default" ,plan_status = "Y",history_update = "",
                             history_start_date="", history_end_date="", delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
@@ -9036,6 +9048,14 @@ def query_user_stock_list(tableName,id = "0", userID = "", stock_code = "", user
                 else:
                     sqlStr =  sqlStr + " WHERE user_plan = %s" 
                 valuesList.append(user_plan)
+            if searchKey:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND (stock_code LIKE %s OR stock_name LIKE %s ) " 
+                else:
+                    sqlStr =  sqlStr + " WHERE (stock_code LIKE %s OR stock_name LIKE %s ) " 
+                aKey = "%" + searchKey + "%"
+                valuesList.append(aKey)
+                valuesList.append(aKey)
             if plan_status:
                 if valuesList:
                     sqlStr =  sqlStr + " AND plan_status = %s" 
@@ -10038,7 +10058,7 @@ def query_technical_signal(tableName,id = "0", stock_code="", sortFlag="DESC", a
     return result
 
 #technical_signal and user_stock_list查询记录
-def query_user_technical_signal(stock_code="", sortFlag="DESC", action="", date="", start_date="", end_date="",readFlag="", adjust="", period="", indicator="", userID = "", limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+def query_user_technical_signal(stock_code="",stock_name="", sortFlag="DESC", action="", date="", start_date="", end_date="",readFlag="", adjust="", period="", indicator="", userID = "", limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     tableName = tablename_convertor_technical_signal()
     tableName2 = tablename_convertor_user_stock_list()
@@ -10050,59 +10070,41 @@ def query_user_technical_signal(stock_code="", sortFlag="DESC", action="", date=
         if stock_code:
             sqlStr += " AND T1.stock_code = %s"
             valuesList.append(stock_code)
+        if stock_name:
+            sqlStr += " AND T2.stock_name = %s"
+            valuesList.append(stock_name)
         if action:
             sqlStr += " AND action = %s"
             valuesList.append(action)
         if readFlag:
-            if valuesList:
-                sqlStr += " AND readFlag = %s"
-            else:
-                sqlStr += " WHERE readFlag = %s"
+            sqlStr += " AND readFlag = %s"
             valuesList.append(readFlag)
         if adjust:
-            if valuesList:
-                sqlStr += " AND adjust = %s"
-            else:
-                sqlStr += " WHERE adjust = %s"
+            sqlStr += " AND adjust = %s"
             valuesList.append(adjust)
         if period:
-            if valuesList:
-                sqlStr += " AND period = %s"
-            else:
-                sqlStr += " WHERE period = %s"
+            sqlStr += " AND period = %s"
             valuesList.append(period)
         if indicator:
-            if valuesList:
-                sqlStr += " AND indicator = %s"
-            else:
-                sqlStr += " WHERE indicator = %s"
-            valuesList.append(indicator)
-        
+            sqlStr += " AND indicator = %s"
+            valuesList.append(indicator)       
+
         if date:
-            if valuesList:
-                sqlStr += " AND date = %s"
-            else:
-                sqlStr += " WHERE date = %s"
+            sqlStr += " AND date = %s"
             valuesList.append(date)
-       
+
         if start_date:
-            if valuesList:
-                sqlStr += " AND date >= %s"
-            else:
-                sqlStr += " WHERE date >= %s"
+            sqlStr += " AND date >= %s"
             valuesList.append(start_date)
         if end_date:
-            if valuesList:
-                sqlStr += " AND date < %s"
-            else:
-                sqlStr += " WHERE date < %s"
+            sqlStr += " AND date < %s"
             valuesList.append(end_date)
 
         if sortFlag:
-            sqlStr += " ORDER BY date DESC"
+            sqlStr += f" ORDER BY date {sortFlag}"
 
         if limitNum > 0:
-            sqlStr += " LIMIT {0}".format(limitNum)
+            sqlStr += f" LIMIT {limitNum}"
 
         rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
         if rtn > 0:
@@ -10122,15 +10124,15 @@ def query_user_technical_signal(stock_code="", sortFlag="DESC", action="", date=
 
 
 # 查询表数据中date的最大值和最小值(第一个值和最后一个值)
-def query_min_max_data(tableName,column="date",symbol="",period="",adjust="",indicator=""):
+def query_min_max_data(tableName,column="date",stock_code="",period="",adjust="",indicator=""):
     result = {}
     valuesList = []
     sqlStr = f"SELECT min({column}) as min_data, max({column}) as max_data FROM {tableName}"
 
     try:
-        if symbol:
-            sqlStr += " WHERE symbol = %s"
-            valuesList.append(symbol)
+        if stock_code:
+            sqlStr += " WHERE stock_code = %s"
+            valuesList.append(stock_code)
         if period:
             if valuesList:
                 sqlStr += " AND period = %s"

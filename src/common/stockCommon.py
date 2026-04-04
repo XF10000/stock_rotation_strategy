@@ -15,7 +15,7 @@
 # 4. 股票筛选器(包括,量能筛选器, 价格筛选器等)
 
 
-_VERSION="20260331"
+_VERSION="20260402"
 
 
 import os
@@ -464,21 +464,40 @@ def getHistoryStockData(symbol,startYMD,endYMD,period="",adjust=""):
 def getStockBasicInfo(symbol=""):
     result = {}
     try:
-        #首先获取申银万国股票的基本信息(申银万国)
-        swStockInfoDict = comAK.swGetStockInfoData()
-        #其次获取所有股票的基本信息(东方财富)
-        emStockInfoDict = comAK.emGetStockInfoData()
-        for symbol, stockInfo in swStockInfoDict.items():
-            #根据东方财富数据, 填充东方财富行业信息
-            if symbol in emStockInfoDict:
-                stockInfo["industry_name_em"] = emStockInfoDict[symbol]["industry_name_em"]
-                stockInfo["industry_code_em"] = emStockInfoDict[symbol]["industry_code_em"]
-            else:
-                pass
-                #pass
-            result[symbol] = stockInfo
+        stockBasicInfoSet = {}
+        #首先从tushare获取股票基本信息
+        stockList = comTS.getStockList()
+        if stockList:
+            for stockInfo in stockList:
+                stock_code = stockInfo["symbol"]
+                saveSet={
+                    "symbol":stock_code,
+                    "industry_name":stockInfo["industry_name"],
+                    "area":stockInfo["area"],
+                    "market":stockInfo["market"],
+                    "ipo_date":stockInfo["ipo_date"],
+                }
+                stockBasicInfoSet[stock_code] = saveSet
+        else:
+            #获取申银万国股票的基本信息(申银万国)
+            swStockInfoDict = comAK.swGetStockInfoData()
+            #其次获取所有股票的基本信息(东方财富)
+            emStockInfoDict = comAK.emGetStockInfoData()
+            for stock_code, stockInfo in swStockInfoDict.items():
+                #根据东方财富数据, 填充东方财富行业信息
+                if stock_code in emStockInfoDict:
+                    stockInfo["industry_name_em"] = emStockInfoDict[stock_code]["industry_name_em"]
+                    stockInfo["industry_code_em"] = emStockInfoDict[stock_code]["industry_code_em"]
+                else:
+                    pass
+                    #pass
+            stockBasicInfoSet[stock_code] = stockInfo
         if symbol:
-            result = result[symbol]
+            #只返回一支股票的基本信息
+            result[symbol] = stockBasicInfoSet.get(symbol,{})
+        else:
+            result = stockBasicInfoSet
+
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")
@@ -2838,7 +2857,7 @@ def generateDetailedTradingRecords(backtestData,backtestBuySellResult,backtestPr
 
 def test():
     # 示例
-    # data = getStockBasicInfo()
+    data = getStockBasicInfo()
     # rtn = saveStockBasicInfo(data)
     # data = readStockBasicInfo()
     # YMD = "20260125"

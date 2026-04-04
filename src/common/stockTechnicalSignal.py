@@ -8,7 +8,7 @@
 #Description:   技术指标计算 - 计算主要技术指标代表的含义
 # 1. macd的金叉/死叉,顶背离/底背离
 
-__VERSION="20260331"
+__VERSION="20260402"
 
 import os
 import sys
@@ -57,6 +57,8 @@ def getIndicatorName(signalType):
         indicator = "boll"
     elif signalType == "kdjSignals":
         indicator = "kdj"
+    elif signalType == "rsiSignals":
+        indicator = "rsi"
     return indicator
 
 #stock technical signal -- class 
@@ -167,7 +169,7 @@ class MACDAnalyzer:
                     description = f"{date},{self.symbol}:观望信号;"
                     pass
                 finalSignals[YMD]["suggestion"] = crossSuggestion
-                finalSignals[YMD]["subtype"][0:_DEF_SUBTYPE_LEN]
+                finalSignals[YMD]["subtype"] = finalSignals[YMD]["subtype"][0:_DEF_SUBTYPE_LEN]
                 description = description[:_DEF_DESCRIPTION_LEN]
                 finalSignals[YMD]["description"] = description
 
@@ -484,10 +486,10 @@ class KDJAnalyzer:
     """kdj类 - 计算kdj信号"""
     symbol = ""
     #kdj判断指标阈值
-    overboughtThreshold = 80
-    oversoldThreshold = 20
-    jExtremeHighThreshold = 100
-    jExtremeLowThreshold = 0
+    _DEF_KDJ_OVERBOUGHT_THRESOLD = 80
+    _DEF_KDJ_OVERSOLD_THRESHOLD = 20
+    _DEF_KDJ_J_EXTREME_HIGH_THRESHOLD = 100
+    _DEF_KDJ_J_EXTREME_LOW_THRESHOLD = 0
     #kdj数据
     kdjData = None
     kdjSignals = {}
@@ -506,8 +508,9 @@ class KDJAnalyzer:
             #合并所有信号,暂时没有其他的指标信号
             finalSignals = {}
             for YMD,item in kdjSignals.items():
-                date = misc.YMD2Hour(YMD)
+                date = item.get("date","")
                 #填充信号数据
+                finalSignals[YMD] = {}
                 finalSignals[YMD]["symbol"] = self.symbol
                 finalSignals[YMD]["date"] = date
                 finalSignals[YMD]["indicator"] = "kdj"
@@ -552,16 +555,16 @@ class KDJAnalyzer:
 
                 if suggestion == "buy":
                     finalSignals[YMD]["subtype"] = "买入信号"
-                    description = f"{date},{self.symbol}:买入信号,{oldDescription};市场趋势状态:{marketTrendCN},其他关键指标:超买/超卖:{overCN},金叉/死叉:{crossCN},J值极端高位:{jExtremeHighCN},J值极端低位:{jExtremeLowCN},J值上穿:{jTurnUpCN}"
+                    description = f"{date},{self.symbol}-[短线指标]:买入信号,{oldDescription};市场趋势状态:{marketTrendCN},其他关键指标:超买/超卖:{overCN},金叉/死叉:{crossCN},J值极端高位:{jExtremeHighCN},J值极端低位:{jExtremeLowCN},J值上穿:{jTurnUpCN}"
                 elif suggestion == "sell":
                     finalSignals[YMD]["subtype"] = "卖出信号"
-                    description = f"{date},{self.symbol}:死叉交叉（卖出信号）;市场趋势状态:{marketTrendCN},其他关键指标:超买/超卖:{overCN},金叉/死叉:{crossCN},J值极端高位:{jExtremeHighCN},J值极端低位:{jExtremeLowCN},J值上穿:{jTurnUpCN}"
+                    description = f"{date},{self.symbol}-[短线指标]:死叉交叉（卖出信号）;市场趋势状态:{marketTrendCN},其他关键指标:超买/超卖:{overCN},金叉/死叉:{crossCN},J值极端高位:{jExtremeHighCN},J值极端低位:{jExtremeLowCN},J值上穿:{jTurnUpCN}"
                 else:
                     finalSignals[YMD]["subtype"] = "观望信号"
-                    description = f"{date},{self.symbol}:观望信号;"
+                    description = f"{date},{self.symbol}-[短线指标]:观望信号;"
                     pass
                 finalSignals[YMD]["suggestion"] = suggestion
-                finalSignals[YMD]["subtype"][0:_DEF_SUBTYPE_LEN]
+                finalSignals[YMD]["subtype"] = finalSignals[YMD]["subtype"][0:_DEF_SUBTYPE_LEN]
                 description = description[:_DEF_DESCRIPTION_LEN]
                 finalSignals[YMD]["description"] = description
 
@@ -569,7 +572,7 @@ class KDJAnalyzer:
                 detail = item
                 finalSignals[YMD]["detail"] = detail
                 
-            result["finalSignals"] = kdjSignals
+            result["finalSignals"] = finalSignals
             self.kdjSignals = result
             pass
         except Exception as e:
@@ -600,12 +603,12 @@ class KDJAnalyzer:
             df['deathCross'] = (df['kdj_k'] < df['kdj_d']) & (df['kdj_k'].shift(1) >= df['kdj_d'].shift(1))
 
             #判断超买超卖区域
-            df['overbought'] = (df['kdj_k'] > self.overboughtThreshold)
-            df['oversold'] = (df['kdj_k'] < self.oversoldThreshold) 
+            df['overbought'] = (df['kdj_k'] > self._DEF_KDJ_OVERBOUGHT_THRESOLD)
+            df['oversold'] = (df['kdj_k'] < self._DEF_KDJ_OVERSOLD_THRESHOLD) 
 
             #判断J值极端情况
-            df['jExtremeHigh'] = df['kdj_j'] > self.jExtremeHighThreshold
-            df['jExtremeLow'] = df['kdj_j'] < self.jExtremeLowThreshold 
+            df['jExtremeHigh'] = df['kdj_j'] > self._DEF_KDJ_J_EXTREME_HIGH_THRESHOLD
+            df['jExtremeLow'] = df['kdj_j'] < self._DEF_KDJ_J_EXTREME_LOW_THRESHOLD 
 
             # 生成买入信号
             # 条件1：多头趋势 + 超卖区金叉
@@ -666,6 +669,7 @@ class KDJAnalyzer:
             errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
             return False
         return result
+
 
 # 布林带类,负责计算布林带指标
 """
@@ -751,12 +755,13 @@ class BollingerBandAnalyzer:
                     finalSignals[YMD]["symbol"] = self.symbol
                     finalSignals[YMD]["indicator"] = "boll"
                     finalSignals[YMD]["subtype"] = "真转势"
-                    finalSignals[YMD]["subtype"][0:_DEF_SUBTYPE_LEN]
+                    finalSignals[YMD]["subtype"] = finalSignals[YMD]["subtype"][0:_DEF_SUBTYPE_LEN]
                     finalSignals[YMD]["suggestion"] = "hold"
+                    bollBandDataString = f"收盘价:{item['close']} [低轨:{item['boll_lower']} 中轨:{item['boll_mid']} 上轨:{item['boll_upper']}]"
                     marketTrend = trendSignal.get("marketTrend","neutral")
                     marketTrendCN = _DEF_BOLL_MARKET_TREND_CN.get(marketTrend,"neutral")
                     finalSignals[YMD]["marketTrend"] = marketTrend
-                    description = f"{date},{self.symbol}:真转势信号;市场趋势状态:{marketTrendCN}"
+                    description = f"{date},{self.symbol}:真转势信号;市场趋势状态:{marketTrendCN},{bollBandDataString}"
                     description = description[:_DEF_DESCRIPTION_LEN]
                     finalSignals[YMD]["description"] = description
 
@@ -792,6 +797,7 @@ class BollingerBandAnalyzer:
                     finalSignals[YMD]["symbol"] = self.symbol
                     finalSignals[YMD]["indicator"] = "boll"
                     finalSignals[YMD]["suggestion"] = "buy"
+                    bollBandDataString = f"收盘价:{item['close']} [低轨:{item['boll_lower']} 中轨:{item['boll_mid']} 上轨:{item['boll_upper']}]"
                     marketTrend = trendSignal.get("marketTrend","neutral")
                     marketTrendCN = _DEF_BOLL_MARKET_TREND_CN.get(marketTrend,"neutral")
                     subType = "长线入场"
@@ -800,13 +806,13 @@ class BollingerBandAnalyzer:
                         # 增加信号数据
                         finalSignals[YMD]["subtype"] += f";{subType}"
                         description = finalSignals[YMD]["description"]
-                        description += f";长线可以入场(回踩中轨+缩量),建议买入"
+                        description += f";长线可以入场(回踩中轨+缩量),建议买入,{bollBandDataString}"
                         description = description[:_DEF_DESCRIPTION_LEN]
                         finalSignals[YMD]["description"] = description
                     else:
                         # 新增信号数据
                         finalSignals[YMD]["subtype"] = subType
-                        description = f"{date},{self.symbol}:长线可以入场(回踩中轨+缩量),建议买入;市场趋势状态:{marketTrendCN}"
+                        description = f"{date},{self.symbol}:长线可以入场(回踩中轨+缩量),建议买入;市场趋势状态:{marketTrendCN},{bollBandDataString}"
                         description = description[:_DEF_DESCRIPTION_LEN]
                         finalSignals[YMD]["description"] = description
                         finalSignals[YMD]["marketTrend"] = marketTrend
@@ -841,6 +847,7 @@ class BollingerBandAnalyzer:
                     finalSignals[YMD]["symbol"] = self.symbol
                     finalSignals[YMD]["indicator"] = "boll"
                     finalSignals[YMD]["suggestion"] = "sell"
+                    bollBandDataString = f"收盘价:{item['close']} [低轨:{item['boll_lower']} 中轨:{item['boll_mid']} 上轨:{item['boll_upper']}]" 
                     marketTrend = trendSignal.get("marketTrend","neutral")
                     marketTrendCN = _DEF_BOLL_MARKET_TREND_CN.get(marketTrend,"neutral")
                     subType = "建议止损"
@@ -849,13 +856,13 @@ class BollingerBandAnalyzer:
                         # 增加信号数据
                         finalSignals[YMD]["subtype"] += f";{subType}"
                         description = finalSignals[YMD]["description"]
-                        description += f";止损(连续跌破中轨),建议卖出"
+                        description += f";止损(连续跌破中轨),建议卖出,{bollBandDataString}"
                         description = description[:_DEF_DESCRIPTION_LEN]
                         finalSignals[YMD]["description"] = description
                     else:
                         # 新增信号数据
                         finalSignals[YMD]["subtype"] = subType
-                        description = f"{date},{self.symbol}:止损(连续跌破中轨),建议卖出;市场趋势状态:{marketTrendCN}"
+                        description = f"{date},{self.symbol}:止损(连续跌破中轨),建议卖出;市场趋势状态:{marketTrendCN},{bollBandDataString}"
                         description = description[:_DEF_DESCRIPTION_LEN]
                         finalSignals[YMD]["description"] = description
                         finalSignals[YMD]["marketTrend"] = marketTrend
@@ -890,6 +897,7 @@ class BollingerBandAnalyzer:
                     finalSignals[YMD]["symbol"] = self.symbol
                     finalSignals[YMD]["indicator"] = "boll"
                     finalSignals[YMD]["suggestion"] = "hold"
+                    bollBandDataString = f"收盘价:{item['close']} [低轨:{item['boll_lower']} 中轨:{item['boll_mid']} 上轨:{item['boll_upper']}]"
                     marketTrend = trendSignal.get("marketTrend","neutral")
                     marketTrendCN = _DEF_BOLL_MARKET_TREND_CN.get(marketTrend,"neutral")
                     subType = "变盘"
@@ -899,11 +907,11 @@ class BollingerBandAnalyzer:
                         finalSignals[YMD]["subtype"] += f";{subType}"
                         description = finalSignals[YMD]["description"]
                         if turningPointType == "up":
-                            description += f";变盘(上),建议买入"
+                            description += f";变盘(上),建议买入,{bollBandDataString}"
                         elif turningPointType == "down":
-                            description += f";变盘(下),建议卖出"
+                            description += f";变盘(下),建议卖出,{bollBandDataString}"
                         else:
-                            description += f";变盘(未知),建议保持"
+                            description += f";变盘(未知),建议保持,{bollBandDataString}"
                         description = description[:_DEF_DESCRIPTION_LEN]
                         finalSignals[YMD]["description"] = description
                     else:
@@ -916,8 +924,8 @@ class BollingerBandAnalyzer:
                         elif turningPointType == "range":
                             description = f"变盘(震荡),建议保持持仓"
                         else:
-                            description = f"变盘(未知),建议观望"
-                        description = f"{date},{self.symbol}:{description};市场趋势状态:{marketTrendCN}"
+                            description = f"变盘(未知),建议观望,{bollBandDataString}"
+                        description = f"{date},{self.symbol}:{description};市场趋势状态:{marketTrendCN},{bollBandDataString}"
                         description = description[:_DEF_DESCRIPTION_LEN]
                         finalSignals[YMD]["description"] = description
                         finalSignals[YMD]["marketTrend"] = marketTrend
@@ -1012,6 +1020,10 @@ class BollingerBandAnalyzer:
                 saveSet["isUptrend"] = row["isUptrend"]
                 saveSet["isDowntrend"] = row["isDowntrend"]
                 saveSet["isRange"] = row["isRange"]
+                saveSet["close"] = row["close"]
+                saveSet["boll_lower"] = row["boll_lower"]
+                saveSet["boll_mid"] = row["boll_mid"]
+                saveSet["boll_upper"] = row["boll_upper"]
                 result[currentYMD] = saveSet
             pass
         except Exception as e:
@@ -1069,6 +1081,10 @@ class BollingerBandAnalyzer:
                     saveSet["isFalseBreak_5d"] = row["isFalseBreak_5d"]
                     saveSet["isRecoverVol"] = row["isRecoverVol"]
                     saveSet["isUptrend"] = row["isUptrend"]
+                    saveSet["close"] = row["close"]
+                    saveSet["boll_lower"] = row["boll_lower"]
+                    saveSet["boll_mid"] = row["boll_mid"]
+                    saveSet["boll_upper"] = row["boll_upper"]
                     result[currentYMD] = saveSet
             pass
         except Exception as e:
@@ -1124,6 +1140,10 @@ class BollingerBandAnalyzer:
                     saveSet["isMidDowntrend_3d"] = row["isMidDowntrend_3d"]
                     saveSet["isTrueRevesal"] = row["isTrueRevesal"]
                     saveSet["retestMidNoVol"] = row["retestMidNoVol"]
+                    saveSet["close"] = row["close"]
+                    saveSet["boll_lower"] = row["boll_lower"]
+                    saveSet["boll_mid"] = row["boll_mid"]
+                    saveSet["boll_upper"] = row["boll_upper"]
                     result[currentYMD] = saveSet
             pass
         except Exception as e:
@@ -1184,6 +1204,10 @@ class BollingerBandAnalyzer:
                     saveSet["isPullback_mid"] = row["isPullback_mid"]
                     saveSet["isVolShrink"] = row["isVolShrink"]
                     saveSet["isBullBackgroud"] = row["isBullBackgroud"]
+                    saveSet["close"] = row["close"]
+                    saveSet["boll_lower"] = row["boll_lower"]
+                    saveSet["boll_mid"] = row["boll_mid"]
+                    saveSet["boll_upper"] = row["boll_upper"]
                     result[currentYMD] = saveSet
             pass
         except Exception as e:
@@ -1226,6 +1250,10 @@ class BollingerBandAnalyzer:
                     saveSet["consucutiveBelow"] = row["consucutiveBelow"]
                     saveSet["isVolHigh"] = row["isVolHigh"]
                     saveSet["isMidTurnDown"] = row["isMidTurnDown"]
+                    saveSet["close"] = row["close"]
+                    saveSet["boll_lower"] = row["boll_lower"]
+                    saveSet["boll_mid"] = row["boll_mid"]
+                    saveSet["boll_upper"] = row["boll_upper"]
                     result[currentYMD] = saveSet
             pass
         except Exception as e:
@@ -1273,11 +1301,314 @@ class BollingerBandAnalyzer:
                     if turningPointDownAlert:
                         turningPointType = "down"
                     saveSet = {'date':currentDate,'turningPointType':turningPointType}
+                    saveSet["close"] = row["close"]
+                    saveSet["boll_lower"] = row["boll_lower"]
+                    saveSet["boll_mid"] = row["boll_mid"]
+                    saveSet["boll_upper"] = row["boll_upper"]
                     result[currentYMD] = saveSet
             pass
         except Exception as e:
             errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         
+        return result
+
+"""
+RSI类 - 计算RSI信号
+RSI（相对强弱指数）是投资中非常经典的技术指标，主要用于衡量价格涨跌的力度和速度，帮助判断超买或超卖状态。
+
+数值范围：0 – 100
+常用周期：14天（也可根据交易风格调整，如短线用7天或9天）
+核心逻辑：通过比较一定时期内的平均收盘涨数和平均收盘跌数，来评估多空力量。
+
+这是RSI最基础、最常用的功能。
+超买区（RSI > 70）： 说明价格近期上涨过快，买方力量可能已过度释放，价格有回调或下跌的风险。此时应考虑卖出或减仓。
+超卖区（RSI < 30）： 说明价格近期下跌过猛，卖方力量可能已衰竭，价格有反弹或上涨的可能。此时应考虑买入或加仓。
+注意：在强劲的牛市中，RSI可能长时间停留在70以上；在深度的熊市中，也可能长时间低于30。此时直接反向操作风险较大，需要结合其他方法。
+
+顶背离（看跌信号）：
+价格：创出新高（比前一个高点高）
+RSI：未能创出新高，反而形成更低的峰顶
+含义：上涨动能不足，是强烈的卖出信号。
+底背离（看涨信号）：
+价格：创出新低（比前一个低点低）
+RSI：未能创出新低，反而形成更高的谷底
+含义：下跌动能衰竭，是强烈的买入信号。
+
+2. 中轴线（50线）判断强弱
+RSI > 50：市场处于强势区域，多头主导，可优先考虑买入或持有。
+RSI < 50：市场处于弱势区域，空头主导，应谨慎或考虑卖出。
+RSI 上穿50： 可视为短期走强的初步信号。
+RSI 下破50： 可视为短期走弱的初步信号。
+
+3. 形态分析
+像分析K线形态一样，你也可以分析RSI线的形态。
+头肩顶/底、双重顶/底 等经典形态出现在RSI上时，其突破信号比K线形态有时更早出现。
+例如：RSI形成“头肩顶”形态并跌破颈线，是卖出信号。
+
+4. 金叉与死叉（结合两条不同周期的RSI线）
+你可以设置两条RSI线，例如：
+快线：周期为6天的 RSI（更敏感）
+慢线：周期为12或24天的 RSI（更平滑）
+金叉（买入信号）：快线从下方向上穿越慢线，通常发生在超卖区或从低位回升时。
+死叉（卖出信号）：快线从上方向下穿越慢线，通常发生在超买区或从高位回落时。
+
+四、实际操作流程示例
+假设你准备交易一只股票，可以按以下步骤综合判断：
+看大局：确认50线的位置。若RSI在50上方，只考虑做多（买入），反之亦然。
+找机会：等待RSI进入超卖区（<30），或出现底背离形态。
+等确认：此时不要立即买入。等待RSI向上突破30或金叉出现，或价格K线出现反转信号（如锤子线、阳包阴）。
+定买卖：
+买入：信号确认后入场。
+卖出：当RSI进入超买区（>70）、出现顶背离、或死叉时卖出。
+设止损：买入时，可将止损设在底背离对应的价格低点下方。
+
+五、RSI的局限性
+没有完美的指标，RSI也有几个主要缺点：
+钝化：在单边暴涨或暴跌行情中，RSI会长期停留在超买/超卖区，导致过早卖出或买入，错过主升浪/主跌浪。
+震荡市更有效：RSI在震荡行情中表现极佳，但在强趋势行情中表现一般。
+需要确认：RSI是先行或同步指标，最好结合成交量、均线、MACD 等其他工具共同验证。
+
+总结:
+判断方法	买入信号	卖出信号
+超买/超卖	RSI < 30 且开始掉头向上	RSI > 70 且开始掉头向下
+背离	价格新低，RSI未新低（底背离）	价格新高，RSI未新高（顶背离）
+中轴线	RSI 从下向上突破 50	RSI 从上向下跌破 50
+金叉/死叉	快线上穿慢线（尤其在50以下）	快线下穿慢线（尤其在50以上）
+
+核心建议：不建议单独使用RSI，把它当作一个“提醒工具”或“过滤器”效果会更好。比如，只在RSI显示超卖时才考虑买入，只在RSI显示超买时才考虑卖出，然后结合趋势线和成交量等做最终决策。
+
+"""
+class RSIAnalyzer:
+    """RSI类 - 计算RSI信号"""
+    symbol = ""
+    #判断指标阈值
+    _DEF_RSI_OVERBOUGHT_THRESHOLD = 70 #默认超买阈值
+    _DEF_RSI_OVERSOLD_THRESHOLD = 30 #默认超卖阈值
+    
+    #RSI数据
+    rsiData = None
+    rsiSignals = {}
+    rsiKeyList = ["date","ma_60","rsi_6","rsi_12","rsi_24","open","close","high","low","volume","amount","turnover_rate"]
+    
+    def __init__(self,symbol,df=None):
+        self.symbol = symbol
+        if df is not None:
+            #取部分字段数据
+            self.rsiData = df[self.rsiKeyList]
+    
+    def calc(self):
+        """计算RSI指标"""
+        result = {}
+        try:
+            pass
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        return result
+
+    #检查超买超卖状态
+    def check_overbought_oversold(self,rsiCol="rsi_12"):
+        """
+        检查超买/超卖状态
+        
+        参数:
+            rsiCol (str): RSI指标列名，默认"rsi_12"
+        
+        返回:
+            添加了超买/超卖信号的DataFrame
+        """
+        result = {}
+        try:
+            df = self.rsiData
+
+            # 初始化超买超卖信号列
+            overboughtCol = f'{rsiCol}_overbought'
+            overboughtCrossCol = f'{rsiCol}_overbought_cross'
+            oversoldCol = f'{rsiCol}_oversold'
+            oversoldCrossCol = f'{rsiCol}_oversold_cross'
+
+            # 超买信号：RSI > 超买阈值 且从上方下穿
+            df[overboughtCol] = (df[rsiCol] > self._DEF_RSI_OVERBOUGHT_THRESHOLD)
+            df[overboughtCrossCol] = (df[rsiCol] > self._DEF_RSI_OVERBOUGHT_THRESHOLD) & (df[rsiCol].shift(1) <= self._DEF_RSI_OVERBOUGHT_THRESHOLD)
+            
+            # 超卖信号：RSI < 超卖阈值 且从下方上穿
+            df[oversoldCol] = (df[rsiCol] < self._DEF_RSI_OVERSOLD_THRESHOLD)
+            df[oversoldCrossCol] = (df[rsiCol] < self._DEF_RSI_OVERSOLD_THRESHOLD) & (df[rsiCol].shift(1) >= self._DEF_RSI_OVERSOLD_THRESHOLD)
+            
+            # 转换为字典
+            for index, row in df.iterrows():
+                currentDate = row['date']
+                currentYMD = currentDate.replace('-','')
+                #判断超买超卖状态
+                overbought = row[overboughtCol]
+                overboughtCross = row[overboughtCrossCol]
+                oversold = row[oversoldCol]
+                oversoldCross = row[oversoldCrossCol]
+                if overbought:
+                    saveSet = {'date':currentDate}
+                    # 超买信号
+                    saveSet["overbought"] = overbought
+                    saveSet["overboughtCross"] = overboughtCross
+                    # 超卖信号
+                    saveSet["oversold"] = oversold
+                    saveSet["oversoldCross"] = oversoldCross
+                    # 原始数据
+                    saveSet["close"] = row["close"]
+                    saveSet[rsiCol] = row[rsiCol]
+
+                    result[currentYMD] = saveSet
+
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        return result
+
+    #检查背离信号
+    def check_divergence(self, rsiCol="rsi_12",lookback = 20):
+        """
+        检查背离信号（顶背离和底背离）
+        
+        参数:
+            df: 包含价格和RSI数据的DataFrame
+            price_col: 价格列名
+            rsi_col: RSI列名
+            lookback: 回溯周期（默认20）
+        
+        返回:
+            添加了背离信号的DataFrame
+        """
+        result = {}
+        try:
+            df = self.rsiData
+
+            # 初始化背离列
+            bearishDivergenceCol = f'{rsiCol}_bearish_divergence'
+            bullishDivergenceCol = f'{rsiCol}_bullish_divergence'
+            # 初始化背离信号列
+            df[bearishDivergenceCol] = False
+            df[bullishDivergenceCol] = False
+            
+            for i in range(lookback, len(df)):
+                # 获取窗口内的数据
+                price_window = df["close"].iloc[i-lookback:i+1]
+                rsi_window = df[rsiCol].iloc[i-lookback:i+1]
+                
+                # 当前价格和RSI
+                current_price = price_window.iloc[-1]
+                current_rsi = rsi_window.iloc[-1]
+                
+                # 找窗口内的高点和低点
+                price_high_idx = price_window.idxmax()
+                price_low_idx = price_window.idxmin()
+                rsi_high_idx = rsi_window.idxmax()
+                rsi_low_idx = rsi_window.idxmin()
+                
+                # 顶背离：价格创新高，RSI未创新高
+                if (price_window.iloc[-1] > price_window.iloc[-2] and 
+                    current_price > price_window.iloc[price_high_idx] and
+                    current_rsi < rsi_window.iloc[rsi_high_idx]):
+                    df.loc[df.index[i], bearishDivergenceCol] = True
+                
+                # 底背离：价格创新低，RSI未创新低
+                if (price_window.iloc[-1] < price_window.iloc[-2] and 
+                    current_price < price_window.iloc[price_low_idx] and
+                    current_rsi > rsi_window.iloc[rsi_low_idx]):
+                    df.loc[df.index[i], bullishDivergenceCol] = True
+                
+                #转换为字典
+                for index, row in df.iterrows():
+                    currentDate = row['date']
+                    currentYMD = currentDate.replace('-','')
+                    bearishDivergence = row[bearishDivergenceCol]
+                    bullishDivergence = row[bullishDivergenceCol]
+                    if bearishDivergence or bullishDivergence:
+                        saveSet = {'date':currentDate}
+                        # 背离信号
+                        saveSet["bearishDivergence"] = bearishDivergence
+                        saveSet["bullishDivergence"] = bullishDivergence
+                        # 原始数据
+                        saveSet["close"] = row["close"]
+                        saveSet[rsiCol] = row[rsiCol]
+
+                        result[currentYMD] = saveSet
+        
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        return result
+
+    def check_mid_line_cross(df: pd.DataFrame, rsi_col: str, 
+                            mid_line: float = 50) -> pd.DataFrame:
+        """
+        检查中轴线穿越信号
+        
+        参数:
+            df: 包含RSI数据的DataFrame
+            rsi_col: RSI列名
+            mid_line: 中轴线位置（默认50）
+        
+        返回:
+            添加了中轴线穿越信号的DataFrame
+        """
+        df = df.copy()
+        
+        # 上穿中轴线
+        df[f'{rsi_col}_cross_above_mid'] = (df[rsi_col] > mid_line) & (df[rsi_col].shift(1) <= mid_line)
+        
+        # 下穿中轴线
+        df[f'{rsi_col}_cross_below_mid'] = (df[rsi_col] < mid_line) & (df[rsi_col].shift(1) >= mid_line)
+        
+        # 强弱区域标记
+        df[f'{rsi_col}_strong'] = (df[rsi_col] > mid_line)
+        df[f'{rsi_col}_weak'] = (df[rsi_col] < mid_line)
+        
+        return df
+
+    # 检查金叉/死叉信号
+    def check_golden_death_cross(self, fast_rsi = 'rsi_6', slow_rsi = 'rsi_12'):
+        """
+        检查金叉/死叉信号
+        
+        参数:
+            df: 包含多条RSI数据的DataFrame
+            fast_rsi: 快线RSI列名
+            slow_rsi: 慢线RSI列名
+        
+        返回:
+            添加了金叉/死叉信号的字典
+        """
+        result = {}
+        try:
+            df = self.rsiData
+            goldenCrossCol = f'golden_cross_{fast_rsi}_{slow_rsi}'
+            deathCrossCol = f'death_cross_{fast_rsi}_{slow_rsi}'
+        
+            # 金叉：快线上穿慢线
+            df[goldenCrossCol] = (df[fast_rsi] > df[slow_rsi]) & (df[fast_rsi].shift(1) <= df[slow_rsi].shift(1))
+            # 死叉：快线下穿慢线
+            df[deathCrossCol] = (df[fast_rsi] < df[slow_rsi]) & (df[fast_rsi].shift(1) >= df[slow_rsi].shift(1))
+
+            # 转换为字典
+            for index, row in df.iterrows():
+                currentDate = row['date']
+                currentYMD = currentDate.replace('-','')
+                goldenCross = row[goldenCrossCol]
+                deathCross = row[deathCrossCol]
+                if goldenCross or deathCross:
+                    saveSet = {'date':currentDate}
+                    # 金叉/死叉信号
+                    saveSet["goldenCross"] = goldenCross
+                    saveSet["deathCross"] = deathCross
+                    # 原始数据
+                    saveSet["close"] = row["close"]
+                    saveSet[rsiCol] = row[rsiCol]
+
+                    saveSet[fast_rsi] = row[fast_rsi]
+                    saveSet[slow_rsi] = row[slow_rsi]
+
+                    result[currentYMD] = saveSet
+
+
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+                
         return result
 
 
