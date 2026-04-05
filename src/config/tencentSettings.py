@@ -36,7 +36,7 @@ _DEBUG = True  #预设trace开关，禁止修改
 #SMS Service 
 TECENT_SMS_SERVICE = {
 "local":{
-    # "SecretId":"YOUR secretId", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -55,7 +55,7 @@ TECENT_SMS_SERVICE = {
     "TemplateParamSet":None, 
     }, 
 "server_01":{
-    # "SecretId":"YOUR secretId", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -74,7 +74,7 @@ TECENT_SMS_SERVICE = {
     "TemplateParamSet":None, 
     }, 
 "server_02":{
-    # "SecretId":"YOUR secretId", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -93,7 +93,7 @@ TECENT_SMS_SERVICE = {
     "TemplateParamSet":None, 
     }, 
 "home":{
-    # "SecretId":"YOUR secretId", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -116,7 +116,7 @@ TECENT_SMS_SERVICE = {
 #COS Service 
 TECENT_COS_SERVICE = {
 "local":{
-    # "secretId":"YOUR secretId", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
@@ -128,7 +128,7 @@ TECENT_COS_SERVICE = {
     "dispTimeOut":1800, 
     }, 
 "server_01":{
-    # "secretId":"YOUR secretId", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
@@ -140,7 +140,7 @@ TECENT_COS_SERVICE = {
     "dispTimeOut":1800, 
     }, 
 "server_02":{
-    # "secretId":"YOUR secretId", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
@@ -152,7 +152,7 @@ TECENT_COS_SERVICE = {
     "dispTimeOut":1800, 
     }, 
 "home":{
-    # "secretId":"YOUR secretId", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
