@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch stock data from web and upload to database
 
-_VERSION="20260331"
+_VERSION="20260404"
 
 _DEBUG=True
 
@@ -869,20 +869,20 @@ def filterTechnicalIndicators(indicators,oldIndicators):
     result = []
     try:
         #过滤出需要上传的技术指标
-        stockCodeDateSet = {}
+        oldIndicatorsSet = {}
         for item in oldIndicators:
             date = item.get("date", "")
             stock_code = item.get("stock_code", "")
             if not date or not stock_code:
                 continue
-            stockCodeDateSet[f"{stock_code}_{date}"] = item
+            oldIndicatorsSet[f"{stock_code}_{date}"] = item
         #开始过滤指标
         for indicator in indicators:
             date = indicator.get("date", "")
             stock_code = indicator.get("stock_code", "")
             if not date or not stock_code:
                 continue
-            if f"{stock_code}_{date}" not in stockCodeDateSet:
+            if f"{stock_code}_{date}" not in oldIndicatorsSet:
                 result.append(indicator)
             else:
                 #补充缺失指标数据,临时代码 need to remove or modify
@@ -905,7 +905,7 @@ def updateOneTechnicalIndicators(symbol,period,adjust,rightDate):
     try:
         _LOG.info(f" - 更新股票: {symbol} 的技术指标...周期:{period},调整:{adjust},日期:{rightDate}")
         #查询股票的当前技术指标
-        currIndicators = ylwzStockServer.readTechnicalIndicators(symbol,period,adjust)
+        currIndicators = ylwzStockServer.readTechnicalIndicators(symbol,period=period,adjust=adjust)
         if currIndicators:
             #如果技术指标存在, 则增量更新
             pass
@@ -917,7 +917,7 @@ def updateOneTechnicalIndicators(symbol,period,adjust,rightDate):
             #获取股票历史数据
             startDate = settings.STOCK_TECHNICAL_INDICATORS_START_DATE
             endDate = rightDate
-            stockHistoryDataList = ylwzStockServer.queryStockData(symbol,startDate,endDate,period=period,adjust=adjust)
+            stockHistoryDataList = ylwzStockServer.queryStockData(symbol=symbol,startDate=startDate,endDate=rightDate,period=period,adjust=adjust)
             if not stockHistoryDataList or len(stockHistoryDataList) == 0:
                 _LOG.warning(f"W: 获取股票历史数据失败... 股票:{symbol},周期:{period},调整:{adjust}")
                 return result
@@ -931,7 +931,7 @@ def updateOneTechnicalIndicators(symbol,period,adjust,rightDate):
             newIndicators = filterTechnicalIndicators(indicators,currIndicators)
             #上传技术指标
             for indicator in newIndicators:
-                recID = ylwzStockServer.addTechnicalIndicator(symbol,indicator,period,adjust)
+                recID = ylwzStockServer.addTechnicalIndicator(symbol=symbol,dataSet=indicator,period=period,adjust=adjust)
                 if recID:
                     result += 1
                     _LOG.info(f"I: 上传股票技术指标成功... 股票:{symbol},周期:{period},调整:{adjust},recID:{recID}")
@@ -987,7 +987,7 @@ def updateDayStockFullData(symbol,updateStartDate,updateEndDate,tradeDateList):
         for adjust in adjustList:
             _LOG.info(f"I: 查询股票历史数据  - 股票代码:{symbol}, 调整方式:{adjust}, 开始日期:{updateStartDate}, 结束日期:{updateEndDate}")
             #day 数据更新判断方式
-            stockHistoryDataList = ylwzStockServer.queryStockData(symbol, updateStartDate, updateEndDate,period=period,adjust=adjust)
+            stockHistoryDataList = ylwzStockServer.queryStockData(symbol=symbol, startDate=updateStartDate,endDate=updateEndDate,period=period,adjust=adjust,mode="short")
             if not stockHistoryDataList:
                 _LOG.warning(f"W: 获取股票历史数据失败... 股票:{symbol},周期:{period},调整:{adjust}")
             # startDate = stockHistoryDataList[0].get("date")
@@ -1047,7 +1047,7 @@ def updateWeekStockFullData(symbol):
             adjustList = ["","qfq","hfq"]
             for adjust in adjustList:
                 #首先获取当前股票周数据
-                currWeekData = ylwzStockServer.queryStockData(symbol, "", "",period=period,adjust=adjust)
+                currWeekData = ylwzStockServer.queryStockData(symbol, startDate="", endDate="",period=period,adjust=adjust,mode="short")
                 if currWeekData:
                     #获取当前股票周数据的最大日期
                     weekFirstDate = currWeekData[-1].get("date")
@@ -1060,7 +1060,7 @@ def updateWeekStockFullData(symbol):
                 #获取日数据
                 weekFirstDate = misc.YMD2HumanDate(weekFirstYMD)
                 weekLastDate = misc.YMD2HumanDate(weekLastYMD)
-                currDayData = ylwzStockServer.queryStockData(symbol, weekFirstDate, weekLastDate,period="day",adjust=adjust)
+                currDayData = ylwzStockServer.queryStockData(symbol=symbol, startDate=weekFirstDate,endDate=weekLastDate,period="day",adjust=adjust)
                 df = pd.DataFrame(currDayData)
                 df = comStock.convertDaily2Weekly(df)
                 newWeekData = df.to_dict(orient="records")
@@ -1187,7 +1187,7 @@ def calcOneTechnicalSignal(symbol,period,adjust):
     result = {}
     try:
         _LOG.info(f" - 计算股票: {symbol} 的技术信号(雷达指标),周期:{period},调整:{adjust}")
-        currHistoryIndicators = ylwzStockServer.readHistoryTechnicalIndicators(symbol,period,adjust)
+        currHistoryIndicators = ylwzStockServer.readHistoryTechnicalIndicators(symbol=symbol,period=period,adjust=adjust)
         if currHistoryIndicators:
             ts = comTS.StockTS()
             result = ts.calcTechnicalSignals(symbol,currHistoryIndicators)
@@ -1254,7 +1254,7 @@ def calcTechnicalSignals():
                 continue
             for period in ["day","week"]: #不计算月数据,只计算日数据和周数据
                 # for adjust in ["","hfq","qfq"]:
-                for adjust in [""]:
+                for adjust in ["qfq"]: #技术信号用qfq调整(前复权)
                     techSignal = calcOneTechnicalSignal(symbol,period,adjust)
                     #更新股票配置
                     rtn = uploadOneStockTechnicalSignal(symbol,techSignal,period,adjust)
@@ -1280,7 +1280,7 @@ def normalDataUpdate(currYMD):
         rtn = updateTechnicalIndicators(currYMD)
 
         #检查行业数据是否存在
-        rtn = updateIndustryData()
+        # rtn = updateIndustryData()
 
         #更新股票分红数据文件
         # dividendData = updateDividendData()
@@ -1310,7 +1310,7 @@ def regularDataUpdater():
         if rightDate:
             #更新交易日数据
             _LOG.info(f"I: 更新交易日数据 ...{rightDate}... ")
-            # rtn = tradeDayDataUpdater(rightDate)
+            rtn = tradeDayDataUpdater(rightDate)
             _LOG.info(f"I: 更新交易日数据 ...{rightDate}...结束 ")
 
         _LOG.info(f"I: 其他数据的计算和更新 ... ")

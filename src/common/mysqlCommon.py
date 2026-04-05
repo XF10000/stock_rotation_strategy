@@ -2858,7 +2858,10 @@ def update_stock_history_data(tableName,id,dataSet):
 def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",start_date="",end_date="",date="",
                             delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
-    columns = "*"
+    if mode == "full":
+        columns = "*"
+    else:
+        columns = "id,date,stock_code"
     valuesList = []
     sqlStr = f"SELECT {columns} FROM {tableName}"
 
@@ -3613,7 +3616,10 @@ def update_technical_indicators(tableName,id,dataSet):
 def query_technical_indicators(tableName,id = "0", stock_code="",date="",start_date="",end_date="",
                                 delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
-    columns = "*"
+    if mode == "full":
+        columns = "*"
+    else:
+        columns = "id,date,stock_code "
     valuesList = []
     sqlStr = f"SELECT {columns} FROM {tableName}"
 

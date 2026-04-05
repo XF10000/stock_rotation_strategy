@@ -1,4 +1,4 @@
-_VERSION = "20251123"
+_VERSION = "20260405"
 
 currWorkMode="monitor"
 
@@ -29,22 +29,24 @@ processData = [
         "file":"/data/stockapp/src/stockapi/stockWebAPIPost.py",
         "fileList":["/data/stockapp/src/config/basicSettings.py",
                     "/data/stockapp/src/config/local_settings.py",
+                    "/data/stockapp/src/config/redisSettings.py",
                     "/data/stockapp/src/config/mysqlSettings.py",
                     "/data/stockapp/src/common/globalDefinition.py",
-                    "/data/stockapp/src/common/funcCommon.py",
+                    "/data/stockapp/src/common/funcCommon.py",],
         # "num":3, #不检查数量就不要填, 或者填0
     },
-    # {
-    #     "key":"ylwzRecvFiles:application",
-    #     "cmd":"cd /data/stockapp/src/main; ./restore_file.sh ", 
-    #     "param":"",
-    #     "file":"/data/stockapp/src/main/ylwzRecvFiles.py",
-    #     "fileList":["/data/stockapp/src/config/basicSettings.py",
-    #                 "/data/stockapp/src/config/local_settings.py",
-    #                 "/data/stockapp/src/common/globalDefinition.py",
-    #                 "/data/stockapp/src/common/funcCommon.py",
-    #     # "num":3, #不检查数量就不要填, 或者填0
-    # },
+    {
+        "key":"ylwzRecvFiles:application",
+        "cmd":"cd /data/stockapp/src/stockapi; ./restore_file.sh ", 
+        "param":"",
+        "file":"/data/stockapp/src/stockapi/ylwzRecvFiles.py",
+        "fileList":["/data/stockapp/src/config/basicSettings.py",
+                    "/data/stockapp/src/config/local_settings.py",
+                    "/data/stockapp/src/common/globalDefinition.py",
+                    "/data/stockapp/src/config/redisSettings.py",
+                    "/data/stockapp/src/common/funcCommon.py",],
+        # "num":3, #不检查数量就不要填, 或者填0
+    },
     {
         "key":"transferStockMysql.py",
         "cmd":"cd /data/stockapp/src/processor; ./restore_trans.sh ", 
@@ -54,6 +56,7 @@ processData = [
                     "/data/stockapp/src/config/local_settings.py",
                     "/data/stockapp/src/common/globalDefinition.py",
                     "/data/stockapp/src/common/funcCommon.py",
+                    "/data/stockapp/src/config/redisSettings.py",
                     "/data/stockapp/src/config/mysqlSettings.py",],
         # "num":3, #不检查数量就不要填, 或者填0
     },
@@ -63,6 +66,5 @@ existProcessKeys = [
 ]
 
 serviceMonitorData = [
-    {
 
 ]

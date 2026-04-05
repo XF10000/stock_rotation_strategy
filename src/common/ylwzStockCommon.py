@@ -13,7 +13,7 @@
 # 3. 其他接口
 
 
-_VERSION="20260404"
+_VERSION="20260405"
 
 
 import os
@@ -942,11 +942,11 @@ class StockServer:
         return result
 
     #获取历史数据和当前数据的技术指标
-    def readHistoryTechnicalIndicators(self,symbol="",period="",adjust=""):
+    def readHistoryTechnicalIndicators(self,symbol="",date="",startDate="",endDate="",period="",adjust=""):
         result = []
         try:
             cmd = "historytechnicalindicatorqry"
-            querySet = {"symbol":symbol,"period":period,"adjust":adjust}
+            querySet = {"symbol":symbol,"date":date,"start_date":startDate,"end_date":endDate,"period":period,"adjust":adjust}    
             rtnData = self.query(cmd,querySet)
             if rtnData and "data" in rtnData:
                 data = rtnData["data"]
@@ -1047,12 +1047,12 @@ class StockServer:
         return result
 
     #获取股票历史数据, date 格式 YYYYMMDD
-    def queryStockData(self,symbol="",date="",startDate="",endDate="",period="day",adjust="",limitNum=0):
+    def queryStockData(self,symbol="",date="",startDate="",endDate="",period="day",adjust="",mode="full",limitNum=0):
         result = []
         try:
             if (startDate < endDate) or (startDate=="") or (endDate==""):
                 cmd = "stockhistoryqry"
-                querySet = {"symbol":symbol,"date":date,"start_date":startDate,"end_date":endDate,"period":period,"adjust":adjust,"limitNum":limitNum}
+                querySet = {"symbol":symbol,"date":date,"start_date":startDate,"end_date":endDate,"period":period,"adjust":adjust,"mode":mode,"limitNum":limitNum}
                 rtnData = self.query(cmd,querySet)
                 if rtnData and "data" in rtnData:
                     data = rtnData["data"]
@@ -1170,6 +1170,7 @@ class StockServer:
             querySet = {}
             querySet["stock_code"] = symbol
             querySet["date"] = dataSet.get("date","")
+            querySet["mode"] = "short"
             querySet["period"] = period
             querySet["adjust"] = adjust
             querySet["limitNum"] = 1

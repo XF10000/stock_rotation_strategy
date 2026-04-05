@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260404"
+_VERSION="20260405"
 
 
 import os
@@ -101,6 +101,8 @@ FASTDFS_SERVER_PATH ={
     "server_02":"http://www.iottest.online:8080/", 
     "home":"http://192.168.100.100:8080/", 
 }[_SYS]
+
+LOCAL_FILE_SERVER_DIR_NAME = "temp"
 
 #local server path 
 LOCAL_FILE_SERVER_PATH ={

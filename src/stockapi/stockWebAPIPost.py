@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260404"
+_VERSION="20260405"
 
 
 import os
@@ -4504,7 +4504,7 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                             else:
                                 tableName = comMysql.tablename_convertor_stock_history_data(period=period,adjust=adjust)
                                 currDataList = comMysql.query_stock_history_data(tableName,stock_code=stock_code,stock_name=stock_name,date=queryDate,
-                                                                                start_date=startDate,end_date=endDate,limitNum=limitNum)
+                                                                                start_date=startDate,end_date=endDate,mode = mode,limitNum=limitNum)
 
                         dataList = []
 
@@ -4521,29 +4521,30 @@ def funcStockHistoryQry(CMD,dataSet,sessionIDSet):
                             aSet["id"] = currDataSet.get("id","")
                             aSet["stock_code"] = currDataSet.get("stock_code","")
                             aSet["date"] = currDataSet.get("date","")
-                            aSet["open"] = round(float(currDataSet.get("open","")),2)
-                            aSet["close"] = round(float(currDataSet.get("close","")),2)
-                            aSet["high"] = round(float(currDataSet.get("high","")),2)
-                            aSet["low"] = round(float(currDataSet.get("low","")),2)
-                            aSet["volume"] = round(float(currDataSet.get("volume","")),2)
-                            aSet["amount"] = round(float(currDataSet.get("amount","")),2)
-                            aSet["amplitude"] = round(float(currDataSet.get("amplitude","")),2)
-                            try:
-                                aSet["price_change"] = round(aSet["close"] - aSet["open"],2)
-                                aSet["pct_change"] = round((aSet["price_change"] * 100 / aSet["open"]),2)
-                            except:
-                                pass
-                            aSet["turnover_rate"] = round(float(currDataSet.get("turnover_rate","")),2)
-                            aSet["label1"] = currDataSet.get("label1","")
-                            aSet["label2"] = currDataSet.get("label2","")
-                            aSet["label3"] = currDataSet.get("label3","")
-                            aSet["memo"] = currDataSet.get("memo","")
-                            aSet["regID"] = currDataSet.get("regID","")
-                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
-                            aSet["modifyID"] = currDataSet.get("modifyID","")
-                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
-                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
-                            aSet["delFlag"] = currDataSet.get("delFlag","")
+                            if mode == "full":
+                                aSet["open"] = round(float(currDataSet.get("open","")),2)
+                                aSet["close"] = round(float(currDataSet.get("close","")),2)
+                                aSet["high"] = round(float(currDataSet.get("high","")),2)
+                                aSet["low"] = round(float(currDataSet.get("low","")),2)
+                                aSet["volume"] = round(float(currDataSet.get("volume","")),2)
+                                aSet["amount"] = round(float(currDataSet.get("amount","")),2)
+                                aSet["amplitude"] = round(float(currDataSet.get("amplitude","")),2)
+                                try:
+                                    aSet["price_change"] = round(aSet["close"] - aSet["open"],2)
+                                    aSet["pct_change"] = round((aSet["price_change"] * 100 / aSet["open"]),2)
+                                except:
+                                    pass
+                                aSet["turnover_rate"] = round(float(currDataSet.get("turnover_rate","")),2)
+                                aSet["label1"] = currDataSet.get("label1","")
+                                aSet["label2"] = currDataSet.get("label2","")
+                                aSet["label3"] = currDataSet.get("label3","")
+                                aSet["memo"] = currDataSet.get("memo","")
+                                aSet["regID"] = currDataSet.get("regID","")
+                                aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                                aSet["modifyID"] = currDataSet.get("modifyID","")
+                                aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                                aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                                aSet["delFlag"] = currDataSet.get("delFlag","")
 
                             dataList.append(aSet)
 
@@ -5159,7 +5160,7 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
                             else:
                                 tableName = comMysql.tablename_convertor_technical_indicators(period=period,adjust=adjust)
                                 currDataList = comMysql.query_technical_indicators(tableName,stock_code=stock_code,date=queryDate,
-                                                start_date=startDate,end_date=endDate,limitNum=limitNum)
+                                                start_date=startDate,end_date=endDate,mode=mode,limitNum=limitNum)
 
                         dataList = []
 
@@ -5176,55 +5177,57 @@ def funcTechnicalIndicatorsQry(CMD,dataSet,sessionIDSet):
                             aSet["id"] = currDataSet.get("id","")
                             aSet["stock_code"] = currDataSet.get("stock_code","")
                             aSet["date"] = currDataSet.get("date","")
-                            aSet["close"] = currDataSet.get("close","")
-                            aSet["ma_5"] = currDataSet.get("ma_5","")
-                            aSet["ma_10"] = currDataSet.get("ma_10","")
-                            aSet["ma_20"] = currDataSet.get("ma_20","")
-                            aSet["ma_60"] = currDataSet.get("ma_60","")
-                            aSet["macd_line"] = currDataSet.get("macd_line","")
-                            aSet["macd_signal"] = currDataSet.get("macd_signal","")
-                            aSet["macd_histogram"] = currDataSet.get("macd_histogram","")
-                            aSet["macd_line_long"] = currDataSet.get("macd_line_long","")
-                            aSet["macd_signal_long"] = currDataSet.get("macd_signal_long","")
-                            aSet["macd_histogram_long"] = currDataSet.get("macd_histogram_long","")
-                            aSet["boll_upper"] = currDataSet.get("boll_upper","")
-                            aSet["boll_mid"] = currDataSet.get("boll_mid","")
-                            aSet["boll_lower"] = currDataSet.get("boll_lower","")
-                            aSet["ene_upper"] = currDataSet.get("ene_upper","")
-                            aSet["ene_mid"] = currDataSet.get("ene_mid","")
-                            aSet["ene_lower"] = currDataSet.get("ene_lower","")
-                            aSet["dmi_pdi"] = currDataSet.get("dmi_pdi","")
-                            aSet["dmi_mdi"] = currDataSet.get("dmi_mdi","")
-                            aSet["dmi_adx"] = currDataSet.get("dmi_adx","")
-                            aSet["dma_line"] = currDataSet.get("dma_line","")
-                            aSet["ama_line"] = currDataSet.get("ama_line","")
-                            aSet["sar"] = currDataSet.get("sar","")
-                            aSet["kdj_k"] = currDataSet.get("kdj_k","")
-                            aSet["kdj_d"] = currDataSet.get("kdj_d","")
-                            aSet["kdj_j"] = currDataSet.get("kdj_j","")
-                            aSet["rsi_6"] = currDataSet.get("rsi_6","")
-                            aSet["rsi_12"] = currDataSet.get("rsi_12","")
-                            aSet["rsi_24"] = currDataSet.get("rsi_24","")
-                            aSet["cci"] = currDataSet.get("cci","")
-                            aSet["bias_5"] = currDataSet.get("bias_5","")
-                            aSet["bias_10"] = currDataSet.get("bias_10","")
-                            aSet["bias_20"] = currDataSet.get("bias_20","")
-                            aSet["wr_6"] = currDataSet.get("wr_6","")
-                            aSet["wr_14"] = currDataSet.get("wr_14","")
-                            aSet["volume"] = currDataSet.get("volume","")
-                            aSet["turnover_rate"] = currDataSet.get("turnover_rate","")
-                            aSet["obv"] = currDataSet.get("obv","")
-                            aSet["hashval"] = currDataSet.get("hashval","")
-                            aSet["label1"] = currDataSet.get("label1","")
-                            aSet["label2"] = currDataSet.get("label2","")
-                            aSet["label3"] = currDataSet.get("label3","")
-                            aSet["memo"] = currDataSet.get("memo","")
-                            aSet["regID"] = currDataSet.get("regID","")
-                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
-                            aSet["modifyID"] = currDataSet.get("modifyID","")
-                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
-                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
-                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                            if mode == "full":
+                                aSet["close"] = currDataSet.get("close","")
+                                aSet["ma_5"] = currDataSet.get("ma_5","")
+                                aSet["ma_10"] = currDataSet.get("ma_10","")
+                                aSet["ma_20"] = currDataSet.get("ma_20","")
+                                aSet["ma_60"] = currDataSet.get("ma_60","")
+                                aSet["macd_line"] = currDataSet.get("macd_line","")
+                                aSet["macd_signal"] = currDataSet.get("macd_signal","")
+                                aSet["macd_histogram"] = currDataSet.get("macd_histogram","")
+                                aSet["macd_line_long"] = currDataSet.get("macd_line_long","")
+                                aSet["macd_signal_long"] = currDataSet.get("macd_signal_long","")
+                                aSet["macd_histogram_long"] = currDataSet.get("macd_histogram_long","")
+                                aSet["boll_upper"] = currDataSet.get("boll_upper","")
+                                aSet["boll_mid"] = currDataSet.get("boll_mid","")
+                                aSet["boll_lower"] = currDataSet.get("boll_lower","")
+                                aSet["ene_upper"] = currDataSet.get("ene_upper","")
+                                aSet["ene_mid"] = currDataSet.get("ene_mid","")
+                                aSet["ene_lower"] = currDataSet.get("ene_lower","")
+                                aSet["dmi_pdi"] = currDataSet.get("dmi_pdi","")
+                                aSet["dmi_mdi"] = currDataSet.get("dmi_mdi","")
+                                aSet["dmi_adx"] = currDataSet.get("dmi_adx","")
+                                aSet["dma_line"] = currDataSet.get("dma_line","")
+                                aSet["ama_line"] = currDataSet.get("ama_line","")
+                                aSet["sar"] = currDataSet.get("sar","")
+                                aSet["kdj_k"] = currDataSet.get("kdj_k","")
+                                aSet["kdj_d"] = currDataSet.get("kdj_d","")
+                                aSet["kdj_j"] = currDataSet.get("kdj_j","")
+                                aSet["rsi_6"] = currDataSet.get("rsi_6","")
+                                aSet["rsi_12"] = currDataSet.get("rsi_12","")
+                                aSet["rsi_24"] = currDataSet.get("rsi_24","")
+                                aSet["cci"] = currDataSet.get("cci","")
+                                aSet["bias_5"] = currDataSet.get("bias_5","")
+                                aSet["bias_10"] = currDataSet.get("bias_10","")
+                                aSet["bias_20"] = currDataSet.get("bias_20","")
+                                aSet["wr_6"] = currDataSet.get("wr_6","")
+                                aSet["wr_14"] = currDataSet.get("wr_14","")
+                                aSet["volume"] = currDataSet.get("volume","")
+                                aSet["turnover_rate"] = currDataSet.get("turnover_rate","")
+                                aSet["obv"] = currDataSet.get("obv","")
+                                aSet["hashval"] = currDataSet.get("hashval","")
+                                aSet["label1"] = currDataSet.get("label1","")
+                                aSet["label2"] = currDataSet.get("label2","")
+                                aSet["label3"] = currDataSet.get("label3","")
+                                aSet["memo"] = currDataSet.get("memo","")
+                                aSet["regID"] = currDataSet.get("regID","")
+                                aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                                aSet["modifyID"] = currDataSet.get("modifyID","")
+                                aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                                aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                                aSet["delFlag"] = currDataSet.get("delFlag","")
 
                             dataList.append(aSet)
 
@@ -5338,7 +5341,7 @@ def funcHistoryTechnicalIndicatorQry(CMD,dataSet,sessionIDSet):
                     if not(useQueryBufferFlag and chkBufferExist(indexKey)) or forceFlashFlag == comGD._CONST_YES:
 
                         currDataList = comMysql.query_history_technical_indicator(stock_code=stock_code,date=queryDate,
-                                        start_date=startDate,end_date=endDate,limitNum=limitNum)
+                                        start_date=startDate,end_date=endDate,period=period,adjust=adjust,limitNum=limitNum)
 
                         dataList = []
 
