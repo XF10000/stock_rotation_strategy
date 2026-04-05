@@ -36,7 +36,7 @@ _DEBUG = True  #预设trace开关，禁止修改
 #SMS Service 
 TECENT_SMS_SERVICE = {
 "local":{
-    "SecretId":"AKIDf4mDguoh4AY9WwDzh9oFQKxKRKwhZVWV", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -55,7 +55,7 @@ TECENT_SMS_SERVICE = {
     "TemplateParamSet":None, 
     }, 
 "server_01":{
-    "SecretId":"AKIDf4mDguoh4AY9WwDzh9oFQKxKRKwhZVWV", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -74,7 +74,7 @@ TECENT_SMS_SERVICE = {
     "TemplateParamSet":None, 
     }, 
 "server_02":{
-    "SecretId":"AKIDf4mDguoh4AY9WwDzh9oFQKxKRKwhZVWV", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -93,7 +93,7 @@ TECENT_SMS_SERVICE = {
     "TemplateParamSet":None, 
     }, 
 "home":{
-    "SecretId":"AKIDf4mDguoh4AY9WwDzh9oFQKxKRKwhZVWV", 
+    "SecretId":"YOUR secretId", 
     "SecretKey":"YOUR_CODE", 
     "reqTimeout":30, 
     "endpoint":"sms.tencentcloudapi.com", 
@@ -116,7 +116,7 @@ TECENT_SMS_SERVICE = {
 #COS Service 
 TECENT_COS_SERVICE = {
 "local":{
-    "secretId":"AKIDCAwQddLfcMkqbFKWGbgU2MRIsuYvjdhM", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
@@ -128,7 +128,7 @@ TECENT_COS_SERVICE = {
     "dispTimeOut":1800, 
     }, 
 "server_01":{
-    "secretId":"AKIDCAwQddLfcMkqbFKWGbgU2MRIsuYvjdhM", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
@@ -140,7 +140,7 @@ TECENT_COS_SERVICE = {
     "dispTimeOut":1800, 
     }, 
 "server_02":{
-    "secretId":"AKIDCAwQddLfcMkqbFKWGbgU2MRIsuYvjdhM", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
@@ -152,7 +152,7 @@ TECENT_COS_SERVICE = {
     "dispTimeOut":1800, 
     }, 
 "home":{
-    "secretId":"AKIDCAwQddLfcMkqbFKWGbgU2MRIsuYvjdhM", 
+    "secretId":"YOUR secretId", 
     "secretKey":"YOUR_CODE", 
     "domainBase":"myqcloud.com", 
     "regionId":"ap-chengdu", 
@@ -171,25 +171,25 @@ TECENT_COS_SERVICE = {
 TECENT_OCR_SERVICE = {
 "local":{
     "url":"http://dm-51.data.aliyun.com/rest/160601/ocr/ocr_idcard.json", 
-    "AppKey":"203766758", 
+    "AppKey":"YOUR KEY", 
     "AppSecret":"YOUR_CODE", 
     "AppCode":"YOUR_CODE", 
     }, 
 "server_01":{
     "url":"http://dm-51.data.aliyun.com/rest/160601/ocr/ocr_idcard.json", 
-    "AppKey":"203766758", 
+    "AppKey":"YOUR KEY", 
     "AppSecret":"YOUR_CODE", 
     "AppCode":"YOUR_CODE", 
     }, 
 "server_02":{
     "url":"http://dm-51.data.aliyun.com/rest/160601/ocr/ocr_idcard.json", 
-    "AppKey":"203766758", 
+    "AppKey":"YOUR KEY", 
     "AppSecret":"YOUR_CODE", 
     "AppCode":"YOUR_CODE", 
     }, 
 "home":{
     "url":"http://dm-51.data.aliyun.com/rest/160601/ocr/ocr_idcard.json", 
-    "AppKey":"203766758", 
+    "AppKey":"YOUR KEY", 
     "AppSecret":"YOUR_CODE", 
     "AppCode":"YOUR_CODE", 
     }
@@ -200,17 +200,17 @@ TECENT_OCR_SERVICE = {
 TECENT_AI365_FACE_SERVICE = {
 "local":{
     "url":"https://service-q3toequb-1301232119.bj.apigw.tencentcs.com/release/idfaceIdentity", 
-    "SecretID":"AKID7bm0czj03jx57ckcc382Ohdcnxk3bmq3t3w", 
+    "SecretID":"YOUR SECRET", 
     "SecretKey":"YOUR_CODE", 
     }, 
 "server_01":{
     "url":"https://service-q3toequb-1301232119.bj.apigw.tencentcs.com/release/idfaceIdentity", 
-    "SecretID":"AKID7bm0czj03jx57ckcc382Ohdcnxk3bmq3t3w", 
+    "SecretID":"YOUR SECRET", 
     "SecretKey":"YOUR_CODE", 
     }, 
 "server_02":{
     "url":"https://service-q3toequb-1301232119.bj.apigw.tencentcs.com/release/idfaceIdentity", 
-    "SecretID":"AKID7bm0czj03jx57ckcc382Ohdcnxk3bmq3t3w", 
+    "SecretID":"YOUR SECRET", 
     "SecretKey":"YOUR_CODE", 
     }, 
 "home":{
@@ -225,22 +225,22 @@ TECENT_AI365_FACE_SERVICE = {
 TECENT_AI365_OPERATOR_SERVICE = {
 "local":{
     "url":"http://service-4epp7bin.ap-beijing.apigateway.myqcloud.com/release/efficient/cellphone", 
-    "SecretID":"AKID7bm0czj03jx57ckcc382Ohdcnxk3bmq3t3w", 
+    "SecretID":"YOUR SECRET", 
     "SecretKey":"YOUR_CODE ", 
     }, 
 "server_01":{
     "url":"http://service-4epp7bin.ap-beijing.apigateway.myqcloud.com/release/efficient/cellphone", 
-    "SecretID":"AKID7bm0czj03jx57ckcc382Ohdcnxk3bmq3t3w", 
+    "SecretID":"YOUR SECRET", 
     "SecretKey":"YOUR_CODE ", 
     }, 
 "server_02":{
     "url":"http://service-4epp7bin.ap-beijing.apigateway.myqcloud.com/release/efficient/cellphone", 
-    "SecretID":"AKID7bm0czj03jx57ckcc382Ohdcnxk3bmq3t3w", 
+    "SecretID":"YOUR SECRET", 
     "SecretKey":"YOUR_CODE ", 
     }, 
 "home":{
     "url":"http://service-4epp7bin.ap-beijing.apigateway.myqcloud.com/release/efficient/cellphone", 
-    "AppSecret":"AKID7bm0czj03jx57ckcc382Ohdcnxk3bmq3t3w", 
+    "AppSecret":"YOUR SECRET", 
     "AppCode":"YOUR_CODE ", 
     }
 }[_SYS]
