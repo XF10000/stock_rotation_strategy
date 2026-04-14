@@ -88,7 +88,7 @@ def calcOneTechnicalSignal(symbol,period,adjust):
     result = {}
     try:
         _LOG.info(f" - 计算股票: {symbol} 的技术信号(雷达指标),周期:{period},调整:{adjust}")
-        currHistoryIndicators = ylwzStockServer.readHistoryTechnicalIndicators(symbol,period,adjust)
+        currHistoryIndicators = ylwzStockServer.readHistoryTechnicalIndicators(symbol=symbol,period=period,adjust=adjust)
         if currHistoryIndicators:
             ts = comTS.StockTS()
             result = ts.calcTechnicalSignals(symbol,currHistoryIndicators)

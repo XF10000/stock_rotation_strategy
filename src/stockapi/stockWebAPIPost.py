@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260405"
+_VERSION="20260414"
 
 
 import os
@@ -2994,6 +2994,60 @@ def funcGenUserSessionID(CMD, dataSet, sessionIDSet):
     return result
 
 
+#获取技术指标映射表
+def funcGetIndicatorMap(CMD, dataSet, sessionIDSet):
+    result = {}
+    errCode = "B0"
+    # rtnCMD = CMD[0:2]+errCode
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+    msgData = {}
+
+    try:
+        
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+
+        openID = sessionIDSet.get("openID", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+        sessionID = dataSet.get("sessionID")
+        roleName = sessionIDSet.get("roleName")
+
+        msgKey = "account"
+        url = ACCOUNT_SERVICE_URL
+        headers = {'content-type': 'application/json'}
+
+        if tempUserID:
+            loginID = userInfo.get("loginID","")
+            indicatorMap = settings.STOCK_SIGNAL_OUTPUT_INDICATOR_MAP
+            indicatorList = list(indicatorMap.keys())
+            #赋值到 rtnData
+            rtnData["data"] = {}
+            rtnData["data"]["indicatorList"] = indicatorList
+            rtnData["data"]["indicatorMap"] = indicatorMap
+           
+        else:
+            errCode = "B8"
+
+        result = rtnData
+
+        rtnSet = comFC.rtnMSG(errCode, rtnField, lang,msgKey)
+        msgData = rtnSet["MSG"]
+        result["CMD"] = CMD
+        result["msgKey"] = msgKey
+        result["MSG"] = msgData
+        result["errCode"] = errCode
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERROR", "ERR_GENERAL")
+        result = rtnSet  
+       
+    return result
+
+
 #行业信息增加代码
 def funcIndustryInfoAdd(CMD,dataSet,sessionIDSet):
     result = {}
@@ -3557,7 +3611,7 @@ def funcStockInfoAdd(CMD,dataSet,sessionIDSet):
                     saveSet["public_float"] = dataSet.get("public_float", "") 
                     saveSet["market_cap"] = dataSet.get("market_cap", "") 
                     saveSet["free_market_cap"] = dataSet.get("free_market_cap", "") 
-                    saveSet["dcf_value_pre_share"] = dataSet.get("dcf_value_pre_share", "") 
+                    saveSet["dcf_value_per_share"] = dataSet.get("dcf_value_per_share", "") 
                     saveSet["industry_code"] = dataSet.get("industry_code", "") 
                     saveSet["industry_name"] = dataSet.get("industry_name", "") 
                     saveSet["industry_name_sw"] = dataSet.get("industry_name_sw", "") 
@@ -3717,7 +3771,7 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
                 public_float = dataSet.get("public_float") 
                 market_cap = dataSet.get("market_cap") 
                 free_market_cap = dataSet.get("free_market_cap") 
-                dcf_value_pre_share = dataSet.get("dcf_value_pre_share") 
+                dcf_value_per_share = dataSet.get("dcf_value_per_share") 
                 industry_code = dataSet.get("industry_code") 
                 industry_name = dataSet.get("industry_name") 
                 industry_name_sw = dataSet.get("industry_name_sw") 
@@ -3768,8 +3822,8 @@ def funcStockInfoModify(CMD,dataSet,sessionIDSet):
                             if free_market_cap != currDataSet.get("free_market_cap"):
                                 saveSet["free_market_cap"] = free_market_cap
 
-                            if dcf_value_pre_share != currDataSet.get("dcf_value_pre_share"):
-                                saveSet["dcf_value_pre_share"] = dcf_value_pre_share
+                            if dcf_value_per_share != currDataSet.get("dcf_value_per_share"):
+                                saveSet["dcf_value_per_share"] = dcf_value_per_share
 
                             if industry_code != currDataSet.get("industry_code") and industry_code:
                                 saveSet["industry_code"] = industry_code
@@ -3981,6 +4035,7 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
                             aSet["id"] = currDataSet.get("id","")
                             aSet["stock_code"] = currDataSet.get("stock_code","")
                             aSet["stock_name"] = currDataSet.get("stock_name","")
+                            aSet["dcf_value_per_share"] = currDataSet.get("dcf_value_per_share",0)
                             aSet["total_shares_outstanding"] = currDataSet.get("total_shares_outstanding","")
                             aSet["public_float"] = currDataSet.get("public_float","")
                             aSet["market_cap"] = currDataSet.get("market_cap","")
@@ -4037,6 +4092,125 @@ def funcStockInfoQry(CMD,dataSet,sessionIDSet):
 
     return result
 
+
+#股票平均DCF查询代码
+def funcGetStockAvgDCF(CMD,dataSet,sessionIDSet):
+    result = {}
+    errCode = "B0"
+    rtnCMD = CMD
+    rtnField = ""
+    rtnData = {}
+
+    dataValidFlag = True #数据是否有效的标志
+    rtnErrMsgList = [] #数据错误原因
+
+    try:
+
+        lang = dataSet.get("lang", comGD._DEF_DEFAULT_LANGUAGE)
+        msgKey = "stock_msg"
+        openID = sessionIDSet.get("openID", "")
+        roleName = sessionIDSet.get("roleName", "")
+        tempUserID = sessionIDSet.get("loginID", "")
+
+        if tempUserID != "":
+            loginID = tempUserID
+
+            #权限检查
+
+            if errCode == "B0": #
+
+                symbol = dataSet.get("symbol","")
+                if symbol:
+                    stock_code = symbol
+                else:
+                    stock_code = dataSet.get("stock_code","")
+
+                stock_name = dataSet.get("stock_name","")
+
+                searchKey = dataSet.get("searchKey","").strip()
+
+                mode = dataSet.get("mode", "full")
+
+                limitNum = dataSet.get("limitNum",comGD._DEF_MAX_QUERY_LIMIT_NUM)
+
+                #权限检查/功能检测
+
+                rightCheckFlag = True
+
+                if rightCheckFlag:
+                    loginID = tempUserID
+
+                    currDataList = comMysql.query_user_stock_dcf_value_per_share(stock_code=stock_code,stock_name=stock_name,userID=loginID,
+                                            searchKey=searchKey,mode=mode,limitNum=limitNum)
+
+                    dataList = []
+
+                    for currDataSet in currDataList:
+                        aSet = {}
+
+                        #需要把文件转移到public domain
+                        #appendixFileID00 =  currDataSet.get("appendixFileID00", "")
+                        #appendixFileID00 = getTempLocation(appendixFileID00, privateFlag = True)
+
+                        #if mode == "full":
+                            #aSet["houseID"] = currDataSet.get("houseID", "")
+                        aSet["id"] = currDataSet.get("id","")
+                        aSet["stock_code"] = currDataSet.get("stock_code","")
+                        aSet["stock_name"] = currDataSet.get("stock_name","")
+                        aSet["dcf_value_per_share"] = currDataSet.get("dcf_value_per_share",0)
+                        if mode == "full":
+                            aSet["total_shares_outstanding"] = currDataSet.get("total_shares_outstanding",0)
+                            aSet["public_float"] = currDataSet.get("public_float","")
+                            aSet["market_cap"] = currDataSet.get("market_cap","")
+                            aSet["free_market_cap"] = currDataSet.get("free_market_cap","")
+                            aSet["industry_code"] = currDataSet.get("industry_code","")
+                            aSet["industry_name"] = currDataSet.get("industry_name","")
+                            aSet["industry_name_sw"] = currDataSet.get("industry_name_sw","")
+                            aSet["industry_name_em"] = currDataSet.get("industry_name_em","")
+                            aSet["area"] = currDataSet.get("area","")
+                            aSet["market"] = currDataSet.get("market","")
+                            aSet["ipo_date"] = currDataSet.get("ipo_date","")
+                            aSet["label1"] = currDataSet.get("label1","")
+                            aSet["label2"] = currDataSet.get("label2","")
+                            aSet["label3"] = currDataSet.get("label3","")
+                            aSet["memo"] = currDataSet.get("memo","")
+                            aSet["regID"] = currDataSet.get("regID","")
+                            aSet["regYMDHMS"] = currDataSet.get("regYMDHMS","")
+                            aSet["modifyID"] = currDataSet.get("modifyID","")
+                            aSet["modifyYMDHMS"] = currDataSet.get("modifyYMDHMS","")
+                            aSet["dispFlag"] = currDataSet.get("dispFlag","")
+                            aSet["delFlag"] = currDataSet.get("delFlag","")
+
+                        dataList.append(aSet)
+
+                    rtnData["data"] = dataList
+
+                    rtnData["limitNum"] = limitNum
+
+                    result = rtnData
+
+                else:
+                    errCode = "BT"
+
+        else:
+            errCode = "B8"
+
+        rtnCMD = CMD
+        rtnSet = comFC.rtnMSG(errCode,rtnField, lang, msgKey)
+        result["CMD"] = rtnCMD
+        result["msgKey"] = msgKey
+        result["MSG"] = rtnSet["MSG"]
+        result["errCode"] = errCode
+        result["MSG"]["content"] += ";"+";".join(rtnErrMsgList)
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},CMD:{CMD},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+
+        rtnSet = comFC.rtnMSG("ERR_GENERAL", "ERR_GENERAL", "")
+        result = rtnSet
+
+    return result
 
 
 #股票历史数据增加代码
@@ -12100,16 +12274,18 @@ def funcUserTechnicalSignalQry(CMD,dataSet,sessionIDSet):
                                                     adjust = adjust,period = period,readFlag = readFlag,limitNum = limitNum)
 
                         dataList = []
-
+                        indicatorList = settings.STOCK_SIGNAL_OUTPUT_INDICATOR_MAP
+                        
                         for currDataSet in currDataList:
-                            aSet = {}
+                            indicator = currDataSet.get("indicator","")
+                            if indicator not in indicatorList:
+                                # 技术指标不在输出列表中，跳过
+                                continue
 
+                            aSet = {}
                             #需要把文件转移到public domain
                             #appendixFileID00 =  currDataSet.get("appendixFileID00", "")
                             #appendixFileID00 = getTempLocation(appendixFileID00, privateFlag = True)
-
-                            #if mode == "full":
-                                #aSet["houseID"] = currDataSet.get("houseID", "")
 
                             aSet["id"] = currDataSet.get("id","")
                             aSet["userID"] = currDataSet.get("userID","")
@@ -12162,6 +12338,7 @@ def funcUserTechnicalSignalQry(CMD,dataSet,sessionIDSet):
                     rtnData = getQueryBufferComplte(indexKey, beginNum = beginNum,  endNum = endNum)
 
                     #rtnData["limitNum"] = limitNum
+                    rtnData["indicatorList"] = indicatorList
 
                     result = rtnData
 
@@ -12361,6 +12538,7 @@ urlPathMap = {
 
     #stock related begin
     "genusersessionid":funcGenUserSessionID,
+    "getindicatormap":funcGetIndicatorMap,
 
     "industryinfoadd":funcIndustryInfoAdd,
     "industryinfodel":funcIndustryInfoDel,
@@ -12371,6 +12549,7 @@ urlPathMap = {
     "stockinfodel":funcStockInfoDel,
     "stockinfomodify":funcStockInfoModify,
     "stockinfoqry":funcStockInfoQry,
+    "getstockavgdcf":funcGetStockAvgDCF,
 
     "stockhistoryadd":funcStockHistoryAdd,
     "stockhistorydel":funcStockHistoryDel,

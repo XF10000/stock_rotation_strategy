@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260405"
+_VERSION="20260414"
 
 
 import os
@@ -248,7 +248,9 @@ ROLE_CMD_LIST =\
     "gethomepagedata",
     #stock related begin
     "genusersessionid",
+    "getindicatormap",
     "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
+    "getstockavgdcf",
     "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
     "technicalindicatorsadd","technicalindicatorsdel","technicalindicatorsmodify","technicalindicatorsqry",
@@ -277,7 +279,9 @@ ROLE_CMD_LIST =\
     "gethomepagedata",
     #stock related begin
     "genusersessionid",
+    "getindicatormap",
     "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
+    "getstockavgdcf",
     "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryadd","stockhistorydel","stockhistorymodify","stockhistoryqry",
     "technicalindicatorsadd","technicalindicatorsdel","technicalindicatorsmodify","technicalindicatorsqry",
@@ -304,7 +308,9 @@ ROLE_CMD_LIST =\
     "gethomepagedata",
     #stock related begin
     "genusersessionid",
+    "getindicatormap",
     "stockinfoadd","stockinfodel","stockinfomodify","stockinfoqry",
+    "getstockavgdcf",
     "industryinfoadd","industryinfodel","industryinfomodify","industryinfoqry",
     "stockhistoryqry",
     "technicalindicatorsqry",
@@ -331,6 +337,7 @@ ROLE_CMD_LIST =\
     "gethomepagedata",
     #stock related begin
     "genusersessionid",
+    "getindicatormap",
     "stockinfoqry",
     "technicalsignalqry",
     "usertechnicalsignalqry",
@@ -431,6 +438,24 @@ INDEX_DATA_SAVE_DIR_NAME = {
     "server_02":f"{STOCK_DATA_CACHE_DIR_NAME}/rsi_data",
     "home":f"{STOCK_DATA_CACHE_DIR_NAME}/rsi_data",
 }[_SYS]
+
+# techinical signal output indicator list
+# 这个控制给用户输出的提示的技术指标列表
+STOCK_SIGNAL_OUTPUT_INDICATOR_MAP = {
+     # 传统技术指标,单一指标
+    # "boll":"布林带",
+    # "macd":"MACD",
+    # "kdj":"KDJ随机指标",
+    # "rsi":"相对强弱指数",
+    "cci":"商品通道指标",
+    "obv":"量能指标",
+    # 组合指标
+    # "fx43":"FX四选三", # Frank Xie 四选三技术指标
+    "rsma":" RSI+MACD组合",
+    "obmr":"OBV+MA+RSI组合",
+    "brma":"布林带+RSI+MACD+ADX组合",
+}
+
 
 STOCK_PORTFOLIO_CONFIG_FILE = "portfolio_config.csv"
 STOCK_PORTFOLIO_CONFIG_JSON_FILE = "stock_portfolio_config.json"

@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260404"
+_VERSION="20260406"
 
 #add src directory
 import os
@@ -2198,7 +2198,7 @@ def create_stock_info(tableName):
     "public_float double COMMENT '流通股',",
     "market_cap double COMMENT '总市值',",
     "free_market_cap double COMMENT '流通市值',",
-    "dcf_value_pre_share float COMMENT '每股贴现现金流价值',",
+    "dcf_value_per_share float COMMENT '每股贴现现金流价值',",
     "industry_code VARCHAR(10) COMMENT '行业代码',",
     "industry_name VARCHAR(48) COMMENT '行业名称',",
     "industry_name_sw VARCHAR(48) COMMENT '行业申银万国',",
@@ -2297,10 +2297,10 @@ def insert_stock_info(tableName,dataSet):
         saveSet["free_market_cap"] = free_market_cap
 
         try:
-            dcf_value_pre_share = float(dataSet.get("dcf_value_pre_share")) 
+            dcf_value_per_share = float(dataSet.get("dcf_value_per_share")) 
         except:
-            dcf_value_pre_share = 0 
-        saveSet["dcf_value_pre_share"] = dcf_value_pre_share
+            dcf_value_per_share = 0 
+        saveSet["dcf_value_per_share"] = dcf_value_per_share
 
         saveSet["industry_code"] = dataSet.get("industry_code", "") 
 
@@ -2382,8 +2382,8 @@ def update_stock_info(tableName,id,dataSet):
             pass
 
         try:
-            dcf_value_pre_share = float(dataSet.get("dcf_value_pre_share")) 
-            saveSet["dcf_value_pre_share"] = dcf_value_pre_share
+            dcf_value_per_share = float(dataSet.get("dcf_value_per_share")) 
+            saveSet["dcf_value_per_share"] = dcf_value_per_share
         except:
             pass
 
@@ -2517,6 +2517,53 @@ def query_stock_info(tableName,id = "0",stock_code = "",stock_name = "",industry
                 aKey = "%" + searchKey + "%"
                 valuesList.append(aKey)
                 valuesList.append(aKey)
+
+        if limitNum > 0:
+            sqlStr += " LIMIT {0}".format(limitNum)
+
+        rtn = mysqlDB.executeRead(sqlStr, tuple(valuesList))
+        if rtn > 0:
+            dataList = mysqlDB.fetchAll()
+            dataList = dataFormatConvert(dataList)
+            result = list(dataList)
+
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        # if _DEBUG:
+            # _LOG.error(f"{errMsg}")
+
+    return result
+
+
+#query stock dcf data
+def query_user_stock_dcf_value_per_share(tableName,id = "0",stock_code = "",stock_name = "",userID="",
+                 searchKey="",delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+    result = []
+    tableName = tablename_convertor_stock_info()
+    tableName2 = tablename_convertor_user_stock_list()
+    if mode == "full":
+        columns = "T1.*"
+    else:
+        columns = "T1.id,T1.stock_code,T1.stock_name,T1.dcf_value_per_share"
+    valuesList = []
+    sqlStr = f"SELECT {columns} FROM {tableName} as T1,{tableName2} as T2 WHERE T1.stock_code=T2.stock_code AND T2.user_id={userID}"
+
+    try:
+
+        if stock_code:
+            sqlStr =  sqlStr + " AND T1.stock_code = %s" 
+            valuesList.append(stock_code)
+
+        if stock_name:
+            sqlStr =  sqlStr + " AND T1.stock_name = %s" 
+            valuesList.append(stock_name)
+       
+        if searchKey:
+            sqlStr =  sqlStr + " AND (T1.stock_code LIKE %s OR T1.stock_name LIKE %s ) " 
+            aKey = "%" + searchKey + "%"
+            valuesList.append(aKey)
+            valuesList.append(aKey)
 
         if limitNum > 0:
             sqlStr += " LIMIT {0}".format(limitNum)

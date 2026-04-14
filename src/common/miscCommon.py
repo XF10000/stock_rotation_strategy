@@ -7,7 +7,7 @@
 #Date: 2015-12-05
 #Description:   通用杂项函数,例如时间,字符串处理等
 
-_VERSION = "20260317"
+_VERSION = "20260405"
 
 #common function:
 import time, datetime
@@ -200,6 +200,25 @@ def getDaysBeforeAfter(nums,YMD=""):
         result.append(day)
     return result
 
+#获取前几天的日期
+def getDaysBefore(nums,YMD=""):
+    result = []
+    if not YMD:
+        YMD = getTime()[0:8]
+    for i in range(nums,0,-1):
+        day = getPassday(i,YMD)
+        result.append(day)
+    return result
+
+#获取后几天的日期
+def getDaysAfter(nums,YMD=""):
+    result = []
+    if not YMD:
+        YMD = getTime()[0:8]
+    for i in range(0, nums):
+        day = getPassday(-i,YMD)
+        result.append(day)
+    return result
 
 class weekDay:
     __weekParam={
