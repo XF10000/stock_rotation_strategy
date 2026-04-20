@@ -1063,7 +1063,6 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
-
     #查询股票基本信息
     def queryStockInfo(self,symbol="",limitNum=0):
         result = []
@@ -1242,7 +1241,6 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
-
     #查询行业数据
     def readIndustryInfo(self,industryCode="",industryName=""):
         result = {}
@@ -1263,12 +1261,64 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
+    #添加行业历史数据
+    def addIndustryHistoryData(self,symbol,dataSet,period="day"):
+        result = 0
+        try:
+            #首先查询
+            existFlag = False
+            cmd = "industryhistoryqry"
+            querySet = {}
+            querySet["industry_code"] = symbol
+            querySet["date"] = dataSet.get("date","")
+            querySet["period"] = period
+            querySet["limitNum"] = 1
+            rtnData = self.query(cmd,querySet)
+            if rtnData and "data" in rtnData:
+                data = rtnData["data"]
+                if "data" in data:
+                    if data["data"]:
+                        existFlag = True
+
+            if not existFlag:
+                cmd = "industryhistoryadd"
+                querySet = dataSet
+                querySet["industry_code"] = symbol
+                querySet["period"] = period
+
+                rtnData = self.query(cmd,querySet)
+                if rtnData and "data" in rtnData:
+                    data = rtnData["data"]
+                    if "recID" in data:
+                        result = int(data["recID"])
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
+    #获取行业历史数据, date 格式 YYYYMMDD
+    def queryIndustryHistoryData(self,symbol="",date="",startDate="",endDate="",period="day",mode="full",limitNum=0):
+        result = []
+        try:
+            if (startDate < endDate) or (startDate=="") or (endDate==""):
+                cmd = "industryhistoryqry"
+                querySet = {"symbol":symbol,"date":date,"start_date":startDate,"end_date":endDate,"period":period,"mode":mode,"limitNum":limitNum}
+                rtnData = self.query(cmd,querySet)
+                if rtnData and "data" in rtnData:
+                    data = rtnData["data"]
+                    if "data" in data:
+                        result = data["data"]
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e),traceback.format_exc()}"
+            self._errMsg = errMsg       
+        return result
+
     #获取某个指标的最大最小值(dataType="indicator","signal","industry","stock")
-    def getMaxMinData(self,dataType,columnName="date",period="day",adjust="",indicator="",symbol=""):
+    def getMaxMinData(self,dataType,columnName="date",period="day",adjust="",indicator="",symbol="",industry_code=""):
         result = {}
         try:
             cmd = "maxmindataqry"
-            querySet = {"dataType":dataType,"columnName":columnName,"period":period,"adjust":adjust,"indicator":indicator,"symbol":symbol}    
+            querySet = {"dataType":dataType,"columnName":columnName,"period":period,"adjust":adjust,"indicator":indicator,"symbol":symbol,"industry_code":industry_code}    
             rtnData = self.query(cmd,querySet)
             if rtnData and "data" in rtnData:
                 data = rtnData["data"]

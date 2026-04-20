@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch stock data from web and upload to database
 
-_VERSION="20260404"
+_VERSION="20260419"
 
 _DEBUG=True
 
@@ -836,6 +836,66 @@ def updateTradeDayInfo(tradeDay):
     return result
 
 
+#更新一个申万指数的历史行情
+# period = "day", "week", "month" #日k线、周k线、月k线
+def updateOneIndustryHistoryData(symbol,period="day"):
+    result = 0
+    try:
+        #首先获取当前的历史行情更新情况
+        dataType = "industry"
+        maxminData = ylwzStockServer.getMaxMinData(dataType,period=period,industry_code=symbol)
+        lastDate = maxminData.get("max_data","")
+        if lastDate:
+            lastYMD = misc.humanDate2YMD(lastDate)
+        else:
+            passDays = comGD._DEF_STOCK_KEEP_HISTORY_DATA_DAYS
+            lastYMD = misc.getPassday(passDays)
+    
+        if _DEBUG:
+            _LOG.info(f"  - 申万指数代码:{symbol}, 技术指标:{dataType}, 最后一次更新日期:{lastDate}")
+
+        startYMD = lastYMD
+        endYMD = misc.getTime()[0:8]
+        indexHistoryDataList = comStock.getHistoryIndexData(symbol,period=period,startYMD=startYMD,endYMD=endYMD)
+        if indexHistoryDataList:
+            #上传行业历史数据(申银万国)
+            for data in indexHistoryDataList:
+                recID = ylwzStockServer.addIndustryHistoryData(symbol,data,period=period)
+                if recID > 0:
+                    _LOG.info(f"I: 上传行业历史数据完成... 申万指数代码:{symbol},周期:{period},日期:{data.get('date','')},recID:{recID}")
+                    result += 1
+                else:
+                    _LOG.warning(f"E: 上传行业历史数据失败... 申万指数代码:{symbol},周期:{period},日期:{data.get('date','')}")
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
+#上传股票行业当日数据
+def updateStockIndustryHistoryData(YMD):
+    result = 0
+    try:
+        currWeekDay = misc.weekDay()
+        if currWeekDay.wday != 5: #0-4 周一到周五, 5-6 周六周日
+            return result
+
+        _LOG.info(f"I: 只在周六更新股票行业历史数据(申万数据)")
+        #首先获取申万指数代码
+        industrySymbolDataSet = ylwzStockServer.readIndustryInfo()
+        for industrySymbol, item in industrySymbolDataSet.items():
+            industry_name = item.get("industry_name", "")
+            for period in ["day","week","month"]:
+                _LOG.info(f"I: 申万指数代码:{industrySymbol},行业名称:{industry_name},周期:{period}")
+                rtn = updateOneIndustryHistoryData(industrySymbol,period=period)
+                result += rtn
+
+    except Exception as e:
+        errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        _LOG.error(f"{errMsg}, {traceback.format_exc()}")
+    return result
+
+
 #这里是更新在交易日的数据
 def tradeDayDataUpdater(rightDate):
     result = 0
@@ -1270,7 +1330,7 @@ def calcTechnicalSignals():
 def normalDataUpdate(currYMD):
     result = 0
     try:
-        #升级股票基本信息
+        #更新股票基本信息
         rtn = updateStockBasicInfo()
 
         # 根据用户股票列表, 更股票历史数据
@@ -1278,6 +1338,9 @@ def normalDataUpdate(currYMD):
 
         # 计算技术指标
         rtn = updateTechnicalIndicators(currYMD)
+
+        #获取行业数据(每周更新一次)
+        rtn = updateStockIndustryHistoryData(currYMD)
 
         #检查行业数据是否存在
         # rtn = updateIndustryData()

@@ -7,7 +7,7 @@
 #Date: 2022-08-23
 #Description:   通用的配置管理,网络地址等
 
-_VERSION="20260414"
+_VERSION="20260415"
 
 
 import os
@@ -448,7 +448,7 @@ STOCK_SIGNAL_OUTPUT_INDICATOR_MAP = {
     # "kdj":"KDJ随机指标",
     # "rsi":"相对强弱指数",
     "cci":"商品通道指标",
-    "obv":"量能指标",
+    # "obv":"量能指标",
     # 组合指标
     # "fx43":"FX四选三", # Frank Xie 四选三技术指标
     "rsma":" RSI+MACD组合",

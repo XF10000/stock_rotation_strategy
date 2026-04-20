@@ -330,7 +330,7 @@ def swGetStockInfoData():
 
 #获取申万指数历史行情
 # period = "day", "week", "month" #日k线、周k线、月k线
-def swGetIndexHistory(index_symbol,period="week",start_date="20200101"):
+def swGetIndexHistory(index_symbol,period="day",startYMD="20200101"):
     result = []
     try:
         if period == "weekly":
@@ -346,8 +346,9 @@ def swGetIndexHistory(index_symbol,period="week",start_date="20200101"):
         for item in indexHistory:
             item["date"] = item["date"].strftime(f"%Y-%m-%d")
             YMD = item["date"].replace("-","")
-            if YMD > start_date:
+            if YMD > startYMD:
                 result.append(item)
+        misc.time.sleep(0.1)
     except Exception as e:
         traceMsg = traceback.format_exc().strip("")
         errMsg = f"{e},{traceMsg}"

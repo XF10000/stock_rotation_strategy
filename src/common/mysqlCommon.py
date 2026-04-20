@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260406"
+_VERSION="20260419"
 
 #add src directory
 import os
@@ -1418,7 +1418,7 @@ def update_hwinfo_report_record(tableName,recID,dataSet):
 
 
 #hwinfo_report_record 查询记录
-def query_hwinfo_report_record(tableName,recID = "0", hostName = "", YMDHMS="", sortFlag = "DESC",
+def query_hwinfo_report_record(tableName,recID = "0", hostName = "", YMDHMS="", beginYMDHMS="", endYMDHMS="", sortFlag = "DESC",
                                delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
@@ -1437,12 +1437,30 @@ def query_hwinfo_report_record(tableName,recID = "0", hostName = "", YMDHMS="", 
             valuesList = [recID]  
         else:
             if hostName:
-                sqlStr =  sqlStr + " WHERE hostName = %s" 
-                valuesList = [hostName]  
-            elif YMDHMS:
-                sqlStr =  sqlStr + " WHERE regYMDHMS <= %s"
-                valuesList = [YMDHMS]  
-            
+                if valuesList:
+                    sqlStr =  sqlStr + " AND hostName = %s" 
+                else:
+                    sqlStr =  sqlStr + " AND hostName = %s" 
+                valuesList.append(hostName)
+            if YMDHMS:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND YMDHMS <= %s"
+                else:
+                    sqlStr =  sqlStr + " AND YMDHMS <= %s"
+                valuesList.append(YMDHMS)            
+            if beginYMDHMS:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND YMDHMS >= %s"
+                else:
+                    sqlStr =  sqlStr + " AND YMDHMS >= %s"
+                valuesList.append(beginYMDHMS)            
+            if endYMDHMS:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND YMDHMS < %s"
+                else:
+                    sqlStr =  sqlStr + " AND YMDHMS < %s"
+                valuesList.append(endYMDHMS)            
+
             if sortFlag == "DESC":
                 sqlStr = sqlStr + " ORDER BY recID DESC"
 
@@ -1816,17 +1834,11 @@ def query_industry_info(tableName,id = "0", industry_code = "", industry_name = 
 
 #industry_history_data begin 
 
-def tablename_convertor_industry_history_data(period = "day",adjust="",old=""):
+def tablename_convertor_industry_history_data(period = "day",old=""):
     if old:
-        if adjust:
-            tableName = f"industry_history_data_{period}_{adjust}_{old}"
-        else:
-            tableName = f"industry_history_data_{period}_{old}"
+        tableName = f"industry_history_data_{period}_{old}"
     else:
-        if adjust:
-            tableName = f"industry_history_data_{period}_{adjust}"
-        else:
-            tableName = f"industry_history_data_{period}"
+        tableName = f"industry_history_data_{period}"
     tableName = tableName.lower()
     return tableName
 
@@ -2125,7 +2137,7 @@ def update_industry_history_data(tableName,id,dataSet):
 
 
 #industry_history_data 查询记录
-def query_industry_history_data(tableName,id = "0", industry_code = "",
+def query_industry_history_data(tableName,id = "0", industry_code = "",start_date = "",end_date = "",date = "",
                                 delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
@@ -2136,7 +2148,6 @@ def query_industry_history_data(tableName,id = "0", industry_code = "",
 
         try:
             id = int(id)
-
         except:
             id = 0
 
@@ -2147,10 +2158,27 @@ def query_industry_history_data(tableName,id = "0", industry_code = "",
             if industry_code:
                 if valuesList:
                     sqlStr += " AND industry_code = %s"
-                    valuesList.append(industry_code)
                 else:
                     sqlStr += " WHERE industry_code = %s"
-                    valuesList.append(industry_code)
+                valuesList.append(industry_code)
+            if start_date:
+                if valuesList:
+                    sqlStr += " AND date >= %s"
+                else:
+                    sqlStr += " WHERE date >= %s"
+                valuesList.append(start_date)
+            if end_date:
+                if valuesList:
+                    sqlStr += " AND date < %s"
+                else:
+                    sqlStr += " WHERE date < %s"
+                valuesList.append(end_date)
+            if date:
+                if valuesList:
+                    sqlStr += " AND date = %s"
+                else:
+                    sqlStr += " WHERE date = %s"
+                valuesList.append(date)
 
         if limitNum > 0:
             sqlStr += " LIMIT {0}".format(limitNum)
@@ -9413,7 +9441,7 @@ def update_data_check_log(tableName,id,dataSet):
 
 
 #data_check_log 查询记录
-def query_data_check_log(tableName,id = "0", delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
+def query_data_check_log(tableName,id = "0", date = "", start_date = "", end_date = "", delFlag = "0", mode = "full",limitNum = comGD._DEF_MAX_QUERY_LIMIT_NUM):
     result = []
     columns = "*"
     valuesList = []
@@ -9423,13 +9451,32 @@ def query_data_check_log(tableName,id = "0", delFlag = "0", mode = "full",limitN
 
         try:
             id = int(id)
-
         except:
             id = 0
 
         if id > 0:
             sqlStr =  sqlStr + " WHERE id = %s" 
             valuesList = [id]  
+        else:
+            if date:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND report_date = %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE report_date = %s" 
+                valuesList.append(date)
+
+            if start_date:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND report_date >= %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE report_date >= %s" 
+                valuesList.append(start_date)
+            if end_date:
+                if valuesList:
+                    sqlStr =  sqlStr + " AND report_date < %s" 
+                else:
+                    sqlStr =  sqlStr + " WHERE report_date < %s" 
+                valuesList.append(end_date)
 
         #if limitNum > 0:
             #sqlStr += " LIMIT {0}".format(limitNum)
@@ -10177,7 +10224,7 @@ def query_user_technical_signal(stock_code="",stock_name="", sortFlag="DESC", ac
 
 
 # 查询表数据中date的最大值和最小值(第一个值和最后一个值)
-def query_min_max_data(tableName,column="date",stock_code="",period="",adjust="",indicator=""):
+def query_min_max_data(tableName,column="date",stock_code="",industry_code="",period="",adjust="",indicator=""):
     result = {}
     valuesList = []
     sqlStr = f"SELECT min({column}) as min_data, max({column}) as max_data FROM {tableName}"
@@ -10186,6 +10233,12 @@ def query_min_max_data(tableName,column="date",stock_code="",period="",adjust=""
         if stock_code:
             sqlStr += " WHERE stock_code = %s"
             valuesList.append(stock_code)
+        if industry_code:
+            if valuesList:
+                sqlStr += " AND industry_code = %s"
+            else:
+                sqlStr += " WHERE industry_code = %s"
+            valuesList.append(industry_code)
         if period:
             if valuesList:
                 sqlStr += " AND period = %s"
@@ -10271,10 +10324,10 @@ def checkMySqlDataBase():
         rtn = create_stock_dividend_data(tableName)
 
     periods = ["day","week","month"]
-    adjusts = ["","hfq","qfq"]
+    # adjusts = ["","hfq","qfq"]
     for period in periods:
-        for adjust in adjusts:
-            tableName = tablename_convertor_industry_history_data(period,adjust)
+        # for adjust in adjusts:
+            tableName = tablename_convertor_industry_history_data(period)
             if chkTableExist(tableName) == False:
                 rtn = create_industry_history_data(tableName)
 
@@ -10354,10 +10407,10 @@ def dropMySqlDataBase():
         rtn = drop_stock_dividend_data(tableName)
 
     periods = ["day","week","month"]
-    adjusts = ["","hfq","qfq"]
+    # adjusts = ["","hfq","qfq"]
     for period in periods:
-        for adjust in adjusts:
-            tableName = tablename_convertor_industry_history_data(period,adjust)
+        # for adjust in adjusts:
+            tableName = tablename_convertor_industry_history_data(period)
             if chkTableExist(tableName):
                 rtn = drop_industry_history_data(tableName)
 

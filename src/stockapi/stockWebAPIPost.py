@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260414"
+_VERSION="20260419"
 
 
 import os
@@ -6110,6 +6110,7 @@ def funcIndustryHistoryAdd(CMD,dataSet,sessionIDSet):
         if tempUserID != "":
             loginID = tempUserID
             #权限检查
+            period = dataSet.get("period","")
 
             if errCode == "B0": #
                 #data validation check
@@ -6141,7 +6142,7 @@ def funcIndustryHistoryAdd(CMD,dataSet,sessionIDSet):
                     saveSet["regID"] = loginID
                     saveSet["regYMDHMS"] = misc.getTime()
 
-                    tableName = comMysql.tablename_convertor_industry_history_data()
+                    tableName = comMysql.tablename_convertor_industry_history_data(period=period)
                     recID = comMysql.insert_industry_history_data(tableName,saveSet)
                     rtnData["recID"] = str(recID)
 
@@ -6203,10 +6204,11 @@ def funcIndustryHistoryDel(CMD,dataSet,sessionIDSet):
         if tempUserID != "":
             loginID = tempUserID
             #权限检查
+            period = dataSet.get("period","")
 
             if errCode == "B0": #
                 id = dataSet.get("id", "")
-                tableName = comMysql.tablename_convertor_industry_history_data()
+                tableName = comMysql.tablename_convertor_industry_history_data(period=period)
                 currDataList = comMysql.query_industry_history_data(tableName,id)
                 if len(currDataList) == 1:
                     saveSet = {}
@@ -6275,7 +6277,8 @@ def funcIndustryHistoryModify(CMD,dataSet,sessionIDSet):
                 #data validation check
                 dataValidFlag = True
 
-                id = dataSet.get("id") 
+                period = dataSet.get("period","")
+
                 industry_code = dataSet.get("industry_code") 
                 date = dataSet.get("date") 
                 open = dataSet.get("open") 
@@ -6300,7 +6303,7 @@ def funcIndustryHistoryModify(CMD,dataSet,sessionIDSet):
                     #当前记录获取
                     recID = dataSet.get("id", "")
 
-                    tableName = comMysql.tablename_convertor_industry_history_data()
+                    tableName = comMysql.tablename_convertor_industry_history_data(period=period)
                     currDataList = comMysql.query_industry_history_data(tableName,recID)
 
                     if len(currDataList) == 1:
@@ -6372,7 +6375,7 @@ def funcIndustryHistoryModify(CMD,dataSet,sessionIDSet):
                                 saveSet["modifyYMDHMS"] = misc.getTime()
 
                                 #保存数据
-                                tableName = comMysql.tablename_convertor_industry_history_data()
+                                tableName = comMysql.tablename_convertor_industry_history_data(period=period)
                                 rtn = comMysql.update_industry_history_data(tableName,recID,saveSet)
                                 rtnData["rtn"] = str(rtn)
 
@@ -6447,8 +6450,17 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
                 #获取查询输入参数
                 id = dataSet.get("id", "")
 
-                #houseID = dataSet.get("houseID", "")
-                industry_code = dataSet.get("industry_code", "")
+                symbol = dataSet.get("symbol", "")
+                if symbol:
+                    industry_code = symbol
+                else:
+                    industry_code = dataSet.get("industry_code", "")
+
+                queryDate = dataSet.get("date","")
+                
+                startDate = dataSet.get("startDate", "")
+                endDate = dataSet.get("endDate", "")
+                period = dataSet.get("period", "day")
 
                 forceFlashFlag = dataSet.get("forceFlashFlag",comGD._CONST_NO) #是否强制查询(刷新)标记
 
@@ -6470,6 +6482,14 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
                         indexKeyDataSet["id"] = id
                     if industry_code:
                         indexKeyDataSet["industry_code"] = industry_code
+                    if queryDate:
+                        indexKeyDataSet["date"] = queryDate
+                    if startDate:
+                        indexKeyDataSet["startDate"] = startDate
+                    if endDate:
+                        indexKeyDataSet["endDate"] = endDate
+                    if period:
+                        indexKeyDataSet["period"] = period
                     if searchOption:
                         indexKeyDataSet["searchOption"] = searchOption
                     if mode:
@@ -6488,7 +6508,7 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
 
                         if searchOption:
                             currDataList = []
-                            tableName = comMysql.tablename_convertor_industry_history_data()
+                            tableName = comMysql.tablename_convertor_industry_history_data(period=period)
                             allDataList = comMysql.query_industry_history_data(tableName,mode = mode,limitNum=limitNum)
                             allowList = ["description", "label"] #筛选字段
                             serachResultSet = comFC.handleSearchOption(searchOption,allowList, allDataList)
@@ -6496,11 +6516,12 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
                                 currDataList = serachResultSet.get("data", [])
                         else:
                             if id:
-                                tableName = comMysql.tablename_convertor_industry_history_data()
+                                tableName = comMysql.tablename_convertor_industry_history_data(period=period)
                                 currDataList = comMysql.query_industry_history_data(tableName,id,mode = mode,limitNum=limitNum)
                             else:
-                                tableName = comMysql.tablename_convertor_industry_history_data()
-                                currDataList = comMysql.query_industry_history_data(tableName,industry_code=industry_code,mode = mode,limitNum=limitNum)
+                                tableName = comMysql.tablename_convertor_industry_history_data(period=period)
+                                currDataList = comMysql.query_industry_history_data(tableName,industry_code=industry_code,date=queryDate,
+                                            start_date=startDate,end_date=endDate,mode = mode,limitNum=limitNum)
 
                         dataList = []
 
@@ -6521,8 +6542,21 @@ def funcIndustryHistoryQry(CMD,dataSet,sessionIDSet):
                             aSet["close"] = currDataSet.get("close","")
                             aSet["high"] = currDataSet.get("high","")
                             aSet["low"] = currDataSet.get("low","")
-                            aSet["volume"] = currDataSet.get("volume","")
-                            aSet["amount"] = currDataSet.get("amount","")
+                            volumeInM = currDataSet.get("volume","") #单位百万股
+                            try:
+                                volumeInM = float(volumeInM)
+                            except:
+                                volumeInM = 0
+                            amountInYi = currDataSet.get("amount","") #单位亿元
+                            try:
+                                amountInYi = float(amountInYi)
+                            except:
+                                amountInYi = 0
+                            amountInM = amountInYi * 100 #单位百万
+                            aSet["volumeInM"] = volumeInM
+                            aSet["amountInM"] = amountInM
+                            aSet["volume"] = volumeInM * 1000000
+                            aSet["amount"] = amountInM * 1000000
                             aSet["amplitude"] = currDataSet.get("amplitude","")
                             aSet["pct_change"] = currDataSet.get("pct_change","")
                             aSet["price_change"] = currDataSet.get("price_change","")
@@ -12397,6 +12431,7 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
                     stock_code = symbol
                 else:
                     stock_code = dataSet.get("stock_code")
+                industry_code = dataSet.get("industry_code")
                 #直接给出表名
                 tableName = dataSet.get("tableName", "")
                 if not tableName:
@@ -12406,7 +12441,7 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
                     adjust = dataSet.get("adjust", "")
                     indicator = dataSet.get("indicator", "")
                     if dataType == "industry":
-                        tableName = comMysql.tablename_convertor_industry_history_data(period,adjust)
+                        tableName = comMysql.tablename_convertor_industry_history_data(period)
                     elif dataType == "indicator":
                         tableName = comMysql.tablename_convertor_technical_indicators(period,adjust)
                     elif dataType == "signal":
@@ -12420,9 +12455,7 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
                 if not columnName:
                     columnName = "date"
 
-                if tableName in ["industry_history_data_day","industry_history_data_day_hfq","industry_history_data_day_qfq",
-                    "industry_history_data_week","industry_history_data_week_hfq","industry_history_data_week_qfq",
-                    "industry_history_data_month","industry_history_data_month_hfq","industry_history_data_month_qfq",
+                if tableName in ["industry_history_data_day","industry_history_data_week","industry_history_data_month",
                     "stock_history_data_day","stock_history_data_day_hfq","stock_history_data_day_qfq",
                     "stock_history_data_week","stock_history_data_week_hfq","stock_history_data_week_qfq",
                     "stock_history_data_month","stock_history_data_month_hfq","stock_history_data_month_qfq",
@@ -12439,7 +12472,7 @@ def funcMaxMinDataQry(CMD,dataSet,sessionIDSet):
                     if tableName in ["technical_signal"]:
                         currDataSet = comMysql.query_min_max_data(tableName,column=columnName,stock_code=stock_code,period=period,adjust=adjust,indicator=indicator)
                     else:
-                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,stock_code=stock_code)
+                        currDataSet = comMysql.query_min_max_data(tableName,column=columnName,stock_code=stock_code,industry_code=industry_code)
                     rtnData["data"] = currDataSet
 
                     result = rtnData

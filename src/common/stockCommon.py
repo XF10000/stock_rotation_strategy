@@ -840,12 +840,12 @@ def filterIndexData(indexDataList,startYMD,endYMD):
 
 
 #获取行业历史数据(申银万国)
-def getHistoryIndexData(symbol,period,startYMD, endYMD):
+def getHistoryIndexData(symbol,period,startYMD, endYMD=""):
     result = []
     try:
         if startYMD < endYMD:
             #获取行业历史数据(申银万国)
-            result = comAK.swGetIndexHistory(symbol, period, startYMD)
+            result = comAK.swGetIndexHistory(index_symbol=symbol, period=period, startYMD=startYMD)
     except Exception as e:
         errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
         # _LOG.error(f"{errMsg}, {traceback.format_exc()}")

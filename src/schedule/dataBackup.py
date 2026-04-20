@@ -8,7 +8,7 @@
 #Description: 服务器数据备份部分, 主要是备份用户数据
 
 
-_VERSION="20260314"
+_VERSION="20260419"
 
 _DEBUG=True
 
@@ -92,14 +92,14 @@ backupTableNameList = [
     # "income_statements",
     # "indicator_medians",
     "industry_history_data_day",
-    "industry_history_data_day_hfq",
-    "industry_history_data_day_qfq",
+    # "industry_history_data_day_hfq",
+    # "industry_history_data_day_qfq",
     "industry_history_data_month",
-    "industry_history_data_month_hfq",
-    "industry_history_data_month_qfq",
+    # "industry_history_data_month_hfq",
+    # "industry_history_data_month_qfq",
     "industry_history_data_week",
-    "industry_history_data_week_hfq",
-    "industry_history_data_week_qfq",
+    # "industry_history_data_week_hfq",
+    # "industry_history_data_week_qfq",
     "industry_info",
     # "stock_dividend_data",
     "stock_history_data_day",

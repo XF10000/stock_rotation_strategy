@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260403"
+_VERSION = "20260419"
 
 import os
 import sys
@@ -371,16 +371,12 @@ def swGetStockInfoData():
     return result
 
 
-#获取申万指数历史行情
-def swGetIndexHistory(index_symbol, period="week", start_date="20200101"):
+#获取申万指数历史行情,需要5000积分
+def swGetIndexHistory(index_symbol, period="day", startYMD="20200101"):
     result = []
-    try:
-        # Tushare 使用不同的周期参数
-        freq_map = {"day": "D", "week": "W", "month": "M"}
-        freq = freq_map.get(period, "D")
-        
-        indexHistory = tusharePro.index_daily(ts_code=index_symbol, 
-                                      start_date=start_date,
+    try:       
+        indexHistory = tusharePro.sw_daily(ts_code=index_symbol, 
+                                      start_date=startYMD,
                                       end_date=misc.getTime()[:8])
         misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
         
