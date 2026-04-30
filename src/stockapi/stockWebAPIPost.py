@@ -8,7 +8,7 @@
 #Description:  stock web api
 
 
-_VERSION="20260419"
+_VERSION="20260424"
 
 
 import os
@@ -1092,6 +1092,7 @@ def funcUserModify(CMD, dataSet, sessionIDSet):
                 else:
                     errCode = "BT"
             requestData["userID"] = loginID #需要修改的人员的ID
+            requestData["modifyID"] = tempUserID #修改人 的loginID
 
             # #roleName 转换
             # userRoleName = dataSet.get("roleName")
@@ -3094,6 +3095,7 @@ def funcIndustryInfoAdd(CMD,dataSet,sessionIDSet):
                     saveSet["TTM_PE_ratio"] = dataSet.get("TTM_PE_ratio", "") 
                     saveSet["PB_ratio"] = dataSet.get("PB_ratio", "") 
                     saveSet["static_divident_yield"] = dataSet.get("static_divident_yield", "") 
+                    saveSet["volatility_rating"] = dataSet.get("volatility_rating", "") 
                     saveSet["label1"] = dataSet.get("label1", "") 
                     saveSet["label2"] = dataSet.get("label2", "") 
                     saveSet["label3"] = dataSet.get("label3", "") 
@@ -3253,6 +3255,7 @@ def funcIndustryInfoModify(CMD,dataSet,sessionIDSet):
                 TTM_PE_ratio = dataSet.get("TTM_PE_ratio") 
                 PB_ratio = dataSet.get("PB_ratio") 
                 static_divident_yield = dataSet.get("static_divident_yield") 
+                volatility_rating = dataSet.get("volatility_rating") 
                 label1 = dataSet.get("label1") 
                 label2 = dataSet.get("label2") 
                 label3 = dataSet.get("label3") 
@@ -3324,6 +3327,9 @@ def funcIndustryInfoModify(CMD,dataSet,sessionIDSet):
 
                             if static_divident_yield != currDataSet.get("static_divident_yield"):
                                 saveSet["static_divident_yield"] = static_divident_yield
+
+                            if volatility_rating != currDataSet.get("volatility_rating") and volatility_rating:
+                                saveSet["volatility_rating"] = volatility_rating
 
                             if label1 != currDataSet.get("label1") and label1:
                                 saveSet["label1"] = label1
@@ -3523,6 +3529,7 @@ def funcIndustryInfoQry(CMD,dataSet,sessionIDSet):
                             aSet["TTM_PE_ratio"] = currDataSet.get("TTM_PE_ratio","")
                             aSet["PB_ratio"] = currDataSet.get("PB_ratio","")
                             aSet["static_divident_yield"] = currDataSet.get("static_divident_yield","")
+                            aSet["volatility_rating"] = currDataSet.get("volatility_rating","")
                             aSet["label1"] = currDataSet.get("label1","")
                             aSet["label2"] = currDataSet.get("label2","")
                             aSet["label3"] = currDataSet.get("label3","")

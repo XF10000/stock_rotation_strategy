@@ -973,7 +973,7 @@ class StockServer:
             self._errMsg = errMsg       
         return result
 
-    #获取股票交易日数据
+    #获取股票交易日数据,返回的数据不包括currYMD
     def readStockTradeDateList(self,startYMD,currYMD):
         result = []
         try:

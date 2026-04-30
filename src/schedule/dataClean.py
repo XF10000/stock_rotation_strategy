@@ -7,7 +7,7 @@
 #Date: 2019-10-21
 #Description:   服务器数据清理和统计部分
 
-_VERSION="20260419"
+_VERSION="20260420"
 
 _DEBUG=True
 
@@ -366,7 +366,8 @@ def writeUser2UserBasic(dataSet,operatorLoginID="system"):
             #extend items end
         
             if saveSet:
-                saveSet["modifyID"] = operatorLoginID
+                if modifyID not in saveSet:
+                    saveSet["modifyID"] = operatorLoginID
                 saveSet["modifyYMDHMS"] = misc.getTime()
 
                 result = comMysql.updateUserBasic(loginID, saveSet)
@@ -422,8 +423,8 @@ def writeUser2UserBasic(dataSet,operatorLoginID="system"):
             saveSet["extMemo"] = extMemo
 
             #extend items end
-    
-            saveSet["regID"] = operatorLoginID
+            if regID not in saveSet:
+                saveSet["regID"] = operatorLoginID
             saveSet["regYMDHMS"] = misc.getTime()
 
             result = comMysql.insertUserBasic(loginID, saveSet)

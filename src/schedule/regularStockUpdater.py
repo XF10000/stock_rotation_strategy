@@ -7,7 +7,7 @@
 #Date: 2026-01-12
 #Description: regular fetch stock data from web and upload to database
 
-_VERSION="20260419"
+_VERSION="20260428"
 
 _DEBUG=True
 
@@ -187,10 +187,8 @@ def getRightStockDate():
         currWeekDay = misc.weekDay()
         passdayNum = 0
         if ifTradeDay():
-            #周六,周日 + 节假日
-            if currWeekDay.wday == 0: #周一, 取前一个周五
-                passdayNum = 3
-            elif currWeekDay.wday == 5: #周六, 取前一个周五
+            #周六,周日 
+            if currWeekDay.wday == 5: #周六, 取前一个周五
                 passdayNum = 1
             elif currWeekDay.wday == 6: #周日, 取前一个周五
                 passdayNum = 2
@@ -199,7 +197,7 @@ def getRightStockDate():
                 pass               
         else:
             if currWeekDay.wday == 0: 
-                if currHMS < "150000":
+                if currHMS < comGD._DEF_STOCK_CLOSE_END_TIME:
                     #周一而且时间在15:00之前, 取前一个周五
                     passdayNum = 3
                     pass
@@ -460,6 +458,11 @@ def checkStockDataValid(stockDataList):
 def updateStockCloseData(rightDate):
     result = 0
     try:
+        YMDHMS = misc.getTime()
+        HMS = YMDHMS[8:]
+        if HMS > comGD._DEF_STOCK_OPEN_BEGIN_TIME and HMS < comGD._DEF_STOCK_CLOSE_END_TIME:
+            _LOG.warning(f"E: 当前时间{YMDHMS} 不是收盘时间, 不更新股票收盘数据...")
+            return result
         _LOG.info(f"I: 更新股票收盘数据开始...,请等待,大约2分钟 ")
         rightYMD = misc.humanDate2YMD(rightDate)
         #增加数据检查日志
@@ -1209,13 +1212,14 @@ def updateStockHistoryData(currYMD):
         if allUserStockList:
             #计算股票信息开始和结束日期
             startYMD = misc.getPassday(comGD._DEF_STOCK_KEEP_HISTORY_DATA_DAYS)
+            endYMD = misc.getPassday(-1,currYMD) #readStockTradeDateList 不包括currYMD,因此需要增加一天
 
             startDate = startYMD[0:4] + "-" + startYMD[4:6] + "-" + startYMD[6:8]
-            endDate = currYMD[0:4] + "-" + currYMD[4:6] + "-" + currYMD[6:8]
+            endDate = endYMD[0:4] + "-" + endYMD[4:6] + "-" + endYMD[6:8]
 
             _LOG.info(f"I: 开始检查股票信息是否存在... ")
             #获取股票交易日数据
-            stockTradeDateList = ylwzStockServer.readStockTradeDateList(startYMD, currYMD)
+            stockTradeDateList = ylwzStockServer.readStockTradeDateList(startYMD, endYMD)
             tradeDateList = ylwzStockServer.convertTradeDate2Set(stockTradeDateList)
         
             for symbol in allUserStockList:

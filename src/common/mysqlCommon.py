@@ -9,7 +9,7 @@
 #mysql数据库信息也存储在这里, 主要是只有部分程序需要处理mysql数据库, 读写已经分离, 目前主要是采用sql语句处理, 已经防止注入攻击. 
 
 
-_VERSION="20260419"
+_VERSION="20260428"
 
 #add src directory
 import os
@@ -1440,25 +1440,25 @@ def query_hwinfo_report_record(tableName,recID = "0", hostName = "", YMDHMS="", 
                 if valuesList:
                     sqlStr =  sqlStr + " AND hostName = %s" 
                 else:
-                    sqlStr =  sqlStr + " AND hostName = %s" 
+                    sqlStr =  sqlStr + " WHERE hostName = %s" 
                 valuesList.append(hostName)
             if YMDHMS:
                 if valuesList:
                     sqlStr =  sqlStr + " AND YMDHMS <= %s"
                 else:
-                    sqlStr =  sqlStr + " AND YMDHMS <= %s"
+                    sqlStr =  sqlStr + " WHERE YMDHMS <= %s"
                 valuesList.append(YMDHMS)            
             if beginYMDHMS:
                 if valuesList:
                     sqlStr =  sqlStr + " AND YMDHMS >= %s"
                 else:
-                    sqlStr =  sqlStr + " AND YMDHMS >= %s"
+                    sqlStr =  sqlStr + " WHERE YMDHMS >= %s"
                 valuesList.append(beginYMDHMS)            
             if endYMDHMS:
                 if valuesList:
                     sqlStr =  sqlStr + " AND YMDHMS < %s"
                 else:
-                    sqlStr =  sqlStr + " AND YMDHMS < %s"
+                    sqlStr =  sqlStr + " WHERE YMDHMS < %s"
                 valuesList.append(endYMDHMS)            
 
             if sortFlag == "DESC":
@@ -1519,6 +1519,7 @@ def create_industry_info(tableName):
     "TTM_PE_ratio float COMMENT 'TTM(滚动)市盈率',",
     "PB_ratio float COMMENT '市净率',",
     "static_divident_yield float COMMENT '静态股息率',",
+    "volatility_rating VARCHAR(4) COMMENT '波动率评级',",
     "label1 VARCHAR(32) NULL,",
     "label2 VARCHAR(32) NULL,",
     "label3 VARCHAR(32) NULL,",
@@ -1627,6 +1628,8 @@ def insert_industry_info(tableName,dataSet):
             static_divident_yield = 0 
         saveSet["static_divident_yield"] = static_divident_yield
 
+        saveSet["volatility_rating"] = dataSet.get("volatility_rating", "") 
+
         saveSet["label1"] = dataSet.get("label1", "") 
 
         saveSet["label2"] = dataSet.get("label2", "") 
@@ -1729,6 +1732,10 @@ def update_industry_info(tableName,id,dataSet):
             saveSet["static_divident_yield"] = static_divident_yield
         except:
             pass
+
+        volatility_rating = dataSet.get("volatility_rating") 
+        if volatility_rating:
+            saveSet["volatility_rating"] = volatility_rating
 
         label1 = dataSet.get("label1") 
         if label1:
@@ -3006,17 +3013,23 @@ def query_stock_history_data(tableName,id = "0", stock_code="",stock_name="",sta
 
 #technical_indicators begin 
 
-def tablename_convertor_technical_indicators(period = "day",adjust="",old=""):
-    if old:
-        if adjust:
-            tableName = f"technical_indicators_{period}_{adjust}_{old}"
+def tablename_convertor_technical_indicators(period = "day",adjust="",old="",industry=False):
+    if industry:
+        if old:
+            tableName = f"industry_indicators_{period}_{old}"
         else:
-            tableName = f"technical_indicators_{period}_{old}"
+            tableName = f"industry_indicators_{period}"
     else:
-        if adjust:
-            tableName = f"technical_indicators_{period}_{adjust}"
+        if old:
+            if adjust:
+                tableName = f"technical_indicators_{period}_{adjust}_{old}"
+            else:
+                tableName = f"technical_indicators_{period}_{old}"
         else:
-            tableName = f"technical_indicators_{period}"
+            if adjust:
+                tableName = f"technical_indicators_{period}_{adjust}"
+            else:
+                tableName = f"technical_indicators_{period}"
     tableName = tableName.lower()
     return tableName
 
@@ -10312,10 +10325,12 @@ def checkMySqlDataBase():
     adjusts = ["","hfq","qfq"]
     for period in periods:
         for adjust in adjusts:
+            #stock history data
             tableName = tablename_convertor_stock_history_data(period,adjust)
             if chkTableExist(tableName) == False:
                 rtn = create_stock_history_data(tableName)
             tableName = tablename_convertor_technical_indicators(period,adjust)
+            #stock technical indicators
             if chkTableExist(tableName) == False:
                 rtn = create_technical_indicators(tableName)
 
@@ -10324,12 +10339,15 @@ def checkMySqlDataBase():
         rtn = create_stock_dividend_data(tableName)
 
     periods = ["day","week","month"]
-    # adjusts = ["","hfq","qfq"]
     for period in periods:
-        # for adjust in adjusts:
-            tableName = tablename_convertor_industry_history_data(period)
-            if chkTableExist(tableName) == False:
-                rtn = create_industry_history_data(tableName)
+        #industry history data
+        tableName = tablename_convertor_industry_history_data(period)
+        if chkTableExist(tableName) == False:
+            rtn = create_industry_history_data(tableName)
+        #industry technical indicators
+        tableName = tablename_convertor_technical_indicators(period,industry=True)
+        if chkTableExist(tableName) == False:
+            rtn = create_technical_indicators(tableName)
 
     tableName = tablename_convertor_balance_sheets()
     if chkTableExist(tableName) == False:
@@ -10400,19 +10418,22 @@ def dropMySqlDataBase():
                 rtn = drop_stock_history_data(tableName)
             tableName = tablename_convertor_technical_indicators(period,adjust)
             if chkTableExist(tableName):
-                rtn = drop_stock_history_data(tableName)
+                rtn = drop_technical_indicators(tableName)
 
     tableName = tablename_convertor_stock_dividend_data()
     if chkTableExist(tableName):
         rtn = drop_stock_dividend_data(tableName)
 
     periods = ["day","week","month"]
-    # adjusts = ["","hfq","qfq"]
     for period in periods:
-        # for adjust in adjusts:
-            tableName = tablename_convertor_industry_history_data(period)
+        #industry history data
+        tableName = tablename_convertor_industry_history_data(period)
+        if chkTableExist(tableName):
+            rtn = drop_industry_history_data(tableName)
+            #industry technical indicators
+            tableName = tablename_convertor_technical_indicators(period,industry=True)
             if chkTableExist(tableName):
-                rtn = drop_industry_history_data(tableName)
+                rtn = drop_technical_indicators(tableName)
 
     tableName = tablename_convertor_balance_sheets()
     if chkTableExist(tableName):

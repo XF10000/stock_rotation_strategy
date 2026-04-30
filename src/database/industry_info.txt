@@ -14,6 +14,7 @@ static_PE_ratio float COMMENT '静态市盈率'
 TTM_PE_ratio float COMMENT 'TTM(滚动)市盈率'
 PB_ratio float COMMENT '市净率'
 static_divident_yield float COMMENT '静态股息率'
+volatility_rating VARCHAR(4) COMMENT '波动率评级'
 label1 VARCHAR(32) NULL
 label2 VARCHAR(32) NULL
 label3 VARCHAR(32) NULL

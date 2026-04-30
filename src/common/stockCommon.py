@@ -429,7 +429,7 @@ def getHistoryStockData(symbol,startYMD,endYMD,period="",adjust=""):
             if passedDay < startYMD:
                 startYMD = passedDay
 
-        if startYMD < endYMD:
+        if startYMD <= endYMD:
             #首先从tushare获取数据
             result = comTS.getHistroryData(symbol, startYMD, endYMD,period,adjust)
             if result == None:

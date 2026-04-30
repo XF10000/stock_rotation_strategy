@@ -12,7 +12,7 @@
 
 #所有股票内容, symbol = 纯数字代码, 其他英文内容均采用小写,并用"_"连接
 
-_VERSION = "20260419"
+_VERSION = "20260421"
 
 import os
 import sys
@@ -539,6 +539,75 @@ def getHistroryData(symbol, startDate, endDate, period="day", adjust=""):
         result = None
     return result
 
+
+#同时获取日,周,月线数据
+def getAllHistroryData(symbol, startDate, endDate,adjust=""):
+    result = {}
+    try:      
+        if adjust:
+            result = None
+        else:          
+            if len(startDate) == 10:
+                startDate = startDate[:4] + startDate[5:7] + startDate[8:10]
+            if len(endDate) == 10:
+                endDate = endDate[:4] + endDate[5:7] + endDate[8:10]
+            
+            market_info = identifyMarket(symbol)
+            ts_code = market_info.get('ts_code', symbol)
+            
+            # 获取日线数据
+            df = tusharePro.daily(ts_code=ts_code, start_date=startDate, end_date=endDate)
+            
+            if not df.empty:
+                df.rename(columns={'trade_date': 'date', 'ts_code': 'ts_code',
+                                'open': 'open', 'close': 'close','pre_close':'prev_close',
+                                'high': 'high', 'low': 'low','amount': 'amount',
+                                'pct_chg': 'pct_change', 'change': 'change'}, inplace=True)
+                df["volume"] = int(df["vol"].astype(float) * 100) #tushare数据是手，转换为股数
+                df["amount"] = df["amount"].astype(float) * 1000 #tushare数据是千元，转换为元
+                
+                # 转换为周线或月线
+                weekDF = df.resample('W-FRI').agg({
+                    'open': 'first',
+                    'high': 'max',
+                    'low': 'min',
+                    'close': 'last',
+                    'volume': 'sum',
+                    'amount': 'sum',
+                    'pct_change': 'last',
+                    'change': 'last',
+                    'symbol': 'last'
+                })
+                weekDF = weekDF.reset_index()
+                monthDF = df.resample('M').agg({
+                    'open': 'first',
+                    'high': 'max',
+                    'low': 'min',
+                    'close': 'last',
+                    'volume': 'sum',
+                    'amount': 'sum',
+                    'pct_change': 'last',
+                    'change': 'last',
+                    'symbol': 'last'
+                })
+                monthDF = monthDF.reset_index()
+                # 转换日期格式为YYYY-MM-DD
+                df['date'] = df['date'].str[:4] + '-' + df['date'].str[4:6] + '-' + df['date'].str[6:8]
+                weekDF['date'] = weekDF['date'].str[:4] + '-' + weekDF['date'].str[4:6] + '-' + weekDF['date'].str[6:8]
+                monthDF['date'] = monthDF['date'].str[:4] + '-' + monthDF['date'].str[4:6] + '-' + monthDF['date'].str[6:8]
+                # 转换为symbol格式
+                df['symbol'] = df['ts_code'].str.split('.').str[0]
+                weekDF['symbol'] = weekDF['ts_code'].str.split('.').str[0]
+                monthDF['symbol'] = monthDF['ts_code'].str.split('.').str[0]
+                result["day"] = df.to_dict(orient='records')
+                result["week"] = weekDF.to_dict(orient='records')
+                result["month"] = monthDF.to_dict(orient='records')
+        misc.time.sleep(TUSHARE_TIME_LIMIT) # 避免对Tushare API的频繁请求, tushare 限制一分钟500次
+    except Exception as e:
+        traceMsg = traceback.format_exc().strip("")
+        errMsg = f"{e},{traceMsg}"
+        result = None
+    return result
 
 
 '''

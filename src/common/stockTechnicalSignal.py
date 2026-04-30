@@ -6,17 +6,18 @@
 #E-mail:  steven.lian@gmail.com  / xie_frank@163.com
 #Date: 2019-08-01
 #Description:   技术指标计算 - 计算主要技术指标代表的含义
-# 1. macd的金叉/死叉,顶背离/底背离
-# 2. bollinger band的金叉/死叉,顶背离/底背离
-# 3. kdj的金叉/死叉,顶背离/底背离
-# 4. rsi的金叉/死叉,顶背离/底背离
-# 5. obv的金叉/死叉,顶背离/底背离(成交量指标)
-# 6. cci的金叉/死叉,顶背离/底背离(价格指标)
-# 7. frank xie 43指标的金叉/死叉,顶背离/底背离(综合指标)
-# 8. rsi + macd 组合指标的金叉/死叉,顶背离/底背离(综合指标)
-# 9. obv + ma + rsi 组合指标的金叉/死叉,顶背离/底背离(综合指标)
+# 1. 支撑位/压力位计算
+# 2. macd 的金叉/死叉,顶背离/底背离
+# 3. bollinger band的金叉/死叉,顶背离/底背离
+# 4. kdj 的金叉/死叉,顶背离/底背离
+# 5. rsi 的金叉/死叉,顶背离/底背离
+# 6. obv 的金叉/死叉,顶背离/底背离(成交量指标)
+# 7. cci 的金叉/死叉,顶背离/底背离(价格指标)
+# 8. frank xie 43指标的金叉/死叉,顶背离/底背离(综合指标)
+# 9. rsi + macd 组合指标的金叉/死叉,顶背离/底背离(综合指标)
+# 10. obv + ma + rsi 组合指标的金叉/死叉,顶背离/底背离(综合指标)
 
-__VERSION="20260414"
+_VERSION="20260430"
 
 import os
 import sys
@@ -90,6 +91,138 @@ def getIndicatorName(signalType):
     indicator = ""
     indicator = indicatorNameDataSet.get(signalType, "")
     return indicator
+
+# 支撑位/压力位计算
+class SupportPressureCalculator:
+    symbol = ""
+    spData = pd.DataFrame()
+    ratios = {
+        'Level_0': 0,
+        'Level_236': 0.236,
+        'Level_382': 0.382,
+        'Level_500': 0.500,
+        'Level_618': 0.618,
+        'Level_786': 0.786,
+        'Level_100': 1.00
+    }   
+
+    def __init__(self, df):
+        self.spData = df
+
+    def calculate_fibonacci(self, high_price, low_price, direction='up', precision=3):
+        """
+        Calculates Fibonacci levels and rounds them to a specific precision.
+        """
+        levels = {}
+        try:
+            # Ensure inputs are float
+            high = float(high_price)
+            low = float(low_price)
+            diff = high - low
+                
+            for name, r in self.ratios.items():
+                if direction == 'up':
+                    # Rounding the floating point result
+                    val = high - (diff * r)
+                else:
+                    val = low + (diff * r)
+                    
+                levels[name] = round(val, precision)
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+                
+        return levels
+
+    # 假设 df 是包含 'High' 和 'Low' 列的股价数据
+    def calculate_df_fibonacci(self,df=None,direction='up',precision=3):
+        if df is None:
+            df = self.spData
+        levels = {}
+        try:
+            price_high = df['high'].max()
+            price_low = df['low'].min()
+            diff = price_high - price_low
+        
+            for name, r in self.ratios.items():
+                if direction == 'up':
+                    # Rounding the floating point result
+                    val = price_high - (diff * r)
+                else:
+                    # 核心回撤位计算
+                    val = price_low + (diff * r)
+                    
+                levels[name] = round(val, precision)
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        return levels
+
+    def calculate_pivot_points(self, high, low, close, precision=2):
+        """
+        Calculates Classic Pivot Points (P, R1, S1, R2, S2, R3, S3).
+        """
+        result = {}
+        try:
+            # Ensure all inputs are float
+            H = float(high)
+            L = float(low)
+            C = float(close)
+        
+            # 1. Main Pivot Point (P)
+            P = (H + L + C) / 3
+            
+            # 2. First Support and Resistance
+            R1 = (2 * P) - L
+            S1 = (2 * P) - H
+            
+            # 3. Second Support and Resistance
+            R2 = P + (H - L)
+            S2 = P - (H - L)
+            
+            # 4. Third Support and Resistance
+            R3 = H + 2 * (P - L)
+            S3 = L - 2 * (P - H)
+            
+            # Return rounded results in a dictionary
+            result = {
+                "R3": round(R3, precision),
+                "R2": round(R2, precision),
+                "R1": round(R1, precision),
+                "P":  round(P, precision),
+                "S1": round(S1, precision),
+                "S2": round(S2, precision),
+                "S3": round(S3, precision)
+            }
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        return result
+
+    #add pivot levels to df
+    def add_pivot_levels(self, df=None, precision=2):
+        try:
+            if df is None:
+                df = self.spData
+            # We shift the data by 1 to use PREVIOUS day's values for CURRENT day's levels
+            prev_h = df['high'].shift(1)
+            prev_l = df['low'].shift(1)
+            prev_c = df['close'].shift(1)
+
+            # Pivot Point (P)
+            df['P'] = ((prev_h + prev_l + prev_c) / 3).round(precision)
+
+            # Resistance Levels
+            df['R1'] = ((df['P'] * 2) - prev_l).round(precision)
+            df['R2'] = (df['P'] + (prev_h - prev_l)).round(precision)
+            df['R3'] = (prev_h + 2 * (df['P'] - prev_l)).round(precision)
+
+            # Support Levels
+            df['S1'] = ((df['P'] * 2) - prev_h).round(precision)
+            df['S2'] = (df['P'] - (prev_h - prev_l)).round(precision)
+            df['S3'] = (prev_l - 2 * (prev_h - df['P'])).round(precision)
+        except Exception as e:
+            errMsg = f"PID: {_processorPID},errMsg:{str(e)}"
+        
+        return df
+
 
 #stock technical signal -- class 
 # 技术指标计算 - 计算主要技术指标代表的含义
@@ -1538,11 +1671,13 @@ class RSIAnalyzer:
             for YMD, divergenceSignal in divergenceSignals.items():
                 if YMD not in finalSignals:
                     finalSignals[YMD] = {}
+                    suggestion = _DEF_SUGGESTION_SELL
                 else:
                     # 检查是否已给出卖出信号
-                    currSuggestion = finalSignals[YMD]["suggestion"]
+                    currSuggestion = finalSignals[YMD].get("suggestion","")
                     if currSuggestion == _DEF_SUGGESTION_SELL:
                         continue
+                    suggestion = currSuggestion
                 #填充信号数据
                 finalSignals[YMD]["symbol"] = self.symbol
                 finalSignals[YMD]["indicator"] = self.indicator
